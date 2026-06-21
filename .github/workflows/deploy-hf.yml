@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Push al Space de Hugging Face
+      - name: Push una instantánea limpia al Space de Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_USERNAME: ${{ vars.HF_USERNAME }}
@@ -25,6 +25,17 @@ jobs:
             echo "Faltan HF_TOKEN (secret) y/o HF_USERNAME / HF_SPACE_NAME (variables)."
             exit 1
           fi
+          # Excluir archivos que no deben ir al Space público (binarios pesados / PII).
+          rm -f Final_Project_Startup.pdf
+          rm -f docs/research/data/*.csv docs/research/data/*.xlsx docs/research/data/*.xls || true
+
+          # Crear una instantánea SIN historial (orphan) con solo los archivos actuales.
+          git config user.email "deploy@github-actions"
+          git config user.name "github-actions"
+          git checkout --orphan hf-deploy
+          git add -A
+          git commit -m "Deploy snapshot desde GitHub"
+
           git push --force \
             "https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME" \
-            HEAD:main
+            hf-deploy:main
