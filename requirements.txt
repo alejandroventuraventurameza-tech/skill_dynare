@@ -1,4 +1,4 @@
-gradio>=4.44.0
+# Gradio sin fijar versión: Hugging Face instala su versión actual (compatible
+# con su entorno). openai cubre DeepSeek (API compatible con OpenAI).
+gradio
 openai>=1.40.0
-# Opcional: solo si usas el proveedor Anthropic (LLM_PROVIDER=anthropic)
-# anthropic>=0.40.0
