@@ -1,0 +1,30 @@
+name: Deploy to Hugging Face Space
+
+# Despliega el repo al Space de Hugging Face en cada push (y manualmente).
+on:
+  push:
+    branches: [main, first_branch]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (historia completa)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push al Space de Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: ${{ vars.HF_USERNAME }}
+          HF_SPACE_NAME: ${{ vars.HF_SPACE_NAME }}
+        run: |
+          if [ -z "$HF_TOKEN" ] || [ -z "$HF_USERNAME" ] || [ -z "$HF_SPACE_NAME" ]; then
+            echo "Faltan HF_TOKEN (secret) y/o HF_USERNAME / HF_SPACE_NAME (variables)."
+            exit 1
+          fi
+          git push --force \
+            "https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME" \
+            HEAD:main

@@ -15,3 +15,8 @@ __pycache__/
 +*/
 *_results.mat
 *.jnl
+
+# Datos crudos de la encuesta con PII (correos) — NUNCA publicar
+docs/research/data/*.csv
+docs/research/data/*.xlsx
+docs/research/data/*.xls
