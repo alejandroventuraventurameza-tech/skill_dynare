@@ -1,14 +1,15 @@
 """
 app.py — Interfaz Gradio de Dynare Translate (entrypoint para Hugging Face Spaces).
 
-Tres modos:
-  1. "Traducir":  pegas la economía del modelo (FONCs, variables, parámetros) y
-     obtienes un .mod correcto + explicación pedagógica. Usa la API (DeepSeek).
+Pestañas:
+  1. "Traducir":  pegas la economía del modelo y obtienes un .mod + explicación.
      Opción "modo aprendizaje" (bootcamp): explicación más didáctica + ejercicios.
-  2. "Foto de pizarra": subes una foto de tus ecuaciones, el OCR (modelos
-     PaddleOCR / PP-OCRv4) las lee, las corriges en una caja editable y traduces.
-  3. "Verificar":  pegas un .mod y el verificador estático te dice si compilará.
-     NO necesita API key — funciona 100% offline (ideal para el demo en vivo).
+  2. "Foto de pizarra": foto de tus ecuaciones -> OCR (modelos PaddleOCR) -> caja
+     editable -> traducir.
+  3. "Bootcamp": mini-curso "Introducción a Dynare" con ejercicios autocorregidos
+     por el verificador (estilo Codecademy/DataCamp).
+  4. "Verificar":  pegas un .mod y el verificador estático te dice si compilará.
+     NO necesita API key — funciona offline.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ import gradio as gr
 from dynare_translate.core.translator import translate
 from dynare_translate.core.verifier import analyze
 from dynare_translate.core.ocr import image_to_text
+from dynare_translate.core import bootcamp
 
 # --------------------------------------------------------------------------- #
 # Ejemplos precargados ("de oro")
@@ -94,11 +96,26 @@ def do_ocr(image_path: str):
     return text
 
 
+def on_lesson_change(title: str):
+    """Al cambiar de lección: actualiza teoría, código inicial y limpia feedback."""
+    return bootcamp.lesson_intro(title), bootcamp.lesson_starter(title), ""
+
+
+def do_check_lesson(title: str, code: str):
+    return bootcamp.check_lesson(title, code)
+
+
+def do_show_solution(title: str):
+    return bootcamp.lesson_solution(title)
+
+
 # --------------------------------------------------------------------------- #
 # UI
 # --------------------------------------------------------------------------- #
 
 def build_demo() -> gr.Blocks:
+    titles = bootcamp.lesson_titles()
+
     with gr.Blocks(title="Dynare Translate", theme=gr.themes.Soft()) as demo:
         gr.Markdown(
             "# 🧮 Dynare Translate\n"
@@ -156,7 +173,33 @@ def build_demo() -> gr.Blocks:
             trans_btn2.click(do_translate, inputs=[extracted, learn2],
                              outputs=[out_code2, out_report2, out_expl2])
 
-        # ---- Tab 3: Verificar (offline) ----
+        # ---- Tab 3: Bootcamp ----
+        with gr.Tab("Bootcamp: Introducción a Dynare"):
+            gr.Markdown(
+                "🎓 Mini-curso interactivo. Lee la teoría, resuelve el ejercicio "
+                "en el editor y pulsa **Comprobar**: el verificador te corrige al "
+                "instante (no necesitas tener Dynare instalado)."
+            )
+            lesson_sel = gr.Radio(choices=titles, value=titles[0],
+                                  label="Lecciones")
+            lesson_md = gr.Markdown(bootcamp.lesson_intro(titles[0]))
+            lesson_code = gr.Code(
+                label="Tu .mod (edítalo y comprueba)",
+                language="python", value=bootcamp.lesson_starter(titles[0]),
+            )
+            with gr.Row():
+                check_btn = gr.Button("Comprobar", variant="primary")
+                sol_btn = gr.Button("Ver solución")
+            lesson_feedback = gr.Markdown()
+
+            lesson_sel.change(on_lesson_change, inputs=lesson_sel,
+                              outputs=[lesson_md, lesson_code, lesson_feedback])
+            check_btn.click(do_check_lesson, inputs=[lesson_sel, lesson_code],
+                            outputs=lesson_feedback)
+            sol_btn.click(do_show_solution, inputs=lesson_sel,
+                          outputs=lesson_code)
+
+        # ---- Tab 4: Verificar (offline) ----
         with gr.Tab("Verificar un .mod (offline)"):
             gr.Markdown(
                 "Pega un archivo .mod y el verificador estático te dirá si "
