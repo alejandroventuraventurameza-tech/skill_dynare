@@ -72,7 +72,8 @@ configura el Space y `app.py` es el entrypoint.
 │   └── core/
 │       ├── verifier.py          # Verificador estático DETERMINISTA (sin LLM, testeado)
 │       ├── prompts.py           # System prompt desde la base de conocimiento
-│       └── translator.py        # Traducción vía API de Anthropic + auto-reparación
+│       ├── translator.py        # Traducción vía API (DeepSeek) + auto-reparación
+│       └── ocr.py               # OCR de la foto (modelos PaddleOCR / PP-OCRv4)
 ├── context/DYNARE_CONTEXT.md    # Base de conocimiento (el "cerebro" del prompt)
 ├── examples/                    # Modelos .mod de oro (verificados)
 ├── tests/                       # Pruebas del verificador y los extractores
@@ -88,8 +89,11 @@ razonamiento económico vive en el prompt.
 
 ## Herramientas del curso usadas
 
-- **API de Claude (Anthropic)** — motor de traducción y explicación
-  (`dynare_translate/core/translator.py`).
+- **APIs de LLM (DeepSeek, compatible con OpenAI)** — motor de traducción y
+  explicación (`dynare_translate/core/translator.py`). Agnóstico de proveedor.
+- **PaddleOCR (PP-OCRv4)** — lectura de ecuaciones desde una foto de pizarra,
+  vía `rapidocr-onnxruntime` (`dynare_translate/core/ocr.py`, pestaña "Foto de
+  pizarra" en `app.py`).
 - **Verificación tipo agente** — auditoría automática del modelo, base del
   "agente verificador" (`dynare_translate/core/verifier.py`).
 - **Gradio + despliegue** — interfaz y Space público (`app.py`, frontmatter).

@@ -1,12 +1,14 @@
 """
 app.py — Interfaz Gradio de Dynare Translate (entrypoint para Hugging Face Spaces).
 
-Dos modos:
+Tres modos:
   1. "Traducir":  pegas la economía del modelo (FONCs, variables, parámetros) y
-     obtienes un .mod correcto + explicación pedagógica. Usa la API de Anthropic.
-  2. "Verificar":  pegas un .mod y el verificador estático te dice si compilará
-     y por qué. NO necesita API key — funciona 100% offline (ideal para el demo
-     en vivo aunque falle la red).
+     obtienes un .mod correcto + explicación pedagógica. Usa la API (DeepSeek).
+     Opción "modo aprendizaje" (bootcamp): explicación más didáctica + ejercicios.
+  2. "Foto de pizarra": subes una foto de tus ecuaciones, el OCR (modelos
+     PaddleOCR / PP-OCRv4) las lee, las corriges en una caja editable y traduces.
+  3. "Verificar":  pegas un .mod y el verificador estático te dice si compilará.
+     NO necesita API key — funciona 100% offline (ideal para el demo en vivo).
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ import gradio as gr
 
 from dynare_translate.core.translator import translate
 from dynare_translate.core.verifier import analyze
+from dynare_translate.core.ocr import image_to_text
 
 # --------------------------------------------------------------------------- #
 # Ejemplos precargados ("de oro")
@@ -58,12 +61,11 @@ def _load_golden_mod() -> str:
 # Callbacks
 # --------------------------------------------------------------------------- #
 
-def do_translate(economic_input: str):
-    """Traduce la entrada económica a .mod y devuelve (código, verificación, explicación)."""
-    result = translate(economic_input)
+def do_translate(economic_input: str, learning_mode: bool = False):
+    """Traduce la entrada económica a .mod (código, verificación, explicación)."""
+    result = translate(economic_input, learning_mode=bool(learning_mode))
     if result.error and not result.mod_code:
-        msg = f"### ⚠️ No se pudo traducir\n\n{result.error}"
-        return "", msg, ""
+        return "", f"### ⚠️ No se pudo traducir\n\n{result.error}", ""
     report_md = result.report.to_markdown() if result.report else ""
     if result.repairs:
         report_md = (f"_Auto-reparación aplicada: {result.repairs} iteración(es)._\n\n"
@@ -76,6 +78,20 @@ def do_verify(mod_text: str):
     if not mod_text or not mod_text.strip():
         return "### ℹ️ Pega un archivo .mod para verificarlo."
     return analyze(mod_text).to_markdown()
+
+
+def do_ocr(image_path: str):
+    """Lee las ecuaciones de una foto y devuelve el texto (editable)."""
+    if not image_path:
+        return "Sube una foto primero."
+    try:
+        text = image_to_text(image_path)
+    except RuntimeError as exc:
+        return f"[OCR no disponible] {exc}"
+    if not text.strip():
+        return ("No se detectó texto. Prueba con una foto más nítida, con buena "
+                "luz y las ecuaciones bien marcadas.")
+    return text
 
 
 # --------------------------------------------------------------------------- #
@@ -91,6 +107,7 @@ def build_demo() -> gr.Blocks:
             "explicado paso a paso. Para estudiantes de macro de pregrado."
         )
 
+        # ---- Tab 1: Traducir ----
         with gr.Tab("Traducir economía → Dynare"):
             gr.Markdown(
                 "Pega las ecuaciones que ya derivaste (FONCs, vaciado de mercado, "
@@ -100,13 +117,46 @@ def build_demo() -> gr.Blocks:
                 label="Descripción económica del modelo",
                 lines=16, value=EXAMPLE_INPUT_RBC,
             )
+            learn = gr.Checkbox(
+                label="Modo aprendizaje (explicación más didáctica + ejercicios)",
+                value=False,
+            )
             btn = gr.Button("Traducir a Dynare", variant="primary")
             out_code = gr.Code(label="Archivo .mod", language="python")
             out_report = gr.Markdown(label="Verificación estática")
             out_expl = gr.Markdown(label="Explicación por bloque (bootcamp)")
-            btn.click(do_translate, inputs=inp,
+            btn.click(do_translate, inputs=[inp, learn],
                       outputs=[out_code, out_report, out_expl])
 
+        # ---- Tab 2: Foto de pizarra ----
+        with gr.Tab("Foto de pizarra → Dynare (beta)"):
+            gr.Markdown(
+                "📷 Sube una **foto de tus ecuaciones** (pizarra o papel). El OCR "
+                "(modelos PaddleOCR / PP-OCRv4) las lee y las coloca abajo para que "
+                "**las revises y corrijas** antes de traducir.\n\n"
+                "_Tip: foto nítida, con buena luz y letra clara. El OCR a veces "
+                "confunde `I`↔`1` o `^`↔`~`; corrígelo en la caja antes de traducir._"
+            )
+            img = gr.Image(type="filepath", label="Foto de tus ecuaciones")
+            ocr_btn = gr.Button("Leer ecuaciones (OCR)")
+            extracted = gr.Textbox(
+                label="Texto leído — revísalo y corrígelo antes de traducir",
+                lines=10,
+            )
+            ocr_btn.click(do_ocr, inputs=img, outputs=extracted)
+
+            learn2 = gr.Checkbox(
+                label="Modo aprendizaje (explicación más didáctica + ejercicios)",
+                value=False,
+            )
+            trans_btn2 = gr.Button("Traducir lo leído", variant="primary")
+            out_code2 = gr.Code(label="Archivo .mod", language="python")
+            out_report2 = gr.Markdown(label="Verificación estática")
+            out_expl2 = gr.Markdown(label="Explicación por bloque (bootcamp)")
+            trans_btn2.click(do_translate, inputs=[extracted, learn2],
+                             outputs=[out_code2, out_report2, out_expl2])
+
+        # ---- Tab 3: Verificar (offline) ----
         with gr.Tab("Verificar un .mod (offline)"):
             gr.Markdown(
                 "Pega un archivo .mod y el verificador estático te dirá si "
@@ -121,7 +171,8 @@ def build_demo() -> gr.Blocks:
         gr.Markdown(
             "---\n*Hecho para los alumnos de Macroeconomía II y Macroeconomía "
             "Internacional de la UP. El verificador es determinista y de código "
-            "abierto; la traducción usa la API de Anthropic.*"
+            "abierto; la traducción usa la API de DeepSeek; el OCR usa los modelos "
+            "PaddleOCR (PP-OCRv4).*"
         )
     return demo
 

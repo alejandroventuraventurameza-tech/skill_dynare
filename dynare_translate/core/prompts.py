@@ -1,16 +1,10 @@
 """
 prompts.py — Construcción de los prompts para la capa de traducción (LLM).
 
-La calidad del .mod generado depende casi por completo de:
-  (a) un buen system prompt con las reglas de Dynare, y
-  (b) ejemplos few-shot de CÓDIGO REAL Y VERIFICADO escrito por autores
-      (repos como Pfeifer, la Macroeconomic Model Database, los ejemplos
-      oficiales de Dynare, etc.).
-
-Filosofía del producto: NO entrenamos al modelo con código que generó otro
-modelo (eso arrastra errores). La biblioteca `examples/` contiene .mod reales y
-atribuidos; este módulo los carga, los pasa por el verificador estático y solo
-incluye como few-shot los que pasan los chequeos.
+La calidad del .mod depende de (a) un buen system prompt con las reglas de
+Dynare y (b) ejemplos few-shot de CÓDIGO REAL Y VERIFICADO de autores. La
+biblioteca `examples/` contiene .mod reales y atribuidos; este módulo los carga,
+los pasa por el verificador estático y solo incluye los que pasan.
 """
 
 from __future__ import annotations
@@ -21,13 +15,11 @@ from typing import List, Tuple
 
 from .verifier import analyze
 
-# Rutas relativas a la raíz del repo (este archivo vive en dynare_translate/core/).
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO_ROOT = os.path.abspath(os.path.join(_HERE, "..", ".."))
 _CONTEXT_PATH = os.path.join(_REPO_ROOT, "context", "DYNARE_CONTEXT.md")
 _EXAMPLES_DIR = os.path.join(_REPO_ROOT, "examples")
 
-# Cuántos ejemplos few-shot incluir y cuánto truncar cada uno (control de costo).
 _FEWSHOT_N = int(os.environ.get("DYNARE_FEWSHOT_N", "2"))
 _FEWSHOT_MAX_CHARS = int(os.environ.get("DYNARE_FEWSHOT_MAX_CHARS", "6000"))
 
@@ -40,18 +32,10 @@ def _read(path: str) -> str:
         return ""
 
 
-# --------------------------------------------------------------------------- #
-# Biblioteca de ejemplos (corpus curado de código real)
-# --------------------------------------------------------------------------- #
-
 def load_verified_examples(max_examples: int = _FEWSHOT_N,
                            max_chars: int = _FEWSHOT_MAX_CHARS
                            ) -> List[Tuple[str, str]]:
-    """Carga .mod de `examples/` que PASAN el verificador estático.
-
-    Devuelve una lista de (ruta_relativa, codigo). Si un .mod tiene errores
-    estáticos, se descarta como few-shot (no queremos enseñar con código roto).
-    """
+    """Carga .mod de `examples/` que PASAN el verificador estático."""
     paths = sorted(glob.glob(os.path.join(_EXAMPLES_DIR, "**", "*.mod"),
                              recursive=True))
     out: List[Tuple[str, str]] = []
@@ -60,7 +44,7 @@ def load_verified_examples(max_examples: int = _FEWSHOT_N,
         if not code.strip():
             continue
         if not analyze(code).ok:
-            continue  # solo ejemplos que pasan los chequeos deterministas
+            continue
         rel = os.path.relpath(path, _REPO_ROOT)
         out.append((rel, code[:max_chars]))
         if len(out) >= max_examples:
@@ -82,10 +66,6 @@ def _format_examples_block(examples: List[Tuple[str, str]]) -> str:
     return "\n\n".join(parts)
 
 
-# --------------------------------------------------------------------------- #
-# Contrato de entrada (lo que llena el investigador)
-# --------------------------------------------------------------------------- #
-
 INPUT_CONTRACT = """\
 El investigador entrega la economía YA DERIVADA. Tú NO derives FONCs desde un
 paper: solo traduces a sintaxis Dynare correcta. La entrada puede incluir:
@@ -98,10 +78,6 @@ paper: solo traduces a sintaxis Dynare correcta. La entrada puede incluir:
     parámetros y deja un valor placeholder comentado).
   • NOTAS: niveles vs logaritmos, convenciones de timing, etc.
 """
-
-# --------------------------------------------------------------------------- #
-# System prompt
-# --------------------------------------------------------------------------- #
 
 _SYSTEM_TEMPLATE = """\
 Eres un traductor experto de modelos DSGE a código Dynare (.mod). Tu única
@@ -153,15 +129,33 @@ def build_system_prompt() -> str:
     )
 
 
-def build_user_prompt(economic_input: str) -> str:
-    """Envuelve la entrada económica del usuario con instrucciones finales."""
-    return (
+_LEARNING_ADDENDUM = """\
+
+=== MODO APRENDIZAJE (bootcamp) ===
+Además de la explicación por bloque, escribe la explicación de forma extra
+didáctica, como para un alumno de pregrado que recién aprende: usa analogías
+breves y evita jerga innecesaria. Al final, agrega una sección "## Ejercicios"
+con 2 o 3 ejercicios cortos para que el alumno modifique el modelo y vea qué
+pasa (p. ej., cambiar un parámetro, añadir un shock, alterar una ecuación),
+explicando qué debería observar en cada caso.
+"""
+
+
+def build_user_prompt(economic_input: str, learning_mode: bool = False) -> str:
+    """Envuelve la entrada económica del usuario con instrucciones finales.
+
+    Si learning_mode=True, pide explicación más didáctica + ejercicios (bootcamp).
+    """
+    prompt = (
         "Traduce a Dynare la siguiente descripción económica. Respeta el "
         "estándar de salida (código .mod en bloque ```dynare``` + explicación "
         "por bloque).\n\n"
         "=== ENTRADA ECONÓMICA ===\n"
         f"{economic_input.strip()}\n"
     )
+    if learning_mode:
+        prompt += _LEARNING_ADDENDUM
+    return prompt
 
 
 def build_repair_prompt(mod_code: str, verifier_report: str) -> str:

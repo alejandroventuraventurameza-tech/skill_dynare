@@ -163,7 +163,8 @@ def _call_llm(system_prompt: str, messages: List[dict],
 # --------------------------------------------------------------------------- #
 
 def translate(economic_input: str, max_repairs: int = 2,
-              provider: Optional[str] = None) -> TranslationResult:
+              provider: Optional[str] = None,
+              learning_mode: bool = False) -> TranslationResult:
     """Traduce una descripción económica a un .mod verificado.
 
     Parameters
@@ -175,6 +176,8 @@ def translate(economic_input: str, max_repairs: int = 2,
     provider : str, optional
         Proveedor LLM ("deepseek", "openai", "anthropic"). Por defecto, el de
         la variable de entorno LLM_PROVIDER (DeepSeek).
+    learning_mode : bool
+        Si True, pide explicación más didáctica + ejercicios (modo bootcamp).
     """
     if not economic_input or not economic_input.strip():
         return TranslationResult(
@@ -184,7 +187,8 @@ def translate(economic_input: str, max_repairs: int = 2,
 
     system_prompt = build_system_prompt()
     messages: List[dict] = [
-        {"role": "user", "content": build_user_prompt(economic_input)}
+        {"role": "user",
+         "content": build_user_prompt(economic_input, learning_mode=learning_mode)}
     ]
 
     attempts: List[str] = []
