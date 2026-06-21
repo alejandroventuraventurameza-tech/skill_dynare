@@ -1,4 +1,4 @@
-# Modelo de negocio y monetización — Dynare Translate
+# Modelo de negocio y monetización — MacroBuilt
 
 ## Principio de costos: BYOK (Bring Your Own Key)
 

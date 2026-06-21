@@ -1,6 +1,6 @@
 ---
-title: Dynare Translate
-emoji: 🧮
+title: MacroBuilt
+emoji: 🧪
 colorFrom: indigo
 colorTo: blue
 sdk: gradio
@@ -10,9 +10,9 @@ pinned: false
 license: mit
 ---
 
-# 🧮 Dynare Translate
+# 🧪 MacroBuilt — Tu laboratorio macroeconómico
 
-**Convertimos la pizarra en un laboratorio.** Dynare Translate toma la economía
+**Tu laboratorio macroeconómico.** MacroBuilt toma la economía
 que un estudiante ya derivó a mano (FONCs, condiciones de vaciado de mercado,
 leyes de movimiento) y la traduce a código **Dynare** correcto, **verificado** y
 **explicado paso a paso** — para que los alumnos de macroeconomía de pregrado
