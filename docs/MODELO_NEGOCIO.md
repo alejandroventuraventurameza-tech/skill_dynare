@@ -66,12 +66,36 @@ Opción de conveniencia (sin BYOK): "clave administrada" con un recargo; el toke
 
 ---
 
-## Mercado (esqueleto TAM/SAM/SOM — completar con fuentes en el deck)
+## Mercado (TAM / SAM / SOM)
 
-- **TAM:** estudiantes de economía/finanzas (pregrado + posgrado) que tocan DSGE.
-- **SAM:** programas de economía en LatAm hispanohablante con macro avanzada/DSGE.
-- **SOM (12 meses):** UP + un puñado de universidades de Lima.
-  *Fuentes a citar: SUNEDU (matrícula en Economía), INEI, gremios universitarios.*
+**Ancla (top-down):** SUNEDU registra ~**1.2 millones** de universitarios en Perú
+(dic-2023). Economía es una fracción del total; el detalle exacto está en la
+plataforma TUNI.PE de SUNEDU.
+
+- **TAM — estudiantes de Economía en LatAm hispanohablante** que llevan macro
+  avanzada (donde aparece DSGE/Dynare). Orden de cientos de miles.
+  *Perú: estimado ~25–35 mil estudiantes de Economía (≈2–3% de 1.2M; refinar con TUNI.PE).*
+- **SAM — programas que usan Dynare/DSGE (Lima/Perú).** Con certeza del founder:
+  **UP y PUCP** (Economía con macro avanzada en Dynare); el resto de top peruanas
+  (UNMSM, UNI, U. de Lima) por confirmar. **Cifra oficial UP (2025-II):
+  Economía = 1,605 matriculados** (Facultad de Economía y Finanzas = 2,115;
+  total pregrado UP = 5,739).
+- **SOM (12 meses) — la UP como beachhead.** En la UP, los cursos donde aparece
+  DSGE (Macro II y Macro Internacional) tienen **3 secciones × ~30 alumnos ≈ 90
+  por curso/semestre** → del orden de **~180–360 estudiantes/año** pasan por Dynare.
+  - **Vía institucional (el negocio):** ~6 secciones macro-DSGE × S/ 4,900/año
+    ≈ **S/ 29,400/año solo en la UP**; sumando PUCP (tamaño comparable)
+    ≈ **~S/ 55–60 mil/año** en el beachhead Lima.
+  - **Vía B2C (funnel):** de los ~2,115 de Economía UP, una conversión modesta del
+    flujo de macro a Estudiante Pro (S/ 49/semestre) aporta ingreso complementario.
+
+*Cifras UP: oficiales de la propia universidad (ver
+`docs/research/UP_matriculados_pregrado_2025.pdf`): Economía pregrado 2025-II =
+1,605 matriculados (egresados 2025-II = 79). Secciones/alumnos por curso y certeza
+de uso de Dynare (UP, PUCP) aportados por el founder como TA.*
+
+*Fuentes: Universidad del Pacífico (matriculados y egresados pregrado 2025);
+SUNEDU (https://www.gob.pe/sunedu, TUNI.PE); INEI.*
 
 ---
 

@@ -25,11 +25,12 @@ jobs:
             echo "Faltan HF_TOKEN (secret) y/o HF_USERNAME / HF_SPACE_NAME (variables)."
             exit 1
           fi
-          # Excluir archivos que no deben ir al Space público (binarios pesados / PII).
-          rm -f Final_Project_Startup.pdf
+          # Excluir del Space los archivos que no debe servir (binarios pesados / PII):
+          # cualquier PDF y los datos crudos de la encuesta.
+          find . -maxdepth 6 -name '*.pdf' -delete || true
           rm -f docs/research/data/*.csv docs/research/data/*.xlsx docs/research/data/*.xls || true
 
-          # Crear una instantánea SIN historial (orphan) con solo los archivos actuales.
+          # Instantánea SIN historial (orphan) con solo los archivos actuales.
           git config user.email "deploy@github-actions"
           git config user.name "github-actions"
           git checkout --orphan hf-deploy
