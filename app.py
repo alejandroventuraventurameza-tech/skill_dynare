@@ -39,7 +39,7 @@ CSS = """
 HERO = """
 <div id="mb-hero" style="background:linear-gradient(120deg,#4f46e5 0%,#3b82f6 100%);
      padding:30px 34px; color:#fff;">
-  <div style="font-size:30px; font-weight:800; letter-spacing:-.5px;">🧪 MacroBuilt</div>
+  <div style="font-size:30px; font-weight:800; letter-spacing:-.5px; display:flex; align-items:center; gap:9px;"><svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><path d="M26 16 H38 M29 16 V27 L18.5 47.5 A3 3 0 0 0 21 52 H43 A3 3 0 0 0 45.5 47.5 L35 27 V16" fill="rgba(255,255,255,0.15)" stroke="#fff" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/><rect x="24" y="42" width="4" height="6" rx="1" fill="#fff"/><rect x="30" y="38" width="4" height="10" rx="1" fill="#fff"/><rect x="36" y="34" width="4" height="14" rx="1" fill="#fde68a"/></svg><span>MacroBuilt</span></div>
   <div style="font-size:17px; font-weight:600; margin-top:2px; opacity:.96;">
      Tu laboratorio macroeconómico</div>
   <div style="font-size:14px; margin-top:10px; opacity:.92; max-width:700px; line-height:1.5;">
