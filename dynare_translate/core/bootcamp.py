@@ -246,3 +246,63 @@ def check_lesson(title: str, code: str) -> str:
     check: Callable[[str], Tuple[bool, str]] = l["check"]
     passed, feedback = check(code)
     return feedback
+
+
+# --------------------------------------------------------------------------- #
+# Progresión por fases (bootcamp interactivo)
+# --------------------------------------------------------------------------- #
+
+N_LESSONS = len(LESSONS)
+
+
+def title_at(idx: int) -> str:
+    idx = max(0, min(int(idx), N_LESSONS - 1))
+    return lesson_titles()[idx]
+
+
+def intro_at(idx: int) -> str:
+    return lesson_intro(title_at(idx))
+
+
+def starter_at(idx: int) -> str:
+    return lesson_starter(title_at(idx))
+
+
+def solution_at(idx: int) -> str:
+    return lesson_solution(title_at(idx))
+
+
+def passed_feedback(idx: int, code: str):
+    """Devuelve (feedback_markdown, passed_bool)."""
+    fb = check_lesson(title_at(idx), code)
+    return fb, ("✅" in fb)
+
+
+def render_progress(idx: int, done) -> str:
+    """HTML con los pasos del bootcamp: ✓ completado, número actual resaltado."""
+    chips = []
+    for i in range(N_LESSONS):
+        if i < len(done) and done[i]:
+            bg, fg, mark = "#16a34a", "#ffffff", "✓"
+        elif i == idx:
+            bg, fg, mark = "#4f46e5", "#ffffff", str(i + 1)
+        else:
+            bg, fg, mark = "#e5e7eb", "#6b7280", str(i + 1)
+        chips.append(
+            f'<span title="{title_at(i)}" style="display:inline-flex;'
+            f'align-items:center;justify-content:center;width:30px;height:30px;'
+            f'border-radius:999px;background:{bg};color:{fg};font-weight:700;'
+            f'font-size:13px;">{mark}</span>'
+        )
+        if i < N_LESSONS - 1:
+            chips.append('<span style="color:#cbd5e1;">—</span>')
+    done_n = sum(1 for d in done if d)
+    if done_n == N_LESSONS:
+        cap = ('<div style="margin-top:8px;font-size:13px;color:#16a34a;'
+               'font-weight:600;">🎉 ¡Completaste el bootcamp de introducción!</div>')
+    else:
+        cap = (f'<div style="margin-top:8px;font-size:13px;color:#6b7280;">'
+               f'Progreso: {done_n}/{N_LESSONS} lecciones · completa una para '
+               f'desbloquear la siguiente</div>')
+    return ('<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+            + "".join(chips) + '</div>' + cap)

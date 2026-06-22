@@ -2,12 +2,7 @@
 app.py — Interfaz Gradio de MacroBuilt (entrypoint para Hugging Face Spaces).
 
 MacroBuilt — Tu laboratorio macroeconómico.
-
-Pestañas:
-  1. "Traducir":  economía del modelo -> .mod + explicación (modo aprendizaje opc.).
-  2. "Foto de pizarra": foto -> OCR (modelos PaddleOCR) -> caja editable -> traducir.
-  3. "Bootcamp": mini-curso "Introducción a Dynare", ejercicios autocorregidos.
-  4. "Verificar":  pegas un .mod y el verificador estático te dice si compilará.
+Pestañas: Traducir · Foto de pizarra (OCR PaddleOCR) · Bootcamp interactivo · Verificar.
 """
 
 from __future__ import annotations
@@ -136,16 +131,34 @@ def do_ocr(image_path: str):
     return text
 
 
-def on_lesson_change(title: str):
-    return bootcamp.lesson_intro(title), bootcamp.lesson_starter(title), ""
+# ---- Bootcamp interactivo (progresión por fases) ----
+
+def bc_check(idx, code, done):
+    done = list(done)
+    fb, ok = bootcamp.passed_feedback(idx, code)
+    if ok:
+        done[int(idx)] = True
+    nxt_enabled = done[int(idx)] and int(idx) < bootcamp.N_LESSONS - 1
+    return (fb, done, bootcamp.render_progress(int(idx), done),
+            gr.update(interactive=nxt_enabled))
 
 
-def do_check_lesson(title: str, code: str):
-    return bootcamp.check_lesson(title, code)
+def bc_next(idx, done):
+    nidx = min(int(idx) + 1, bootcamp.N_LESSONS - 1)
+    nxt_enabled = done[nidx] and nidx < bootcamp.N_LESSONS - 1
+    return (nidx, bootcamp.intro_at(nidx), bootcamp.starter_at(nidx), "",
+            bootcamp.render_progress(nidx, done), gr.update(interactive=nxt_enabled))
 
 
-def do_show_solution(title: str):
-    return bootcamp.lesson_solution(title)
+def bc_prev(idx, done):
+    pidx = max(int(idx) - 1, 0)
+    nxt_enabled = done[pidx] and pidx < bootcamp.N_LESSONS - 1
+    return (pidx, bootcamp.intro_at(pidx), bootcamp.starter_at(pidx), "",
+            bootcamp.render_progress(pidx, done), gr.update(interactive=nxt_enabled))
+
+
+def bc_solution(idx):
+    return bootcamp.solution_at(idx)
 
 
 # --------------------------------------------------------------------------- #
@@ -153,8 +166,6 @@ def do_show_solution(title: str):
 # --------------------------------------------------------------------------- #
 
 def build_demo() -> gr.Blocks:
-    titles = bootcamp.lesson_titles()
-
     with gr.Blocks(title="MacroBuilt — Tu laboratorio macroeconómico",
                    theme=THEME, css=CSS) as demo:
         gr.HTML(HERO)
@@ -202,29 +213,34 @@ def build_demo() -> gr.Blocks:
             trans_btn2.click(do_translate, inputs=[extracted, learn2],
                              outputs=[out_code2, out_report2, out_expl2])
 
-        # ---- Tab 3: Bootcamp ----
+        # ---- Tab 3: Bootcamp interactivo ----
         with gr.Tab("🎓 Bootcamp"):
             gr.Markdown(
-                "**Introducción a Dynare.** Lee la teoría, resuelve el ejercicio "
-                "en el editor y pulsa **Comprobar**: el verificador te corrige al "
-                "instante (no necesitas tener Dynare instalado)."
+                "**Introducción a Dynare.** Avanza lección por lección: lee la "
+                "teoría, resuelve el ejercicio y pulsa **Comprobar**. El verificador "
+                "te corrige al instante; al aprobar, se **desbloquea** la siguiente."
             )
-            lesson_sel = gr.Radio(choices=titles, value=titles[0],
-                                  label="Lecciones")
-            lesson_md = gr.Markdown(bootcamp.lesson_intro(titles[0]))
+            idx_state = gr.State(0)
+            done_state = gr.State([False] * bootcamp.N_LESSONS)
+            progress = gr.HTML(bootcamp.render_progress(0, [False] * bootcamp.N_LESSONS))
+            lesson_md = gr.Markdown(bootcamp.intro_at(0))
             lesson_code = gr.Code(label="Tu .mod (edítalo y comprueba)",
-                                  language="python",
-                                  value=bootcamp.lesson_starter(titles[0]))
+                                  language="python", value=bootcamp.starter_at(0))
             with gr.Row():
                 check_btn = gr.Button("Comprobar", variant="primary")
                 sol_btn = gr.Button("Ver solución")
-            lesson_feedback = gr.Markdown()
-            lesson_sel.change(on_lesson_change, inputs=lesson_sel,
-                              outputs=[lesson_md, lesson_code, lesson_feedback])
-            check_btn.click(do_check_lesson, inputs=[lesson_sel, lesson_code],
-                            outputs=lesson_feedback)
-            sol_btn.click(do_show_solution, inputs=lesson_sel,
-                          outputs=lesson_code)
+            feedback = gr.Markdown()
+            with gr.Row():
+                prev_btn = gr.Button("← Anterior")
+                next_btn = gr.Button("Siguiente lección →", interactive=False)
+
+            check_btn.click(bc_check, [idx_state, lesson_code, done_state],
+                            [feedback, done_state, progress, next_btn])
+            next_btn.click(bc_next, [idx_state, done_state],
+                           [idx_state, lesson_md, lesson_code, feedback, progress, next_btn])
+            prev_btn.click(bc_prev, [idx_state, done_state],
+                           [idx_state, lesson_md, lesson_code, feedback, progress, next_btn])
+            sol_btn.click(bc_solution, idx_state, lesson_code)
 
         # ---- Tab 4: Verificar ----
         with gr.Tab("✅ Verificar (offline)"):

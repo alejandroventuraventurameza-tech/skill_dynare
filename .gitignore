@@ -20,3 +20,6 @@ __pycache__/
 docs/research/data/*.csv
 docs/research/data/*.xlsx
 docs/research/data/*.xls
+
+# Corpus externo de referencia (MMB) — pesado y con licencias propias: NO publicar
+mmb-rep-master/

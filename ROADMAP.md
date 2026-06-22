@@ -81,3 +81,34 @@ Cada archivo `.mod` debe incluir:
 | 2026-06-20 | Decisiones de diseño acordadas (scope, arquitectura, prioridades)         |
 | 2026-06-20 | Paper objetivo para caso de prueba: Corsetti & Müller (2006) Twin Deficits|
 | 2026-06-20 | Proyecto convertido en proyecto final de curso                            |
+
+---
+
+## Visión de producto (mediano plazo) — de herramienta a comunidad
+
+MacroBuilt no se queda en un traductor. La hoja de ruta es convertir el bootcamp
+en una **plataforma de aprendizaje y una comunidad** para macroeconomistas que
+programan.
+
+**Bootcamp profesional (evolución del actual):**
+- **Videos hechos por profesores** (incluido el founder como TA de la UP).
+- **Sección de ejercicios** (la parte práctica), autocorregidos por el verificador.
+- **Evaluaciones** y seguimiento de progreso por alumno.
+- **Proyecto final**: cada estudiante construye y replica su propio modelo.
+- **Certificación**.
+
+**Comunidad y networking:**
+- Una **comunidad de programación para macroeconomistas** (foros, mentoría,
+  showcase de proyectos, bolsa de RA/tesis).
+- Networking entre estudiantes, TAs, profesores e investigadores de LatAm.
+
+**Más allá de Dynare:**
+- Expandir a otros lenguajes/entornos del flujo macro-cuantitativo: **Python**
+  (modelos, datos, simulación), R, MATLAB/Octave, y herramientas de estimación.
+- MacroBuilt como el lugar donde un economista aprende a programar de principio a fin.
+
+**Fases sugeridas:**
+1. Hoy: traductor + verificador + bootcamp interactivo (4 lecciones).
+2. +3 meses: bootcamp con videos, más lecciones, evaluaciones, certificación.
+3. +6 meses: proyectos de alumnos + comunidad/foro + piloto institucional.
+4. +12 meses: expansión a Python y otros entornos; networking LatAm.

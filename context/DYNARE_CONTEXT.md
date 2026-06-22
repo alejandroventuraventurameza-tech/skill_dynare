@@ -365,7 +365,33 @@ stoch_simul(order=1, irf=40, periods=0) Y C I K L W R A;
 - **Ejemplos en el repositorio de Dynare:** `/matlab/examples/` en la instalación de Dynare
 - **Dynare++ (versión standalone):** para modelos de orden superior sin MATLAB
 
+## Fundamentación oficial (manual de Dynare)
+
+Esta sección está **verificada contra el manual de referencia oficial de Dynare**
+(*The Model File*, https://www.dynare.org/manual/the-model-file.html), no solo
+contra resúmenes secundarios.
+
+**Convención de timing (cita del manual):** *"the default convention is that the
+timing of a variable reflects when this variable is decided. The typical example
+is for capital stock: since the capital stock used at current period is actually
+decided at the previous period, then the capital stock entering the production
+function is `k(-1)`, and the law of motion of capital must be written:*
+`k = i + (1-delta)*k(-1)`.
+
+Consecuencias autoritativas (manual):
+- Dynare usa por defecto el concepto **"stock al final del período"** (*stock at
+  the end of the period*), no "al inicio del período".
+- *"A predetermined variable — which by definition has been decided in a previous
+  period — must have a lag. ... all stock variables must use the 'stock at the
+  end of the period' convention."* → por eso el capital productivo hoy es `K(-1)`.
+- El comando `predetermined_variables` cambia esa convención (declara variables
+  decididas un período antes, con convención "stock al inicio del período"), pero
+  internamente Dynare siempre reporta con la convención de fin de período.
+
+**Para el bootcamp:** la lección de timing (`K(-1)`) está alineada con esta cita
+oficial. Buen anclaje para enseñar el error más común sin ambigüedad.
+
 ---
 
 *Este archivo es un documento vivo — se actualizará con cada sesión de trabajo.*  
-*Última actualización: 2026-05-23*
+*Última actualización: 2026-06-21*

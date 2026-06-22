@@ -228,10 +228,36 @@ def _assigned_parameters(text_wo_blocks: str, params: Set[str]) -> Set[str]:
 # Análisis principal
 # --------------------------------------------------------------------------- #
 
+def _strip_macros(text):
+    """Quita directivas del macro-processor de Dynare (@#...) y sustituciones @{...}.
+
+    Devuelve (texto_limpio, uses_macro). Si el modelo usa el macro-processor, los
+    conteos y declaraciones no se pueden determinar con certeza de forma estática.
+    """
+    uses = ("@#" in text) or ("@{" in text)
+    out = []
+    for ln in text.split("\n"):
+        if ln.lstrip().startswith("@#"):
+            continue
+        out.append(ln)
+    text = "\n".join(out)
+    while "@{" in text:
+        i = text.index("@{")
+        j = text.find("}", i)
+        if j == -1:
+            break
+        text = text[:i] + "1" + text[j + 1:]
+    return text, uses
+
+
 def analyze(mod_text: str) -> Report:
     """Analiza estáticamente un archivo .mod y devuelve un Report."""
     report = Report()
     text = strip_comments(mod_text)
+    text, uses_macro = _strip_macros(text)
+    uses_macro = uses_macro or ("@#include" in mod_text)
+    known_extra = set(_declared_names(text, "model_local_variable"))
+    known_extra |= set(_declared_names(text, "trend_var"))
 
     # 1) Declaraciones -------------------------------------------------------
     endogenous = _declared_names(text, "var")
@@ -259,7 +285,12 @@ def analyze(mod_text: str) -> Report:
     # 2) Bloque model --------------------------------------------------------
     model_body, has_model = _extract_block(text, "model")
     if not has_model:
-        report.errors.append("No se encontró el bloque `model; ... end;`.")
+        _msg = "No se encontró el bloque `model; ... end;`."
+        if uses_macro:
+            report.warnings.append(
+                "No evaluable estáticamente (macro-processor de Dynare): " + _msg)
+        else:
+            report.errors.append(_msg)
         report.stats = {
             "n_endogenous": len(endo_set),
             "n_exogenous": len(exo_set),
@@ -282,7 +313,7 @@ def analyze(mod_text: str) -> Report:
 
     # 4) Símbolos usados vs declarados --------------------------------------
     used = _used_symbols(equations)
-    known = (endo_set | exo_set | par_set | local_set
+    known = (endo_set | exo_set | par_set | local_set | known_extra
              | DYNARE_FUNCTIONS | DYNARE_KEYWORDS)
     undeclared = sorted(s for s in used if s not in known)
     if undeclared:
@@ -355,6 +386,21 @@ def analyze(mod_text: str) -> Report:
         "Recuerda la condición BK: #eigenvalores explosivos debe igualar "
         "#variables forward-looking para una solución única y estable."
     )
+
+    # 7b) Si usa macro-processor, los chequeos de conteo/declaración no son
+    # decidibles estáticamente: se degradan de error a advertencia.
+    if uses_macro and report.errors:
+        _markers = ("no coincide", "no declarados", "no aparecen en ninguna",
+                    "sin valor asignado")
+        _kept, _moved = [], []
+        for _e in report.errors:
+            if any(_mk in _e for _mk in _markers):
+                _moved.append(
+                    "No evaluable estáticamente (macro-processor de Dynare): " + _e)
+            else:
+                _kept.append(_e)
+        report.errors = _kept
+        report.warnings = _moved + report.warnings
 
     # 8) Estadísticas --------------------------------------------------------
     report.stats = {
