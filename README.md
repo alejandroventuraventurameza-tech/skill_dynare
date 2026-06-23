@@ -24,6 +24,11 @@ dejen de memorizar modelos y empiecen a *jugar* con ellos.
 
 ---
 
+## Demo y sitio
+
+- **Demo en vivo:** https://huggingface.co/spaces/resaca2014/dynare-translate
+- **Landing page:** `index.html` (publicable gratis en GitHub Pages).
+
 ## El problema
 
 Programar modelos DSGE en Dynare es doloroso para un estudiante de pregrado: la
@@ -47,7 +52,7 @@ declarados, parámetros con valor, clasificación estado/*jump* para Blanchard-K
 ### En local
 ```bash
 pip install -r requirements.txt
-cp .env.example .env          # coloca tu ANTHROPIC_API_KEY
+cp .env.example .env          # coloca tu DEEPSEEK_API_KEY
 python app.py                 # abre la interfaz Gradio
 ```
 

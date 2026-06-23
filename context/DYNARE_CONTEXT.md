@@ -393,5 +393,45 @@ oficial. Buen anclaje para enseñar el error más común sin ambigüedad.
 
 ---
 
+## Patrones de un modelo New Keynesian (aprendido de CÓDIGO REAL)
+
+*Estudiado de un NK lineal real del MMB: Paoli & Paustian (2017), "Coordinating
+Monetary and Macroprudential Policies", replicación del MMB.*
+
+Convenciones que usa el código real y que el traductor debe imitar:
+
+- **`model(linear);`** cuando el modelo está **log-linealizado** (las variables son
+  desviaciones respecto al estado estacionario). Evita `exp()/log()`; Dynare trata
+  las ecuaciones como lineales. (En niveles se usa `model;` y sí aparecen `log/exp`.)
+- **Etiquetas de ecuación** antes de cada ecuación: `[name='Phillips curve']`.
+  Documentan qué FONC es cada una; NO cuentan como ecuación. Gran práctica pedagógica.
+- **Anotaciones LaTeX** en las declaraciones: `betta $\beta$ // discount factor`
+  (nombre de código + símbolo + comentario).
+- **Parámetros auxiliares** derivados de otros, en el preámbulo:
+  `kap = (eps-1)/varphi;`  `b = 1/(1+phi_ss);`.
+
+Núcleo NK canónico, tal como aparece en el código real:
+
+```dynare
+[name='Phillips curve']
+pi = kap*((sig+thet)*yg + alfa*(R+b*phi) + eps_m) + betta*pi(+1);
+[name='Euler / IS']
+R  = sig*(yg(+1)-yg) + (thet+1)/(sig+thet)*sig*(a(+1)-a) + pi(+1);
+[name='Taylor rule']
+R  = tau*pi + tau_g*yg + eps_R;        // tau > 1 (principio de Taylor)
+[name='Technology AR(1)']
+a  = rho_a*a(-1) - eta_a;              // un proceso por shock
+```
+
+- **Timing NK:** las forward (`pi(+1)`, `yg(+1)`) son *jump*; las predeterminadas
+  (`n(-1)`, `R(-1)`, `del(-1)`) son estado.
+- **Cierre típico:** `shocks; var eta_x; stderr ...; end;` y luego
+  `check; steady; stoch_simul(order=1, irf=...);`.
+
+> *Nota: el corpus completo (MMB, Pfeifer) se usa como referencia local; aquí se
+> destilan los PATRONES, no se copia el código (respeto de licencias y atribución).*
+
+---
+
 *Este archivo es un documento vivo — se actualizará con cada sesión de trabajo.*  
 *Última actualización: 2026-06-21*
