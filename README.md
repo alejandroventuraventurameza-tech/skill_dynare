@@ -27,6 +27,7 @@ dejen de memorizar modelos y empiecen a *jugar* con ellos.
 ## Demo y sitio
 
 - **Demo en vivo:** https://huggingface.co/spaces/resaca2014/dynare-translate
+- **Video demo (2–3 min):** https://youtu.be/Qrj2jqWcGP8
 - **Landing page:** `index.html` (publicable gratis en GitHub Pages).
 
 ## El problema
