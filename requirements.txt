@@ -1,0 +1,8 @@
+# Gradio sin fijar versión: Hugging Face instala su versión actual (compatible
+# con su entorno). openai cubre DeepSeek (API compatible con OpenAI).
+gradio
+openai>=1.40.0
+
+# OCR de la foto de pizarra: modelos PaddleOCR (PP-OCRv4) vía ONNX Runtime
+# (ligero, sin paddlepaddle). Requiere libgl1 (ver packages.txt).
+rapidocr-onnxruntime>=1.3.0

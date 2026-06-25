@@ -1,0 +1,385 @@
+% ============================================================
+%  MacroBuilt — Contenido del pitch (slide por slide)
+% ============================================================
+
+% ---------- 1 · PORTADA ----------
+{
+  \setbeamertemplate{headline}{}
+  \setbeamertemplate{footline}{}
+  \setbeamertemplate{navigation symbols}{}
+  \begin{frame}[plain]
+    \begin{tikzpicture}[remember picture, overlay]
+      % logo UP arriba a la derecha
+      \node[anchor=north east] at ([xshift=-18pt,yshift=-16pt]current page.north east)
+        {\includegraphics[height=40pt]{UP_logo.jpg}};
+      % logo MacroBuilt al centro
+      \node at ([yshift=24pt]current page.center)
+        {\includegraphics[width=0.66\paperwidth]{macrobuilt_logo.png}};
+      % founder
+      \node[anchor=north] at ([yshift=-30pt]current page.center)
+        {\parbox{0.9\paperwidth}{\centering
+          {\large\bfseries\color{mbNavy} Alejandro Ventura Meza}\\[1pt]
+          {\small\color{UWGrayL3} Solo founder · TA de Macro II y Macro Internacional, UP}}};
+      % URL del demo
+      \node[anchor=north, fill=mbPurple, rounded corners=4pt, inner sep=6pt]
+        at ([yshift=-78pt]current page.center)
+        {\color{white}\small\bfseries Demo en vivo:\; huggingface.co/spaces/resaca2014/dynare-translate};
+      % pie con el curso
+      \node[anchor=south] at ([yshift=18pt]current page.south)
+        {\parbox{0.9\paperwidth}{\centering\footnotesize\color{UWGrayL3}
+          Data Science con Python · Prof.\ Alexander Quispe \\
+          Proyecto final · formato YC (solo founder) · 2026}};
+    \end{tikzpicture}
+  \end{frame}
+}
+
+% ---------- 2 · ONE-LINER ----------
+{
+  \setbeamertemplate{headline}{}
+  \begin{frame}[plain]
+    \vfill
+    \begin{center}
+      \parbox{0.88\paperwidth}{\centering\LARGE\color{mbNavy}
+        \enquote{Llevamos los modelos DSGE \textbf{de la pizarra a un modelo que corre}
+        ---correcto, verificado y explicado--- para que los estudiantes de macro
+        dejen de \emph{memorizar} y empiecen a \emph{experimentar}.}}
+      \\[12pt]
+      {\large\color{UWGrayL3} MacroBuilt — tu laboratorio macroeconómico}
+    \end{center}
+    \vfill
+  \end{frame}
+}
+
+% ============================================================
+\section{Problema}
+% ============================================================
+
+% ---------- 3 · EL PROBLEMA ----------
+\begin{frame}{El problema: se memoriza, no se concreta}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \begin{itemize}
+        \item En macro de pregrado se \textbf{derivan} modelos en la pizarra\ldots
+              y ahí se quedan.
+        \item Concretarlos exige \textbf{Dynare}, que casi nadie domina.
+        \item El alumno no llega a \emph{experimentar} con el modelo que estudió.
+      \end{itemize}
+      \vspace{6pt}
+      \begin{block}{Dolor validado (encuesta, n=59)}
+        El \textbf{71\%} de los estudiantes de macro \textbf{nunca usó Dynare}.
+      \end{block}
+    \column{0.48\textwidth}
+      \begin{center}
+        \includegraphics[width=\columnwidth]{seg_nivel.png}\\
+        {\scriptsize\color{UWGrayL3} Nivel de experiencia con Dynare (n=59).}
+      \end{center}
+  \end{columns}
+\end{frame}
+
+% ---------- 4 · WHY NOW / INSIGHT ----------
+\begin{frame}{El insight: la IA genérica se equivoca y el alumno no lo nota}
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \begin{itemize}
+        \item La IA general produce Dynare \textbf{plausible pero incorrecto}.
+        \item El alumno no tiene cómo \textbf{verificar} si está bien.
+        \item \textbf{Why now:} LLMs baratos (DeepSeek) + OCR gratis (PaddleOCR)
+              hacen viable un laboratorio asistido y \emph{verificado}.
+      \end{itemize}
+      \vspace{6pt}
+      \begin{alertblock}{La brecha}
+        El \textbf{64\%} \textbf{no pudo verificar} si el código de la IA era correcto.
+      \end{alertblock}
+    \column{0.48\textwidth}
+      \begin{center}
+        \includegraphics[width=\columnwidth]{ia_corregir.png}\\
+        {\scriptsize\color{UWGrayL3} ¿Pudiste verificar el código de la IA? (n=59).}
+      \end{center}
+  \end{columns}
+\end{frame}
+
+% ============================================================
+\section{Solución}
+% ============================================================
+
+% ---------- 5 · LA SOLUCIÓN ----------
+\begin{frame}{La solución: MacroBuilt, tu laboratorio macroeconómico}
+  Traduce las ecuaciones que el alumno deriva a mano y las convierte en
+  \textbf{código Dynare correcto, verificado y explicado}.
+  \vspace{8pt}
+  \begin{columns}[T]
+    \column{0.5\textwidth}
+      \begin{block}{Traduce}
+        Ecuaciones $\rightarrow$ archivo \texttt{.mod} listo para correr.
+      \end{block}
+      \begin{exampleblock}{Verifica (sin LLM)}
+        Chequeo \textbf{determinista}: conteo, símbolos, \emph{timing}, Blanchard--Kahn.
+      \end{exampleblock}
+    \column{0.5\textwidth}
+      \begin{block}{Explica}
+        Comenta cada bloque y ecuación con la intuición económica.
+      \end{block}
+      \begin{block}{Foto de pizarra + Bootcamp}
+        OCR del manuscrito y un curso interactivo \textbf{autocorregido}.
+      \end{block}
+  \end{columns}
+\end{frame}
+
+% ---------- 6 · PRODUCTO Y ARQUITECTURA ----------
+\begin{frame}{Producto y arquitectura: el moat es el verificador}
+  \begin{center}
+    \includegraphics[width=0.96\textwidth]{arquitectura.png}
+  \end{center}
+  \vspace{2pt}
+  \begin{columns}[T]
+    \column{0.5\textwidth}
+      \begin{itemize}\small
+        \item \textbf{No es un wrapper de un LLM:} el verificador es propio,
+              estático y determinista.
+      \end{itemize}
+    \column{0.5\textwidth}
+      \begin{itemize}\small
+        \item Validado contra \textbf{185 modelos publicados del MMB} +
+              auto-reparación cuando halla errores.
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+% ============================================================
+\section{Demo}
+% ============================================================
+
+% ---------- 7 · DEMO EN VIVO ----------
+\begin{frame}{Demo en vivo \;(3--4 min — el corazón del pitch)}
+  \begin{columns}[T]
+    \column{0.46\textwidth}
+      \textbf{Recorrido:}
+      \begin{enumerate}\small
+        \item Pego las ecuaciones del RBC $\rightarrow$ \emph{Traducir}.
+        \item Muestro el \texttt{.mod}, el \textbf{\color{mbGreen}$\checkmark$ del verificador} y la explicación.
+        \item \textbf{Foto de pizarra} $\rightarrow$ OCR $\rightarrow$ traducir.
+        \item \textbf{Bootcamp} con progreso autocorregido.
+      \end{enumerate}
+      \vspace{4pt}
+      {\footnotesize\color{UWGrayL3} Plan B: video de respaldo abierto.}
+    \column{0.54\textwidth}
+      \begin{center}
+        \includegraphics[width=\columnwidth]{hoja_demo_rbc.png}\\[2pt]
+        {\scriptsize\color{UWGrayL3} Hoja de ecuaciones del RBC para la demo.}
+      \end{center}
+  \end{columns}
+  \vspace{4pt}
+  \begin{block}{}
+    \centering huggingface.co/spaces/\textbf{resaca2014}/dynare-translate
+  \end{block}
+\end{frame}
+
+% ============================================================
+\section{Mercado}
+% ============================================================
+
+% ---------- 8 · MERCADO ----------
+\begin{frame}{Mercado: la UP como beachhead (cifras oficiales)}
+  \begin{columns}[T]
+    \column{0.5\textwidth}
+      \begin{itemize}\small
+        \item \textbf{TAM:} Economía en LatAm hispano con macro avanzada
+              — cientos de miles. Perú $\approx$ 25--35k.
+        \item \textbf{SAM:} programas con Dynare en Lima — \textbf{UP + PUCP}.
+        \item \textbf{SOM (UP):} \textbf{1{,}605} matriculados de Economía;
+              $\sim$180--360 pasan por Dynare al año.
+      \end{itemize}
+    \column{0.5\textwidth}
+      \begin{exampleblock}{Ingreso institucional (beachhead)}
+        $\sim$\textbf{S/ 29k/año} solo UP \\
+        $\sim$\textbf{S/ 55--60k/año} con PUCP
+      \end{exampleblock}
+      {\scriptsize\color{UWGrayL3} Fuente: matrícula oficial UP 2025-II; SUNEDU/TUNI.PE.}
+  \end{columns}
+\end{frame}
+
+% ---------- 9 · MODELO DE NEGOCIO ----------
+\begin{frame}{Modelo de negocio: BYOK, margen $\sim$100\%}
+  El usuario \textbf{conecta su propia API key} (BYOK): costo variable $\approx$ US\$0.
+  Cobramos por la \textbf{experiencia}, no por el cómputo.
+  \vspace{6pt}
+  \begin{center}\footnotesize
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabular}{@{}>{\bfseries}l l p{0.5\textwidth}@{}}
+    \toprule
+    Plan & Precio & Incluye \\
+    \midrule
+    Free & S/ 0 & Verificador offline ilimitado · 10 traducciones/mes · 1 módulo \\
+    Estudiante Pro & S/ 19/mes & Traducciones ilimitadas · OCR · bootcamp · historial \\
+    Institucional & desde S/ 4{,}900/año & Toda la sección · panel del profesor · soporte \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{2pt}
+  {\footnotesize El motor es el \textbf{institucional}: el founder, como TA, vende
+  directo al departamento (1 decisión $\rightarrow$ decenas de alumnos).}
+\end{frame}
+
+% ============================================================
+\section{Competencia}
+% ============================================================
+
+% ---------- 10 · TABLA DE COMPETENCIA ----------
+\begin{frame}{Competencia: ocupamos el cuadrante vacío}
+  \begin{center}\scriptsize
+  \renewcommand{\arraystretch}{1.3}
+  \newcommand{\si}{\textcolor{mbGreen}{\textbf{Sí}}}
+  \newcommand{\nott}{\textcolor{spicy}{\textbf{No}}}
+  \newcommand{\mq}{\textcolor{carrot}{Parcial}}
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.3\textwidth} c c c >{\raggedright\arraybackslash}p{0.18\textwidth}@{}}
+    \toprule
+    \textbf{Alternativa} & \textbf{Pregrado} & \textbf{Verifica} & \textbf{Enseña} & \textbf{Costo} \\
+    \midrule
+    Repos de expertos (Pfeifer, MMB) & \nott & \mq & \nott & Gratis, difícil \\
+    IA genérica (ChatGPT/Claude) & \si & \nott & \mq & Barato \\
+    Foro de Dynare & \nott & \mq & \mq & Gratis, lento \\
+    Summer schools / cursos & \mq & \si & \si & Caro, posgrado \\
+    Hacerlo a mano & --- & \nott & \nott & \enquote{Gratis} \\
+    \midrule
+    \textcolor{mbPurple}{\textbf{MacroBuilt}} & \si & \si & \si & \textbf{Freemium / BYOK} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{4pt}
+  \begin{center}\small
+  El único \textbf{accesible + correcto + pedagógico} a la vez.
+  \end{center}
+\end{frame}
+
+% ---------- 11 · MOAT ----------
+\begin{frame}{Moat: por qué es difícil de copiar}
+  \begin{columns}[T]
+    \column{0.5\textwidth}
+      \begin{block}{1. Verificador + corpus real}
+        Chequeo determinista propio, validado vs.\ \textbf{185 modelos del MMB}.
+      \end{block}
+      \begin{block}{2. Founder--market fit}
+        Founder = TA de los cursos exactos $\rightarrow$ \textbf{canal institucional} directo.
+      \end{block}
+    \column{0.5\textwidth}
+      \begin{block}{3. Efectos de red}
+        Bootcamp + comunidad de macroeconomistas que programan.
+      \end{block}
+      \begin{block}{4. Datos propios}
+        Sabemos \emph{dónde se traban} los alumnos $\rightarrow$ mejora producto y currículo.
+      \end{block}
+  \end{columns}
+\end{frame}
+
+% ============================================================
+\section{Tracción}
+% ============================================================
+
+% ---------- 12 · TRACCIÓN ----------
+\begin{frame}{Tracción y validación}
+  \begin{columns}[T]
+    \column{0.5\textwidth}
+      \begin{itemize}
+        \item \textbf{Encuesta n=59}: dolor y demanda confirmados.
+        \item \textbf{86\%} de los no-usuarios \textbf{usaría} la herramienta.
+        \item Producto \textbf{desplegado y vivo} (HF Spaces, 4 pestañas).
+        \item Entrevistas cualitativas + pruebas en vivo con usuarios reales.
+      \end{itemize}
+    \column{0.5\textwidth}
+      \begin{center}
+        \includegraphics[width=\columnwidth]{demanda_usaria.png}\\
+        {\scriptsize\color{UWGrayL3} Intención de uso entre no-usuarios (n=59).}
+      \end{center}
+  \end{columns}
+\end{frame}
+
+% ---------- 13 · FOUNDER ----------
+\begin{frame}{Founder: por qué yo}
+  \begin{columns}[T]
+    \column{0.32\textwidth}
+      \begin{center}
+        \includegraphics[width=\columnwidth]{founder_avatar.png}\\[3pt]
+        {\small\bfseries\color{mbNavy} Alejandro Ventura Meza}\\
+        {\scriptsize\color{UWGrayL3} Economía, UP · 21 años}
+      \end{center}
+    \column{0.68\textwidth}
+      \begin{itemize}\small
+        \item \textbf{Vivo el problema:} TA de Macro II y Macro Internacional (UP).
+        \item \textbf{Acceso al cliente:} las aulas de macro son mi canal de
+              validación y go-to-market.
+        \item \textbf{Criterio técnico:} RA en macro; sé cómo debe verse un buen
+              \texttt{.mod} y dónde fallan las IAs.
+        \item \textbf{Solo founder + agentes de IA} como co-CTO: velocidad de iteración.
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+% ============================================================
+\section{Visión}
+% ============================================================
+
+% ---------- 14 · ROADMAP ----------
+\begin{frame}{Roadmap}
+  \begin{enumerate}
+    \item \textbf{Hoy:} traductor + verificador + OCR + bootcamp, desplegado y validado.
+    \item \textbf{Bootcamp profesional:} videos de profesores, evaluaciones, proyecto final.
+    \item \textbf{Comunidad} de macroeconomistas que programan (contenido de profes y alumnos).
+    \item \textbf{Más allá de Dynare:} Python y R para macro aplicada.
+  \end{enumerate}
+  \vspace{6pt}
+  \begin{block}{La visión}
+    Cambiar \emph{cómo se aprende macro}: del pizarrón al laboratorio.
+  \end{block}
+\end{frame}
+
+% ---------- 15 · THE ASK ----------
+\begin{frame}{The ask}
+  \begin{block}{Pedimos}
+    Un \textbf{piloto de 1 semestre} con el Depto.\ de Economía de la UP
+    ($\sim$6 secciones de Macro II y Macro Internacional) + un semilla de
+    \textbf{$\sim$S/ 3{,}000} (hosting + producir las primeras lecciones del bootcamp).
+  \end{block}
+  {\footnotesize Capital mínimo \emph{a propósito}: BYOK ($\approx$US\$0/usuario),
+   verificador local gratis, hosting gratis, open source. \textbf{Lo valioso es el acceso, no el cheque.}}
+  \vspace{4pt}
+  \begin{exampleblock}{Milestone que desbloquea}
+    \begin{itemize}\small
+      \item \textbf{300+} estudiantes activos en la UP.
+      \item \textbf{Primer contrato institucional} firmado (licencia por sección).
+      \item Caso de éxito documentado $\rightarrow$ replicar en \textbf{PUCP} (Fase 2).
+    \end{itemize}
+  \end{exampleblock}
+  \centering\small De \enquote{demo validado} a \textbf{ingreso recurrente institucional}.
+\end{frame}
+
+% ---------- 16 · CIERRE ----------
+{
+  \setbeamertemplate{headline}{}
+  \setbeamertemplate{footline}{}
+  \begin{frame}[plain]
+    \begin{tikzpicture}[remember picture, overlay]
+      \node at ([yshift=30pt]current page.center)
+        {\includegraphics[width=0.6\paperwidth]{macrobuilt_logo.png}};
+      \node[anchor=north] at ([yshift=-26pt]current page.center)
+        {\parbox{0.9\paperwidth}{\centering\large\color{mbNavy}
+          \textbf{Gracias.} ¿Probamos el demo en vivo?}};
+      \node[anchor=north, fill=mbPurple, rounded corners=4pt, inner sep=6pt]
+        at ([yshift=-66pt]current page.center)
+        {\color{white}\small\bfseries huggingface.co/spaces/resaca2014/dynare-translate};
+      \node[anchor=south] at ([yshift=16pt]current page.south)
+        {\footnotesize\color{UWGrayL3} Alejandro Ventura Meza · Universidad del Pacífico · 2026};
+    \end{tikzpicture}
+  \end{frame}
+}
+
+% ---------- 17 · FUENTES (anexo) ----------
+\begin{frame}{Fuentes}
+  \footnotesize
+  \begin{itemize}
+    \item Encuesta propia de validación (n=59), 2026.
+    \item Matrícula oficial UP 2025-II (Economía pregrado = 1{,}605).
+    \item SUNEDU — TUNI.PE; INEI (universitarios en Perú).
+    \item Macromodelbase (MMB): 185 modelos publicados usados para validar el verificador.
+    \item Galí (2008); Pfeifer, \emph{DSGE\_mod}; manual oficial de Dynare.
+  \end{itemize}
+\end{frame}

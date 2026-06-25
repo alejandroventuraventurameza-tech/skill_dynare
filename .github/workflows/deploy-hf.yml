@@ -1,0 +1,42 @@
+name: Deploy to Hugging Face Space
+
+# Despliega el repo al Space de Hugging Face en cada push (y manualmente).
+on:
+  push:
+    branches: [main, first_branch]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (historia completa)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push una instantánea limpia al Space de Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: ${{ vars.HF_USERNAME }}
+          HF_SPACE_NAME: ${{ vars.HF_SPACE_NAME }}
+        run: |
+          if [ -z "$HF_TOKEN" ] || [ -z "$HF_USERNAME" ] || [ -z "$HF_SPACE_NAME" ]; then
+            echo "Faltan HF_TOKEN (secret) y/o HF_USERNAME / HF_SPACE_NAME (variables)."
+            exit 1
+          fi
+          # Excluir del Space los archivos que no debe servir (binarios pesados / PII):
+          # cualquier PDF y los datos crudos de la encuesta.
+          find . -maxdepth 6 -name '*.pdf' -delete || true
+          rm -f docs/research/data/*.csv docs/research/data/*.xlsx docs/research/data/*.xls || true
+
+          # Instantánea SIN historial (orphan) con solo los archivos actuales.
+          git config user.email "deploy@github-actions"
+          git config user.name "github-actions"
+          git checkout --orphan hf-deploy
+          git add -A
+          git commit -m "Deploy snapshot desde GitHub"
+
+          git push --force \
+            "https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME" \
+            hf-deploy:main

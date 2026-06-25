@@ -1,0 +1,124 @@
+% ============================================================
+%  MacroBuilt — Preámbulo del pitch deck
+%  Adaptado del tema Beamer UP (Macroeconomics II TA template).
+%  Compilar con XeLaTeX (fontspec).
+% ============================================================
+\usepackage{fontspec}
+\usepackage[spanish,es-noindentfirst]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{csquotes}
+\usepackage{tikz,etoolbox}
+\usetikzlibrary{shapes,arrows,positioning}
+
+% Dónde buscar imágenes
+\graphicspath{{template_beamer/}{../assets/}{../docs/research/figuras/}}
+
+% ---------- Paleta del tema UP (heredada) ----------
+\definecolor{UWBlack}{HTML}{000000}
+\definecolor{UWWhite}{HTML}{FFFFFF}
+\definecolor{UWGrayL1}{HTML}{DFDFDF}
+\definecolor{UWGrayL2}{HTML}{A2A2A2}
+\definecolor{UWGrayL3}{HTML}{787878}
+\definecolor{UWGrayL4}{HTML}{000000}
+\definecolor{UWGoldL3}{HTML}{FFD54F}
+\definecolor{carrot}{HTML}{EE693F}
+\definecolor{ivory}{HTML}{F1F3CE}
+\definecolor{emerald}{HTML}{265C00}
+\definecolor{turquise}{HTML}{5BC8AC}
+\definecolor{peacockblue}{HTML}{1E656D}
+\definecolor{spicy}{HTML}{B51D0A}
+\definecolor{bluegreen}{HTML}{5F968E}
+
+% ---------- Branding MacroBuilt ----------
+\definecolor{mbPurple}{HTML}{5B4EE5}
+\definecolor{mbNavy}{HTML}{1B1F3B}
+\definecolor{mbText}{HTML}{2A2A2A}
+\definecolor{mbGreen}{HTML}{1E8A4C}
+
+% ---------- Colores de los componentes ----------
+\setbeamercolor{background canvas}{bg=UWWhite}
+\setbeamercolor{normal text}{fg=mbText}
+\setbeamercolor{title}{fg=mbNavy}
+\setbeamercolor{author}{fg=UWGoldL3}
+\setbeamercolor{institute}{fg=mbPurple}
+\setbeamercolor{section in head/foot}{bg=UWBlack, fg=UWGoldL3}
+\setbeamercolor{author in head/foot}{fg=UWGoldL3, bg=UWBlack}
+\setbeamercolor{title in head/foot}{fg=UWBlack, bg=UWGoldL3}
+\setbeamercolor{institute in head/foot}{fg=UWGoldL3, bg=UWBlack}
+\setbeamercolor{navigation symbols}{fg=UWBlack}
+\setbeamercolor{section in toc}{fg=mbNavy}
+\setbeamercolor{frametitle}{fg=mbPurple, bg=UWGrayL1}
+\setbeamercolor{itemize item}{fg=mbPurple}
+
+% Bloques
+\setbeamercolor{block title}{bg=mbPurple, fg=UWWhite}
+\setbeamercolor{block body}{bg=mbPurple!8, fg=mbText}
+\setbeamercolor{block title example}{bg=mbGreen, fg=UWWhite}
+\setbeamercolor{block body example}{bg=mbGreen!10, fg=mbText}
+\setbeamercolor{block title alerted}{bg=spicy, fg=UWWhite}
+\setbeamercolor{block body alerted}{bg=spicy!10, fg=mbText}
+
+% ---------- Fuentes ----------
+\setbeamerfont{frametitle}{series=\bfseries}
+\setbeamerfont{title}{series=\bfseries}
+
+\newcommand\course[1]{\def\insertcourse{#1}}
+\newcommand\class[1]{\def\insertclass{#1}}
+
+% Comando de cifra ancla (número grande + glosa)
+\newcommand{\stat}[2]{%
+  {\color{mbPurple}\fontsize{52}{56}\selectfont\bfseries #1}\[2pt]%
+  {\large #2}%
+}
+
+% ---------- Cabecera (navegación por secciones) ----------
+\setbeamertemplate{headline}{%
+  \begin{beamercolorbox}{section in head/foot}
+    \vskip4pt\bfseries
+    \insertnavigation{\paperwidth}
+    \vskip2pt
+  \end{beamercolorbox}%
+}
+\renewcommand*{\slideentry}[6]{}
+
+% ---------- Pie de página ----------
+\setbeamertemplate{footline}{%
+  \leavevmode
+  \begin{beamercolorbox}[wd=.34\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm,rightskip=.3cm plus1fil]{author in head/foot}
+    \usebeamerfont{author in head/foot}\insertshortauthor
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.32\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm,rightskip=.3cm plus1fil,center]{title in head/foot}
+    {\usebeamerfont{title in head/foot}\insertshorttitle}
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.34\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm,rightskip=.3cm plus1fil]{institute in head/foot}
+    \hfill{\usebeamercolor[fg]{institute in head/foot}\insertshortinstitute}
+  \end{beamercolorbox}%
+}
+
+\setbeamertemplate{navigation symbols}{\bfseries\color{UWGrayL2}\insertframenumber/\inserttotalframenumber}
+\setbeamertemplate{sections/subsections in toc}[ball]
+
+% Viñetas tipo "ladrillo" (heredadas del tema)
+\setbeamertemplate{itemize item}{%
+  \tikz{\draw[fill=mbPurple,draw=none](0,0)rectangle(0.075,0.075);
+        \draw[fill=mbPurple,draw=none](0.075,0.075)rectangle(0.15,0.15);
+        \draw[fill=mbPurple,draw=none](0,0.15)rectangle(0.075,0.225);}}
+\setbeamertemplate{itemize subitem}{%
+  \tikz{\draw[fill=carrot,draw=none](0,0)rectangle(0.05,0.05);
+        \draw[fill=carrot,draw=none](0.05,0.05)rectangle(0.1,0.1);
+        \draw[fill=carrot,draw=none](0,0.1)rectangle(0.05,0.15);}}
+
+\setbeamertemplate{blocks}[rounded][shadow=false]
+\setbeamercovered{transparent}
+\usefonttheme[onlymath]{serif}
+
+% ---------- Metadatos ----------
+\title[MacroBuilt]{MacroBuilt — Tu laboratorio macroeconómico}
+\author[A. Ventura Meza]{Alejandro Ventura Meza}
+\institute[Universidad del Pacífico]{Universidad del Pacífico}
+\course{Data Science con Python · Prof. Alexander Quispe}
+\class{Proyecto final · formato YC (solo founder) · 2026}

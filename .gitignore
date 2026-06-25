@@ -1,0 +1,39 @@
+# Entorno
+.env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Dynare / MATLAB artefactos generados
+*.log
++*/
+*_results.mat
+*.jnl
+
+# Datos crudos de la encuesta con PII (correos) — NUNCA publicar
+docs/research/data/*.csv
+docs/research/data/*.xlsx
+docs/research/data/*.xls
+
+# Corpus externo de referencia (MMB) — pesado y con licencias propias: NO publicar
+mmb-rep-master/
+
+# preview temporal
+_preview_*
+
+# LaTeX / Beamer — artefactos de compilación (el .pdf y los .tex sí se versionan)
+*.aux
+*.nav
+*.snm
+*.toc
+*.out
+*.vrb
+*.synctex.gz
+*.fls
+*.fdb_latexmk

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MacroBuilt — Tu laboratorio macroeconómico</title>
+<meta name="description" content="MacroBuilt convierte tus ecuaciones de macro en código Dynare correcto, verificado y explicado. De la pizarra a un modelo que corre.">
+<link rel="icon" href="assets/macrobuilt_icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--indigo:#4f46e5;--blue:#3b82f6;--ink:#0f172a;--slate:#475569;--mut:#64748b;--bg:#f8fafc;--line:#e2e8f0;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  .btn{display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:11px 18px;font-weight:600;font-size:15px;cursor:pointer;border:1px solid transparent;transition:.15s}
+  .btn-primary{background:var(--indigo);color:#fff}
+  .btn-primary:hover{background:#4338ca}
+  .btn-ghost{background:#fff;color:var(--ink);border-color:var(--line)}
+  .btn-ghost:hover{border-color:#cbd5e1}
+  .btn-white{background:#fff;color:var(--indigo)}
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px}
+  .navlinks{display:flex;align-items:center;gap:26px;font-size:15px;color:var(--slate)}
+  .navlinks a:hover{color:var(--ink)}
+  .navcta{display:flex;align-items:center;gap:10px}
+  @media(max-width:780px){.navlinks{display:none}}
+  /* hero */
+  .hero{background:linear-gradient(120deg,#4f46e5 0%,#3b82f6 100%);color:#fff;padding:84px 0 92px;position:relative;overflow:hidden}
+  .hero h1{font-size:46px;font-weight:800;letter-spacing:-1px;line-height:1.1;max-width:720px}
+  .hero p.sub{font-size:19px;opacity:.95;margin-top:18px;max-width:620px}
+  .hero .chips{margin-top:26px;display:flex;gap:10px;flex-wrap:wrap}
+  .chip{background:rgba(255,255,255,.16);border-radius:999px;padding:7px 14px;font-size:13.5px;font-weight:500}
+  .hero .cta{margin-top:32px;display:flex;gap:12px;flex-wrap:wrap}
+  /* sections */
+  section.block{padding:80px 0}
+  .eyebrow{color:var(--indigo);font-weight:700;font-size:14px;letter-spacing:.4px;text-transform:uppercase}
+  h2{font-size:34px;font-weight:800;letter-spacing:-.5px;margin-top:8px}
+  .lead{color:var(--slate);font-size:18px;margin-top:14px;max-width:680px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:40px}
+  @media(max-width:780px){.grid3{grid-template-columns:1fr}.hero h1{font-size:34px}}
+  .card{border:1px solid var(--line);border-radius:18px;padding:26px;background:#fff;transition:.15s}
+  .card:hover{box-shadow:0 12px 30px rgba(15,23,42,.07);transform:translateY(-2px)}
+  .stat{font-size:44px;font-weight:800;color:var(--indigo);line-height:1}
+  .stat-l{color:var(--slate);margin-top:8px;font-size:15px}
+  .step-n{width:38px;height:38px;border-radius:11px;background:#eef2ff;color:var(--indigo);font-weight:800;display:flex;align-items:center;justify-content:center}
+  .card h3{font-size:18px;margin:14px 0 6px}
+  .card p{color:var(--slate);font-size:15px}
+  .alt{background:var(--bg)}
+  /* pricing */
+  .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:40px}
+  @media(max-width:780px){.price-grid{grid-template-columns:1fr}}
+  .plan{border:1px solid var(--line);border-radius:18px;padding:28px;background:#fff;display:flex;flex-direction:column}
+  .plan.featured{border:2px solid var(--indigo);box-shadow:0 12px 34px rgba(79,70,229,.14)}
+  .plan .pname{font-weight:700;font-size:17px}
+  .plan .pprice{font-size:30px;font-weight:800;margin:10px 0}
+  .plan ul{list-style:none;margin:14px 0 22px;color:var(--slate);font-size:14.5px}
+  .plan li{padding:6px 0 6px 24px;position:relative}
+  .plan li:before{content:"✓";position:absolute;left:0;color:var(--indigo);font-weight:800}
+  .tag{display:inline-block;background:#eef2ff;color:var(--indigo);font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;margin-bottom:8px}
+  /* founder */
+  .founder{display:flex;gap:30px;align-items:center;margin-top:36px;flex-wrap:wrap}
+  .founder img{width:140px;height:140px;border-radius:50%;border:4px solid #eef2ff}
+  .founder .bio{flex:1;min-width:280px}
+  .founder .bio p{color:var(--slate);font-size:16px;margin-top:8px}
+  /* footer */
+  footer{background:var(--ink);color:#cbd5e1;padding:46px 0;font-size:14.5px}
+  footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+  footer a{color:#e2e8f0;text-decoration:underline}
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+  .overlay.open{display:flex}
+  .modal{background:#fff;border-radius:20px;max-width:400px;width:100%;padding:30px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.3)}
+  .modal h3{font-size:22px}
+  .modal p{color:var(--mut);font-size:14.5px;margin-top:6px}
+  .modal input{width:100%;border:1px solid var(--line);border-radius:11px;padding:12px;margin-top:16px;font-size:15px;font-family:inherit}
+  .modal .btn{width:100%;justify-content:center;margin-top:12px}
+  .modal .x{float:right;cursor:pointer;color:var(--mut);font-size:22px;line-height:1;margin:-10px -6px 0 0}
+  .modal .note{margin-top:14px;font-size:12.5px;color:var(--mut)}
+  .flask{width:30px;height:30px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#top">
+      <svg class="flask" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="url(#g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs><path d="M26 16 H38 M29 16 V27 L18.5 47.5 A3 3 0 0 0 21 52 H43 A3 3 0 0 0 45.5 47.5 L35 27 V16" fill="rgba(255,255,255,.15)" stroke="#fff" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><rect x="24" y="42" width="4" height="6" rx="1" fill="#fff"/><rect x="30" y="38" width="4" height="10" rx="1" fill="#fff"/><rect x="36" y="34" width="4" height="14" rx="1" fill="#fde68a"/></svg>
+      MacroBuilt
+    </a>
+    <div class="navlinks">
+      <a href="#problema">El problema</a>
+      <a href="#como">Cómo funciona</a>
+      <a href="#bootcamp">Bootcamp</a>
+      <a href="#precios">Precios</a>
+    </div>
+    <div class="navcta">
+      <button class="btn btn-ghost" onclick="openLogin()">Iniciar sesión</button>
+      <a class="btn btn-primary" href="https://huggingface.co/spaces/resaca2014/dynare-translate" target="_blank">Probar gratis</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <h1>Tu laboratorio macroeconómico</h1>
+    <p class="sub">MacroBuilt convierte las ecuaciones que ves en la pizarra en código <b>Dynare</b> correcto, verificado y explicado paso a paso. De la teoría a un modelo que corre.</p>
+    <div class="chips">
+      <span class="chip">✍️ Pega tus ecuaciones</span>
+      <span class="chip">📷 Foto de pizarra</span>
+      <span class="chip">🎓 Bootcamp interactivo</span>
+      <span class="chip">✅ Verificación instantánea</span>
+    </div>
+    <div class="cta">
+      <a class="btn btn-white" href="https://huggingface.co/spaces/resaca2014/dynare-translate" target="_blank">Probar el demo →</a>
+      <button class="btn btn-ghost" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.4)" onclick="document.getElementById('como').scrollIntoView({behavior:'smooth'})">Ver cómo funciona</button>
+    </div>
+  </div>
+</header>
+
+<section class="block" id="problema">
+  <div class="wrap">
+    <div class="eyebrow">El problema</div>
+    <h2>Programar modelos DSGE es doloroso para un estudiante</h2>
+    <p class="lead">Lo validamos con una encuesta a 59 estudiantes de macroeconomía de la UP. Los números hablan solos.</p>
+    <div class="grid3">
+      <div class="card"><div class="stat">71%</div><div class="stat-l">nunca ha usado Dynare, pese a ser estudiantes de macro.</div></div>
+      <div class="card"><div class="stat">64%</div><div class="stat-l">de quienes usaron IA no pudieron verificar si el código estaba bien.</div></div>
+      <div class="card"><div class="stat">86%</div><div class="stat-l">usaría una herramienta que les enseñe a programar sus modelos.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="block alt" id="como">
+  <div class="wrap">
+    <div class="eyebrow">Cómo funciona</div>
+    <h2>De la pizarra a un .mod que corre, en tres pasos</h2>
+    <div class="grid3">
+      <div class="card"><div class="step-n">1</div><h3>Pega o fotografía</h3><p>Escribe tus FONCs o sube una foto de la pizarra. El OCR (PaddleOCR) las lee y las deja listas para revisar.</p></div>
+      <div class="card"><div class="step-n">2</div><h3>Traduce y verifica</h3><p>Generamos el código Dynare y un verificador determinista comprueba ecuaciones, timing y Blanchard-Kahn al instante.</p></div>
+      <div class="card"><div class="step-n">3</div><h3>Entiende</h3><p>Cada bloque viene explicado para que el modelo no sea una caja negra: aprendes mientras construyes.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="bootcamp">
+  <div class="wrap">
+    <div class="eyebrow">Bootcamp</div>
+    <h2>Aprende Dynare jugando, no memorizando</h2>
+    <p class="lead">Un mini-curso interactivo donde resuelves ejercicios reales y el verificador te corrige al instante. Avanzas por fases: completa una lección para desbloquear la siguiente. La visión: una comunidad de macroeconomistas que programan.</p>
+  </div>
+</section>
+
+<section class="block alt" id="precios">
+  <div class="wrap">
+    <div class="eyebrow">Precios</div>
+    <h2>Empieza gratis</h2>
+    <p class="lead">Tú conectas tu propia clave de API (BYOK): pagas por la experiencia, no por el cómputo.</p>
+    <div class="price-grid">
+      <div class="plan"><div class="pname">Free</div><div class="pprice">S/ 0</div><ul><li>Verificador offline ilimitado</li><li>10 traducciones/mes (con tu key)</li><li>1 módulo del bootcamp</li></ul><a class="btn btn-ghost" href="https://huggingface.co/spaces/resaca2014/dynare-translate" target="_blank">Empezar</a></div>
+      <div class="plan featured"><span class="tag">Más popular</span><div class="pname">Estudiante Pro</div><div class="pprice">S/ 19<span style="font-size:15px;color:var(--mut)">/mes</span></div><ul><li>Traducciones ilimitadas</li><li>OCR de pizarra</li><li>Bootcamp completo</li><li>Historial y exportar .mod</li></ul><button class="btn btn-primary" onclick="openLogin()">Probar Pro</button></div>
+      <div class="plan"><div class="pname">Institucional</div><div class="pprice">A medida</div><ul><li>Acceso para todo el curso</li><li>Panel del profesor</li><li>Onboarding y soporte</li></ul><button class="btn btn-ghost" onclick="openLogin()">Contactar</button></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="founder">
+  <div class="wrap">
+    <div class="eyebrow">Founder</div>
+    <h2>Hecho por quien vive el problema</h2>
+    <div class="founder">
+      <img src="assets/founder_avatar.png" alt="Alejandro Ventura Meza">
+      <div class="bio">
+        <b style="font-size:18px">Alejandro Ventura Meza</b>
+        <p>Estudiante de Economía (UP) y TA de Macroeconomía II y Macroeconomía Internacional. Como asistente de docencia veo a diario que los alumnos sienten rechazo por la macro cuando se queda en "derivar" sin concretar. MacroBuilt nace para que el estudiante se sienta, como un físico o un químico, en su laboratorio.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>© 2026 <b>MacroBuilt</b> · Tu laboratorio macroeconómico</div>
+    <div>Demo: <a href="https://huggingface.co/spaces/resaca2014/dynare-translate" target="_blank">app en Hugging Face</a> · Código abierto en GitHub</div>
+  </div>
+</footer>
+
+<!-- Login modal -->
+<div class="overlay" id="loginOverlay">
+  <div class="modal">
+    <span class="x" onclick="closeLogin()">&times;</span>
+    <h3>Entra a MacroBuilt</h3>
+    <p>Tu laboratorio macroeconómico te espera.</p>
+    <input type="email" placeholder="tu.correo@alum.up.edu.pe" id="loginEmail">
+    <button class="btn btn-primary" onclick="fakeLogin()">Continuar con correo</button>
+    <button class="btn btn-ghost" onclick="fakeLogin()">Continuar con Google</button>
+    <div class="note">Beta — acceso por invitación. El registro completo llegará pronto.</div>
+  </div>
+</div>
+
+<script>
+  function openLogin(){document.getElementById('loginOverlay').classList.add('open')}
+  function closeLogin(){document.getElementById('loginOverlay').classList.remove('open')}
+  function fakeLogin(){alert('¡Gracias por tu interés! El acceso con cuenta está en camino. Por ahora, prueba el demo gratis.');closeLogin();window.open('https://huggingface.co/spaces/resaca2014/dynare-translate','_blank')}
+  document.getElementById('loginOverlay').addEventListener('click',function(e){if(e.target===this)closeLogin()});
+</script>
+</body>
+</html>
