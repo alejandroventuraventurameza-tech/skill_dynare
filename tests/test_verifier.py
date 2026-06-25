@@ -170,6 +170,47 @@ def test_duplicate_declaration():
     assert any("duplicada" in e for e in r.errors)
 
 
+def test_variable_with_trailing_digit_is_used():
+    # Regresión: nombres con dígito final (X1, X2 — típicos de sumas recursivas
+    # Calvo) no deben partirse en `X` al stripear números. Antes el verificador
+    # los reportaba como "no usados" e inventaba un símbolo fantasma `X`.
+    model = r"""
+    var X1 X2 p_star Pi;
+    varexo e;
+    parameters beta phi epsilon;
+    beta = 0.99; phi = 0.75; epsilon = 11;
+    model;
+    p_star = (epsilon/(epsilon-1))*X1/X2;
+    X1 = 1 + beta*phi*Pi(+1)^epsilon*X1(+1);
+    X2 = 1 + beta*phi*Pi(+1)^(epsilon-1)*X2(+1);
+    1 = (1-phi)*p_star^(1-epsilon) + phi*Pi^(epsilon-1) + e;
+    end;
+    """
+    r = analyze(model)
+    assert r.ok, f"Esperaba sin errores, pero hubo: {r.errors}"
+    # No debe aparecer un símbolo fantasma 'X' ni X1/X2 como no usadas.
+    joined = " ".join(r.errors)
+    assert "X1" not in joined and "X2" not in joined
+
+
+def test_steady_state_operator_recognized():
+    # Regresión: el operador nativo steady_state(...) (y STEADY_STATE) no debe
+    # reportarse como símbolo no declarado.
+    for op in ("steady_state", "STEADY_STATE"):
+        model = f"""
+        var G x;
+        varexo e;
+        parameters rho;
+        rho = 0.9;
+        model;
+        log(G) = (1-rho)*log({op}(G)) + rho*log(G(-1)) + e;
+        x = G;
+        end;
+        """
+        r = analyze(model)
+        assert r.ok, f"{op}: esperaba sin errores, pero hubo: {r.errors}"
+
+
 if __name__ == "__main__":
     # Runner mínimo sin pytest
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]

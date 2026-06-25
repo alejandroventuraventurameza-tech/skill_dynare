@@ -51,8 +51,11 @@ DYNARE_FUNCTIONS: Set[str] = {
 }
 
 # Palabras reservadas / operadores de Dynare que pueden aparecer en el modelo.
+# Dynare acepta los operadores tanto en mayúsculas como en minúsculas
+# (p. ej. STEADY_STATE(x) y steady_state(x)), por eso se listan ambas formas.
 DYNARE_KEYWORDS: Set[str] = {
     "STEADY_STATE", "EXPECTATION", "diff", "adl",
+    "steady_state", "expectation",
 }
 
 # Tokens que, si aparecen, indican un comando de simulación/estimación.
@@ -65,7 +68,9 @@ SIMULATION_COMMANDS: Tuple[str, ...] = (
 _IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 # Literales numéricos (incluida notación científica): se eliminan antes de
 # extraer identificadores, para no confundir el "e" de "1e-3" con una variable.
-_NUMBER = re.compile(r"(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?")
+# El lookbehind evita borrar el dígito final de un identificador (p. ej. el "1"
+# de `Xh1` o `X2`), que NO es un número sino parte del nombre de la variable.
+_NUMBER = re.compile(r"(?<![A-Za-z0-9_])(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?")
 # Patrón de temporalidad: Ident(+1), C(-1), A(-2), ...
 _TIMING = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\s*\(\s*([+-]?\d+)\s*\)")
 
