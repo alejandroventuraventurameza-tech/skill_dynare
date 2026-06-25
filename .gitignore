@@ -23,3 +23,17 @@ docs/research/data/*.xls
 
 # Corpus externo de referencia (MMB) — pesado y con licencias propias: NO publicar
 mmb-rep-master/
+
+# preview temporal
+_preview_*
+
+# LaTeX / Beamer — artefactos de compilación (el .pdf y los .tex sí se versionan)
+*.aux
+*.nav
+*.snm
+*.toc
+*.out
+*.vrb
+*.synctex.gz
+*.fls
+*.fdb_latexmk
