@@ -1283,6 +1283,87 @@ nulas, confirmando el resultado analítico de la \S\ref{sec:policy}.}
 \label{fig:hours}
 \end{figure}
 
+\section{Depuración: los errores que vas a cometer}
+\label{sec:debug}
+
+Cuando se codea en vivo, el modelo \emph{se rompe}. Es parte del aprendizaje:
+leer el mensaje de error y saber a qué pieza del modelo apunta. Esta sección
+cataloga los tropiezos más frecuentes ---síntoma, causa y arreglo
+(Tabla~\ref{tab:errores})--- y se detiene en el más instructivo: romper el
+\emph{timing}.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{p{4.5cm}p{4.2cm}p{4.2cm}}
+\toprule
+\textbf{Mensaje de Dynare} & \textbf{Causa} & \textbf{Arreglo} \\
+\midrule
+\texttt{syntax error, unexpected \ldots} en una línea que se ve bien &
+Falta un \code{;} en la línea \emph{anterior} &
+El \emph{parser} reporta el error en la línea siguiente; revisa la de arriba. \\[2pt]
+\texttt{The model doesn't have the same number of equations and endogenous variables} &
+Conteo: \#ecuaciones $\neq$ \#variables en \code{var} &
+Cuenta a mano; suele faltar (o sobrar) una ecuación. \\[2pt]
+\texttt{Impossible to find the steady state} &
+El \lstinline@steady_state_model@ está mal, o el \code{initval} es pobre &
+Corre \lstinline@resid(non_zero)@ para ver qué ecuación no cierra; revisa el álgebra. \\[2pt]
+\texttt{Blanchard \& Kahn conditions are not satisfied: indeterminacy} &
+Casi siempre, \emph{timing} incorrecto de una variable de estado &
+Revisa cada \code{(-1)} y \code{(+1)}; corre \lstinline@model_diagnostics@. \\[2pt]
+\texttt{Warning: Parameter(s) \ldots not used in the model} &
+Un parámetro declarado no aparece en el bloque \code{model} &
+\emph{Advertencia}, no error: inofensiva si es deliberado (ver abajo). \\
+\bottomrule
+\end{tabular}
+\caption{Errores frecuentes al escribir un \code{.mod}.}
+\label{tab:errores}
+\end{table}
+
+\paragraph{Advertencias vs.\ errores.} Conviene distinguir: un \textbf{error}
+detiene a Dynare; una \textbf{advertencia} (\emph{warning}) no. Nuestro propio
+\code{.mod} emite una advertencia benigna ---\texttt{Parameter(s) sigma\_eps not
+used}--- porque \code{sigma\_eps} escala el choque dentro de la ecuación de la
+TFP y Dynare, al escanear el bloque \code{model}, no la ``ve'' como un uso
+directo. El modelo corre y los momentos son correctos. No toda advertencia es un
+problema; conviene leerlas, pero no todas exigen acción.
+
+\paragraph{El error más instructivo: romper el \emph{timing}.} El timing no es un
+tecnicismo: determina qué variables son predeterminadas y, por tanto, el conteo
+de Blanchard--Kahn (\S\ref{sec:bk}). Supongamos que, por descuido, escribimos la
+ley de movimiento del capital adelantada,
+
+\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
+// INCORRECTO: el capital deja de ser predeterminado
+k(+1) = (1 - delta)*k(-1) + i;
+\end{lstlisting}
+
+\noindent En vez de \lstinline@k = (1-delta)*k(-1) + i@. Ahora el capital aparece
+con adelanto, deja de ser un estado predeterminado y pasa a contarse como
+\emph{jumper}. El número de valores propios inestables ya no coincide con el de
+controles, y \code{check} se detiene:
+
+\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
+Blanchard & Kahn conditions are not satisfied: indeterminacy.
+\end{lstlisting}
+
+\begin{remark}
+Este es el valor de haber derivado la condición de Blanchard--Kahn a mano
+(\S\ref{sec:bk}): cuando \code{check} falla, uno sabe \emph{qué} buscar. El
+primer sospechoso es siempre el timing ---un \code{(-1)} o un \code{(+1)} fuera
+de lugar--- porque altera el conteo de estados y controles. El comando
+\lstinline@model_diagnostics@ ayuda: reporta variables sin usar, un jacobiano
+estático singular y otras inconsistencias de especificación.
+\end{remark}
+
+\paragraph{Un tropiezo que no es del modelo: los gráficos.} Si al correr las
+figuras salen \emph{en blanco} o MATLAB se cuelga al plotear las IRFs, no es tu
+\code{.mod}: es el motor gráfico (OpenGL) de MATLAB en esa máquina ---típico en
+laboratorios o por escritorio remoto. El modelo ya quedó resuelto en memoria
+(\code{oo\_}); solo falla el dibujo. Arreglo: ejecutar una vez
+\lstinline@opengl('save','software')@ y reiniciar MATLAB. Como alternativa,
+\lstinline@graph_format=pdf@ en \lstinline@stoch_simul@ evita el exportador a
+\code{.eps} que falla en varias versiones de MATLAB.
+
 % ===================== APÉNDICE =====================
 \appendix
 \chapter{Estado estacionario: determinista vs.\ estocástico}
