@@ -67,6 +67,9 @@
   rulecolor=\color{gray!40},
   numbers=left, numberstyle=\tiny\color{gray!70},
   xleftmargin=1.5em,
+  extendedchars=true,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1,
   morekeywords={var,varexo,parameters,model,end,steady_state_model,shocks,
     stoch_simul,steady,check,resid,initval,stderr,order,irf}
 }
@@ -899,8 +902,205 @@ valores propios y hace fallar la condición.
 Con el modelo completamente especificado \emph{y resuelto analíticamente}
 ---ecuaciones, estado estacionario, log-linealización, funciones de política y
 condición de estabilidad--- estamos listos para traducirlo a Dynare y confirmar,
-con la máquina, lo que ya sabemos con el lápiz. Ese es el tema del próximo
-capítulo.
+con la máquina, lo que ya sabemos con el lápiz.
+
+% ===================== CAPÍTULO 3 =====================
+\chapter{Del papel al código}
+\label{ch:codigo}
+
+La promesa de Dynare es escribir las ecuaciones casi como en el papel; la
+recompensa, confirmar con la máquina ---al dígito--- el estado estacionario, la
+condición de Blanchard--Kahn y las funciones de política que ya derivamos.
+
+\section{Anatomía de un archivo \code{.mod}}
+
+Un archivo \code{.mod} se organiza en bloques que aparecen siempre en el mismo
+orden: (1)~\emph{declaraciones} (\code{var}, \code{varexo}, \code{parameters});
+(2)~\emph{calibración}; (3)~el bloque \code{model}; (4)~el estado estacionario
+(\lstinline@steady_state_model@); (5)~los \code{shocks}; y (6)~los comandos de
+resolución y simulación.
+
+\paragraph{La convención de timing.} El punto que más confunde al principiante
+es el \emph{timing}. Dynare fecha cada variable por \emph{cuándo se decide}, no
+por cuándo se usa físicamente. El capital productivo de hoy se decidió ayer, de
+modo que \code{k} denota el capital \emph{elegido} en $t$ (el $k_{t+1}$ del
+enunciado) y \code{k(-1)} el disponible al inicio de $t$ (el $k_t$).
+Simétricamente, \code{c(+1)} es el consumo esperado en $t+1$. Un error aquí
+cambia el número de variables predeterminadas y hace fallar Blanchard--Kahn.
+
+\begin{remark}
+Traducción de notación: el $k_t$ del Capítulo~\ref{ch:modelo} (capital al inicio
+de $t$) es \code{k(-1)} en Dynare, y el $k_{t+1}$ (elegido en $t$) es \code{k}.
+Por eso la producción $y_t=a_t k_t^{1-\alpha}h_t^{\alpha}$ se codea
+\lstinline@y = a*k(-1)^(1-alpha)*h^alpha@.
+\end{remark}
+
+\section{El modelo pd06, bloque por bloque}
+
+\paragraph{Declaraciones y calibración.} Se declaran las ocho endógenas, el
+choque y los parámetros ---incluidos los valores de estado estacionario, que se
+calculan en forma cerrada para \emph{calibrar} $\theta$ (parte C):
+
+\begin{lstlisting}
+var     y c i k h r w a;
+varexo  eps;
+parameters alpha beta delta phi sigma_eps theta hss
+           r_ss k_ss y_ss i_ss c_ss w_ss;
+
+alpha = 0.667;  beta = 0.984;  delta = 0.025;
+phi = 0.979;    sigma_eps = 0.0072;  hss = 0.20;
+
+// estado estacionario cerrado (parte C) y calibracion de theta
+r_ss = 1/beta - (1 - delta);
+k_ss = hss*((1 - alpha)/r_ss)^(1/alpha);
+y_ss = k_ss^(1 - alpha)*hss^alpha;
+i_ss = delta*k_ss;   c_ss = y_ss - i_ss;   w_ss = alpha*y_ss/hss;
+theta = w_ss*(1 - hss)/c_ss;              // theta endogeno desde h_ss
+\end{lstlisting}
+
+\paragraph{El bloque \code{model}: la traducción ecuación por ecuación.} Es el
+corazón. Cada ecuación del Capítulo~\ref{ch:modelo} se escribe en una línea, con
+una etiqueta \code{[name=...]} que la identifica:
+
+\begin{lstlisting}
+model;
+  [name = 'Euler (FOC hogar, capital)']
+  1/c = beta*(1/c(+1))*(r(+1) + 1 - delta);
+
+  [name = 'Oferta de trabajo (FOC hogar, horas)']
+  theta*c/(1 - h) = w;
+
+  [name = 'Demanda de capital (FOC firma)']
+  r = (1 - alpha)*y/k(-1);
+
+  [name = 'Demanda de trabajo (FOC firma)']
+  w = alpha*y/h;
+
+  [name = 'Funcion de produccion']
+  y = a*k(-1)^(1 - alpha)*h^alpha;
+
+  [name = 'Ley de movimiento del capital']
+  k = (1 - delta)*k(-1) + i;
+
+  [name = 'Vaciado del mercado de bienes']
+  y = c + i;
+
+  [name = 'Proceso AR(1) de la TFP (en logs)']
+  log(a) = phi*log(a(-1)) + sigma_eps*eps;
+end;
+\end{lstlisting}
+
+El mapeo es casi literal (Tabla~\ref{tab:map}). Obsérvese el timing: la Euler
+usa \code{c(+1)} y \code{r(+1)} (expectativas); producción y demanda de capital
+usan \code{k(-1)} (capital al inicio); y el proceso de la TFP se escribe con
+\code{log(a)} para que $a$ sea exactamente un AR(1) en logaritmos.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Ecuación (Cap.~\ref{ch:modelo})} & \textbf{Línea Dynare} & \textbf{Timing} \\
+\midrule
+Euler \eqref{eq:euler} & \lstinline@1/c = beta*(1/c(+1))*(r(+1)+1-delta)@ & \code{(+1)} \\
+Oferta trabajo \eqref{eq:laborsupply} & \lstinline@theta*c/(1-h) = w@ & --- \\
+Demanda capital \eqref{eq:kdemand} & \lstinline@r = (1-alpha)*y/k(-1)@ & \code{k(-1)} \\
+Demanda trabajo \eqref{eq:ldemand} & \lstinline@w = alpha*y/h@ & --- \\
+Producción \eqref{eq:prod} & \lstinline@y = a*k(-1)^(1-alpha)*h^alpha@ & \code{k(-1)} \\
+Ley de movim.\ \eqref{eq:lom} & \lstinline@k = (1-delta)*k(-1) + i@ & \code{k(-1)} \\
+Vaciado \eqref{eq:clearing} & \lstinline@y = c + i@ & --- \\
+TFP \eqref{eq:tfp} & \lstinline@log(a) = phi*log(a(-1)) + sigma_eps*eps@ & \code{(-1)} \\
+\bottomrule
+\end{tabular}
+\caption{Mapeo economía $\to$ Dynare, ecuación por ecuación.}
+\label{tab:map}
+\end{table}
+
+\paragraph{Estado estacionario y shocks.} El bloque \lstinline@steady_state_model@
+entrega el EE cerrado ---Dynare no resuelve nada numéricamente---, y el bloque
+\code{shocks} fija la desviación estándar del choque:
+
+\begin{lstlisting}
+steady_state_model;
+  a = 1;  r = r_ss;  h = hss;  k = k_ss;
+  y = y_ss;  i = i_ss;  c = c_ss;  w = w_ss;
+end;
+
+shocks;
+  var eps; stderr 1;    // sigma_eps ya escala el shock dentro del model
+end;
+\end{lstlisting}
+
+\section{Correr en Dynare, comando por comando}
+
+En la ventana de comandos de MATLAB, basta situarse en la carpeta del \code{.mod}
+y ejecutar \lstinline@dynare rbc_analytical@. Eso dispara, en orden, cuatro
+comandos cuya función conviene entender:
+
+\begin{description}[leftmargin=1.4em,style=nextline]
+\item[\code{steady}] calcula el estado estacionario determinista. Como lo dimos
+  en forma cerrada (\lstinline@steady_state_model@), Dynare solo lo evalúa y lo
+  reporta; debe coincidir con la Tabla~\ref{tab:ss}.
+\item[\code{resid}] evalúa el residuo de cada ecuación del \code{model} en ese
+  estado estacionario. Si el EE es correcto, los ocho residuos son $\approx 0$:
+  es la primera señal de que no hay un error de álgebra en el \code{.mod}.
+\item[\code{check}] calcula los valores propios del sistema linealizado y
+  verifica la condición de Blanchard--Kahn (\S\ref{sec:bk}). Debe hallar un
+  valor propio fuera del círculo unitario ---uno por cada control--- y reportar
+  ``Blanchard \& Kahn conditions are met''.
+\item[\code{stoch\_simul(order=1, irf=40)}] resuelve el modelo a primer orden
+  (log-linealización), computa las funciones de política, las IRFs a un choque de
+  una desviación estándar y los momentos teóricos. La lista final
+  (\code{y c i k h r w a}) elige qué variables reportar.
+\end{description}
+
+\begin{remark}
+El orden \code{steady} $\to$ \code{resid} $\to$ \code{check} $\to$
+\lstinline@stoch_simul@ no es casual: va de lo más básico (¿existe el EE?) a lo
+más fino (¿es único y estable?, ¿cómo responde?). Si algo falla, el primer
+comando que se queja señala dónde está el problema.
+\end{remark}
+
+\section{Resultados y el experimento $\delta=1$ vs.\ $\delta<1$}
+
+La corrida reproduce \emph{exactamente} lo que derivamos a mano: el estado
+estacionario de la Tabla~\ref{tab:ss} ($c_{ss}=0.4528$, $k_{ss}=4.5785$,
+$\theta=3.342$), los valores propios $\{0.936,\ 0.979,\ 1.086\}$ de la
+\S\ref{sec:bk}, y las funciones de impulso-respuesta de la
+Figura~\ref{fig:irf}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{assets/irf_base.pdf}
+\caption{IRFs a un choque de productividad de una desviación estándar
+($\delta=0.025$). Reproducen las que genera Dynare con \lstinline@stoch_simul@.}
+\label{fig:irf}
+\end{figure}
+
+Las IRFs cuentan la historia del ciclo real: el producto salta y decae; la
+inversión reacciona con más fuerza en el impacto; el consumo es
+\emph{hump-shaped} (suavización); el capital se acumula despacio. Y las
+\emph{horas} suben en el impacto ---el mecanismo que, por la \S\ref{sec:policy},
+solo opera cuando $\delta<1$.
+
+\paragraph{El experimento.} Para aislar ese mecanismo, re-ejecutamos con
+\lstinline@dynare rbc_analytical -DDELTA1=1@ ($\delta=1$, que recalibra
+$\theta\approx 3.968$) y comparamos la respuesta de las horas
+(Figura~\ref{fig:hours}). Con depreciación parcial las horas responden; con
+depreciación total quedan clavadas en cero, tal como probamos en
+\eqref{eq:mu}--\eqref{eq:hzero}. La pizarra y la máquina dicen lo mismo.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{assets/irf_hours.pdf}
+\caption{Respuesta de las horas: con $\delta<1$ reaccionan; con $\delta=1$ son
+nulas, confirmando el resultado analítico de la \S\ref{sec:policy}.}
+\label{fig:hours}
+\end{figure}
+
+Con esto cerramos el recorrido: del papel ---preferencias, FONC, estado
+estacionario, log-linealización, Blanchard--Kahn--- al código, y de vuelta, con
+la certeza de que cada número que imprime Dynare tiene detrás una ecuación que
+sabemos resolver a mano.
 
 % ===================== APÉNDICE =====================
 \appendix
