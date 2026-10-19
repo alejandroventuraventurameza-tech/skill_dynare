@@ -150,4 +150,6 @@ check;      // valores propios + condición de Blanchard-Kahn
 // Primer orden (log-linealización), IRFs de 40 períodos a un shock de 1 s.d.
 // y momentos teóricos (periods=0 por defecto).
 // Para momentos de ciclo económico (comparables con datos) añadir hp_filter=1600.
-stoch_simul(order = 1, irf = 40) y c i k h r w a;
+// graph_format=pdf evita el bug de exportación a .eps ('Invalid graphics
+// object') de print -depsc2 en varias versiones de MATLAB.
+stoch_simul(order = 1, irf = 40, graph_format = pdf) y c i k h r w a;
