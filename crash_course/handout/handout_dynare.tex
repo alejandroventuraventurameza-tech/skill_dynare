@@ -101,9 +101,11 @@
 \newcounter{tcbdef}[section]
 \newcounter{tcbex}[section]
 \newcounter{tcbrem}[section]
+\newcounter{tcbprop}[section]
 \renewcommand{\thetcbdef}{\thesection.\arabic{tcbdef}}
 \renewcommand{\thetcbex}{\thesection.\arabic{tcbex}}
 \renewcommand{\thetcbrem}{\thesection.\arabic{tcbrem}}
+\renewcommand{\thetcbprop}{\thesection.\arabic{tcbprop}}
 
 % --- ENTORNOS ---
 \newenvironment{definition}[1][]{%
@@ -114,6 +116,11 @@
 \newenvironment{example}[1][]{%
   \refstepcounter{tcbex}%
   \begin{tcolorbox}[examplestyle, title={Ejemplo~\thetcbex%
+    \ifx\relax#1\relax\else\ (#1)\fi}]}%
+{\end{tcolorbox}}
+\newenvironment{proposition}[1][]{%
+  \refstepcounter{tcbprop}%
+  \begin{tcolorbox}[propstyle, title={Proposición~\thetcbprop%
     \ifx\relax#1\relax\else\ (#1)\fi}]}%
 {\end{tcolorbox}}
 \newenvironment{remark}{%
@@ -393,6 +400,234 @@ ecuaciones; la computadora lo resuelve, lo simula y lo confronta con los datos.
 Esa es, en una frase, la filosofía de diseño de Dynare: escribir el modelo casi
 como se haría en el papel y dejar que la máquina haga el resto.
 \end{remark}
+
+% ===================== CAPÍTULO 2 =====================
+\chapter{El modelo RBC con solución analítica}
+\label{ch:modelo}
+
+En este capítulo escribimos, con todo detalle, el modelo que llevaremos a
+Dynare. Es un modelo de ciclos reales (RBC) de economía cerrada, con oferta de
+trabajo endógena y un único choque de productividad. Lo elegimos porque admite
+una solución de estado estacionario en \emph{forma cerrada}: eso nos permitirá
+verificar, línea por línea, que el código reproduce exactamente lo que
+derivamos a mano.
+
+\section{El entorno}
+
+La economía está habitada por un hogar representativo y una firma
+representativa, que operan bajo competencia perfecta en los mercados de bienes y
+de factores. La única fuente de incertidumbre es un choque de productividad. La
+Tabla~\ref{tab:vars} resume la notación.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{cl}
+\toprule
+\textbf{Símbolo} & \textbf{Significado} \\
+\midrule
+$c_t,\ h_t$ & consumo y trabajo (horas) en $t$ \\
+$1-h_t$ & ocio (dotación de tiempo normalizada a $1$) \\
+$k_t,\ k_{t+1}$ & capital al inicio de $t$ / capital elegido en $t$ \\
+$i_t,\ y_t$ & inversión y producto \\
+$r_t,\ w_t$ & tasa real de alquiler del capital y salario real \\
+$a_t$ & productividad total de factores (PTF) \\
+$\beta\in(0,1)$ & factor de descuento \\
+$\alpha\in(0,1)$ & participación del trabajo en el producto \\
+$\delta\in(0,1]$ & tasa de depreciación del capital \\
+$\theta>0$ & peso del ocio en la utilidad \\
+$\phi\in(0,1)$ & persistencia del choque de PTF \\
+$\varepsilon_t$ & innovación, $\varepsilon_t\sim N(0,\sigma_\varepsilon^2)$ \\
+\bottomrule
+\end{tabular}
+\caption{Variables y parámetros del modelo.}
+\label{tab:vars}
+\end{table}
+
+\paragraph{El hogar.} El hogar representativo maximiza la utilidad esperada
+descontada
+\begin{equation}
+\E_0 \sum_{t=0}^{\infty}\beta^t\big[\ln c_t + \theta\ln(1-h_t)\big],
+\label{eq:utility}
+\end{equation}
+logarítmica tanto en el consumo como en el ocio. Es dueño del capital, que
+alquila a la firma a la tasa $r_t$, y ofrece trabajo al salario $w_t$. Su
+ingreso, $w_t h_t + r_t k_t$, se reparte entre consumo e inversión:
+$c_t + i_t = w_t h_t + r_t k_t$. Combinando esta identidad con la ley de
+movimiento del capital,
+\begin{equation}
+k_{t+1} = (1-\delta)\,k_t + i_t,
+\label{eq:lom}
+\end{equation}
+y eliminando $i_t$, obtenemos la restricción presupuestaria en la forma que
+usaremos:
+\begin{equation}
+c_t + k_{t+1} = w_t h_t + (r_t + 1 - \delta)\,k_t.
+\label{eq:budget}
+\end{equation}
+
+\paragraph{La firma.} La firma produce con una tecnología Cobb--Douglas,
+\begin{equation}
+y_t = a_t\, k_t^{\,1-\alpha}\, h_t^{\,\alpha},
+\label{eq:prod}
+\end{equation}
+donde $\alpha$ es la participación del trabajo (y $1-\alpha$, la del capital). La
+productividad sigue un proceso AR(1) en logaritmos:
+\begin{equation}
+\ln a_t = \phi \ln a_{t-1} + \varepsilon_t,
+\qquad \varepsilon_t\sim N(0,\sigma_\varepsilon^2).
+\label{eq:tfp}
+\end{equation}
+
+\begin{remark}
+Un detalle de notación que conviene fijar desde ya: aquí $\alpha$ es la
+participación \emph{del trabajo}, no del capital (al revés de la convención más
+común). Con la calibración de King--Rebelo, $\alpha=0.667$, de modo que el
+trabajo se lleva dos tercios del producto y el capital, un tercio.
+\end{remark}
+
+\section{Condiciones de primer orden}
+
+\paragraph{Problema del hogar.} El hogar elige $\{c_t,h_t,k_{t+1}\}$ para
+maximizar \eqref{eq:utility} sujeto a \eqref{eq:budget}. El lagrangiano, con
+multiplicador $\lambda_t$ sobre la restricción de cada período, es
+\[
+\mathcal{L}=\E_0\sum_{t=0}^\infty \beta^t\Big\{\ln c_t+\theta\ln(1-h_t)
++\lambda_t\big[w_t h_t+(r_t+1-\delta)k_t-c_t-k_{t+1}\big]\Big\},
+\]
+y sus condiciones de primer orden son
+\begin{align}
+\partial c_t:&\quad \tfrac{1}{c_t}=\lambda_t, \label{eq:foc_c}\\[2pt]
+\partial h_t:&\quad \tfrac{\theta}{1-h_t}=\lambda_t w_t, \label{eq:foc_h}\\[2pt]
+\partial k_{t+1}:&\quad \lambda_t=\beta\,\E_t\!\big[\lambda_{t+1}(r_{t+1}+1-\delta)\big]. \label{eq:foc_k}
+\end{align}
+Sustituyendo $\lambda_t=1/c_t$ de \eqref{eq:foc_c} en \eqref{eq:foc_h} y
+\eqref{eq:foc_k} se obtienen las dos ecuaciones del hogar en términos
+observables. La \textbf{oferta de trabajo} iguala la tasa marginal de
+sustitución ocio--consumo con el salario,
+\begin{equation}
+\boxed{\ \theta\,\frac{c_t}{1-h_t}=w_t\ }, \label{eq:laborsupply}
+\end{equation}
+y la \textbf{ecuación de Euler} vincula el consumo de hoy y de mañana a través
+del retorno del capital,
+\begin{equation}
+\boxed{\ \frac{1}{c_t}=\beta\,\E_t\!\left[\frac{1}{c_{t+1}}\,(r_{t+1}+1-\delta)\right]\ }. \label{eq:euler}
+\end{equation}
+
+\paragraph{Problema de la firma.} La firma es \emph{estática}: en cada período
+elige $k_t$ y $h_t$ para maximizar el beneficio $y_t-r_t k_t-w_t h_t$ sujeto a
+\eqref{eq:prod}. Igualando el producto marginal de cada factor a su precio,
+\begin{align}
+\text{demanda de capital:}&\quad r_t=(1-\alpha)\,\frac{y_t}{k_t}, \label{eq:kdemand}\\[2pt]
+\text{demanda de trabajo:}&\quad w_t=\alpha\,\frac{y_t}{h_t}. \label{eq:ldemand}
+\end{align}
+
+\paragraph{Cierre del modelo.} El vaciado del mercado de bienes exige
+\begin{equation}
+y_t=c_t+i_t. \label{eq:clearing}
+\end{equation}
+
+Reuniendo todo, el equilibrio queda descrito por un sistema de \textbf{ocho
+ecuaciones} ---\eqref{eq:lom}, \eqref{eq:prod}, \eqref{eq:tfp},
+\eqref{eq:laborsupply}, \eqref{eq:euler}, \eqref{eq:kdemand}, \eqref{eq:ldemand}
+y \eqref{eq:clearing}--- en \textbf{ocho incógnitas}:
+$y_t,c_t,i_t,k_t,h_t,r_t,w_t,a_t$. Esta igualdad entre número de ecuaciones y de
+incógnitas es lo primero que Dynare verificará.
+
+\section{Estado estacionario}
+
+En el estado estacionario las variables son constantes y $\varepsilon_t=0$;
+entonces $\ln a_{ss}=\phi\ln a_{ss}$ implica $a_{ss}=1$. Denotamos con el
+subíndice $ss$ los valores de largo plazo, y la estrategia es trabajar con
+\emph{ratios} antes de despejar niveles.
+
+De la Euler \eqref{eq:euler} en estado estacionario, $1=\beta(r_{ss}+1-\delta)$,
+sale de inmediato la tasa de alquiler:
+\begin{equation}
+r_{ss}=\frac{1}{\beta}-(1-\delta). \label{eq:rss}
+\end{equation}
+La demanda de capital \eqref{eq:kdemand} fija el ratio producto--capital,
+$y_{ss}/k_{ss}=r_{ss}/(1-\alpha)$. Por otro lado, de la función de producción
+\eqref{eq:prod} con $a_{ss}=1$ se tiene $y_{ss}/k_{ss}=(h_{ss}/k_{ss})^{\alpha}$.
+Igualando ambas expresiones y despejando el capital en función de las horas,
+\begin{equation}
+k_{ss}=h_{ss}\left(\frac{1-\alpha}{r_{ss}}\right)^{1/\alpha}. \label{eq:kss}
+\end{equation}
+El resto de los niveles se obtiene en cascada:
+\begin{equation}
+y_{ss}=k_{ss}^{\,1-\alpha}\,h_{ss}^{\,\alpha},\qquad
+i_{ss}=\delta k_{ss},\qquad
+c_{ss}=y_{ss}-i_{ss},\qquad
+w_{ss}=\alpha\,\frac{y_{ss}}{h_{ss}}. \label{eq:sslevels}
+\end{equation}
+
+\begin{proposition}[El estado estacionario no depende de $\theta$]
+Dados $(\alpha,\beta,\delta)$ y un nivel de horas $h_{ss}$, el estado
+estacionario queda determinado por \eqref{eq:rss}--\eqref{eq:sslevels} con
+$a_{ss}=1$. Obsérvese que \emph{ninguno} de estos valores depende de $\theta$:
+el peso del ocio no afecta los niveles reales de largo plazo, solo la oferta de
+trabajo \eqref{eq:laborsupply}. Esto es precisamente lo que permite \emph{calibrar}
+$\theta$ a partir de un $h_{ss}$ objetivo.
+\end{proposition}
+
+\section{Calibración}
+
+Seguimos la calibración de King y Rebelo (1999), estándar para una economía
+trimestral (Tabla~\ref{tab:calib}).
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{clc}
+\toprule
+\textbf{Parámetro} & \textbf{Interpretación} & \textbf{Valor} \\
+\midrule
+$\alpha$ & participación del trabajo & $0.667$ \\
+$\beta$ & factor de descuento & $0.984$ \\
+$\delta$ & depreciación & $0.025$ \\
+$\phi$ & persistencia de la PTF & $0.979$ \\
+$\sigma_\varepsilon$ & desv. est. del choque & $0.0072$ \\
+$h_{ss}$ & horas en EE (objetivo) & $0.20$ \\
+\bottomrule
+\end{tabular}
+\caption{Calibración de King--Rebelo (1999).}
+\label{tab:calib}
+\end{table}
+
+El parámetro $\theta$ no se fija externamente: se \emph{calibra} para que el
+estado estacionario reproduzca el objetivo $h_{ss}=0.20$. Despejando $\theta$ de
+la oferta de trabajo \eqref{eq:laborsupply} evaluada en el estado estacionario,
+\begin{equation}
+\boxed{\ \theta=\frac{w_{ss}\,(1-h_{ss})}{c_{ss}}\ }. \label{eq:thetacal}
+\end{equation}
+
+\begin{example}[Verificación numérica]
+Con la calibración de la Tabla~\ref{tab:calib} ($\delta=0.025$), las fórmulas
+\eqref{eq:rss}--\eqref{eq:sslevels} dan el estado estacionario de la
+Tabla~\ref{tab:ss}, y \eqref{eq:thetacal} arroja
+\[
+\theta=\frac{1.8919\times(1-0.20)}{0.4528}\approx 3.342,
+\]
+tal como anticipa el ejercicio. Si en cambio imponemos depreciación total
+($\delta=1$), el mismo procedimiento da $\theta\approx 3.968$: la calibración de
+$\theta$ \emph{depende de} $\delta$, un punto al que volveremos más adelante al
+comparar los escenarios $\delta<1$ y $\delta=1$.
+\end{example}
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lcccccc}
+\toprule
+ & $r_{ss}$ & $k_{ss}$ & $y_{ss}$ & $c_{ss}$ & $i_{ss}$ & $w_{ss}$ \\
+\midrule
+valor & $0.0413$ & $4.5785$ & $0.5673$ & $0.4528$ & $0.1145$ & $1.8919$ \\
+\bottomrule
+\end{tabular}
+\caption{Estado estacionario bajo la calibración base ($\delta=0.025$).}
+\label{tab:ss}
+\end{table}
+
+Con el modelo completamente especificado ---ecuaciones, estado estacionario y
+calibración--- estamos listos para traducirlo a Dynare. Ese es el tema del
+próximo capítulo.
 
 % ===================== REFERENCIAS =====================
 \begin{thebibliography}{99}
