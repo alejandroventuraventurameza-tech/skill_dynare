@@ -1364,6 +1364,58 @@ laboratorios o por escritorio remoto. El modelo ya quedó resuelto en memoria
 \lstinline@graph_format=pdf@ en \lstinline@stoch_simul@ evita el exportador a
 \code{.eps} que falla en varias versiones de MATLAB.
 
+\section{Tu turno: experimentos guiados}
+\label{sec:tuturno}
+
+La mejor forma de entender un modelo es \emph{moverlo}. Cada experimento de abajo
+es un cambio de una línea; córrelo, mira qué pasa y contrástalo con la predicción
+teórica. Los primeros tres cambian un parámetro; los dos últimos, una opción de
+\lstinline@stoch_simul@.
+
+\begin{enumerate}[leftmargin=2em,itemsep=4pt]
+
+\item \textbf{La persistencia del choque ($\phi$).} Cambia
+  \lstinline@phi = 0.979@ por \lstinline@phi = 0.90@.
+  \emph{Qué observar:} las IRFs decaen mucho más rápido y los coeficientes de
+  autocorrelación bajan. \emph{Por qué:} la persistencia del modelo hereda, en
+  primera instancia, la del choque de PTF (\S\ref{sec:momentos}).
+
+\item \textbf{El tamaño del choque ($\sigma_\varepsilon$).} Duplica
+  \lstinline@sigma_eps = 0.0072@ a \lstinline@0.0144@.
+  \emph{Qué observar:} todas las desviaciones estándar y todas las IRFs se
+  \emph{duplican}; las correlaciones y autocorrelaciones no cambian.
+  \emph{Por qué:} a primer orden rige la equivalencia cierta (Apéndice~\ref{app:ss}):
+  la solución es lineal en el choque, así que escalar $\sigma_\varepsilon$ escala
+  las respuestas proporcionalmente, sin tocar la forma del ciclo.
+
+\item \textbf{La participación de los factores ($\alpha$).} Cambia
+  \lstinline@alpha = 0.667@ por \lstinline@alpha = 0.60@.
+  \emph{Qué observar:} se recalcula \emph{todo} el estado estacionario
+  (la relación capital--producto, $\theta$). \emph{Por qué:} la calibración no es
+  neutra; $\alpha$ fija la tecnología y, con ella, los niveles de largo plazo que
+  calculamos en forma cerrada en el estado estacionario (parte~C).
+
+\item \textbf{Los momentos del ciclo (filtro HP).} Añade \lstinline@hp_filter=1600@
+  a la línea de \lstinline@stoch_simul@. \emph{Qué observar:} las desviaciones
+  estándar caen drásticamente y las volatilidades relativas se acercan a las que
+  reportan los datos trimestrales. \emph{Por qué:} el filtro quita el componente
+  de baja frecuencia; recién entonces los momentos son comparables con los del
+  \emph{ciclo} (la observación de la \S\ref{sec:momentos}).
+
+\item \textbf{La corrección por riesgo (segundo orden).} Cambia \lstinline@order=1@
+  por \lstinline@order=2@. \emph{Qué observar:} las medias de las variables dejan
+  de coincidir con el estado estacionario determinista. \emph{Por qué:} a segundo
+  orden aparece el término de corrección por riesgo $\tfrac12 g_{\sigma\sigma}\sigma^2$
+  (Apéndice~\ref{app:ss}): el estado estacionario \emph{estocástico} se separa del
+  determinista.
+
+\end{enumerate}
+
+\noindent Y, por supuesto, el experimento que ya hicimos: la depreciación
+$\delta$ (\S\ref{sec:experimento}), con \lstinline@-DDELTA1=1@. Cinco líneas, cinco
+lecciones ---y la certeza, en cada caso, de poder anticipar el resultado antes de
+correr.
+
 % ===================== APÉNDICE =====================
 \appendix
 \chapter{Estado estacionario: determinista vs.\ estocástico}
