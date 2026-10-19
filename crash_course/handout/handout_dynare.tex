@@ -1,0 +1,424 @@
+% ============================================================================
+%  HANDOUT — Un crash course de Dynare
+%  Del papel al código: un modelo RBC en Dynare
+%  Ventura & Echevarría — Universidad del Pacífico, Macroeconomía II
+%
+%  Autocontenido: compila con pdflatex (un solo motor), sin biblatex/biber.
+%  Preamble adaptado de las Lecture Notes de Macroeconomics II.
+% ============================================================================
+\documentclass[11pt,a4paper]{report}
+
+% --- CODIFICACIÓN E IDIOMA ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish, es-tabla, es-nodecimaldot]{babel}
+
+% --- TIPOGRAFÍA Y MATEMÁTICAS ---
+\usepackage[sc]{mathpazo}
+\linespread{1.05}
+\usepackage{amsmath, amssymb, amsfonts, mathtools, bm}
+\usepackage{siunitx}
+\usepackage{amsthm}
+
+% --- DISEÑO DE PÁGINA ---
+\usepackage{geometry}
+\geometry{a4paper, top=2.5cm, bottom=2.5cm, left=3cm, right=2.5cm}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+
+% --- COLORES (idénticos al libro) ---
+\definecolor{darkblue}{rgb}{0.0, 0.0, 0.55}
+\definecolor{defgreen}{RGB}{235, 250, 235}
+\definecolor{defframe}{RGB}{70, 150, 70}
+\definecolor{thmblue}{RGB}{228, 238, 255}
+\definecolor{thmframe}{RGB}{40, 80, 170}
+\definecolor{propblue}{RGB}{233, 242, 255}
+\definecolor{propframe}{RGB}{60, 100, 190}
+\definecolor{lemmacyan}{RGB}{230, 248, 252}
+\definecolor{lemmaframe}{RGB}{20, 130, 150}
+\definecolor{corolgray}{RGB}{244, 244, 244}
+\definecolor{corolframe}{RGB}{120, 120, 120}
+\definecolor{exgray}{RGB}{250, 250, 248}
+\definecolor{exframe}{RGB}{150, 150, 140}
+\definecolor{remarkamber}{RGB}{255, 251, 228}
+\definecolor{remarkframe}{RGB}{200, 130, 0}
+\definecolor{assbg}{RGB}{255, 245, 232}
+\definecolor{assframe}{RGB}{190, 95, 0}
+\definecolor{upblue}{RGB}{15, 35, 85}
+
+% --- TABLAS Y FIGURAS ---
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{positioning, calc, arrows.meta}
+\usepackage[labelfont=bf, font=small]{caption}
+
+% --- CÓDIGO (listings; para los capítulos de código, ya preparado) ---
+\usepackage{listings}
+\lstdefinestyle{dynare}{
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{darkblue}\bfseries,
+  commentstyle=\color{exframe}\itshape,
+  stringstyle=\color{lemmaframe},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{gray!40},
+  numbers=left, numberstyle=\tiny\color{gray!70},
+  xleftmargin=1.5em,
+  morekeywords={var,varexo,parameters,model,end,steady_state_model,shocks,
+    stoch_simul,steady,check,resid,initval,stderr,order,irf}
+}
+\lstset{style=dynare}
+
+% --- TCOLORBOX (solo breakable: sin skins) ---
+\usepackage[breakable]{tcolorbox}
+\tcbset{
+  defstyle/.style={breakable, colback=defgreen, colframe=defframe,
+    colbacktitle=defframe, coltitle=white, fonttitle=\bfseries\small,
+    boxrule=0.5pt, arc=2pt, toptitle=1.5mm, bottomtitle=1.5mm,
+    left=3pt, right=3pt, top=2pt, bottom=2pt},
+  thmstyle/.style={breakable, colback=thmblue, colframe=thmframe,
+    colbacktitle=thmframe, coltitle=white, fonttitle=\bfseries\small,
+    boxrule=0.5pt, arc=2pt, toptitle=1.5mm, bottomtitle=1.5mm,
+    left=3pt, right=3pt, top=2pt, bottom=2pt},
+  propstyle/.style={breakable, colback=propblue, colframe=propframe,
+    colbacktitle=propframe, coltitle=white, fonttitle=\bfseries\small,
+    boxrule=0.5pt, arc=2pt, toptitle=1.5mm, bottomtitle=1.5mm,
+    left=3pt, right=3pt, top=2pt, bottom=2pt},
+  examplestyle/.style={breakable, colback=exgray, colframe=exframe,
+    colbacktitle=exframe, coltitle=white, fonttitle=\bfseries\small,
+    boxrule=0.5pt, arc=2pt, toptitle=1.5mm, bottomtitle=1.5mm,
+    left=3pt, right=3pt, top=2pt, bottom=2pt},
+  remarkstyle/.style={breakable, colback=remarkamber, colframe=remarkframe,
+    colbacktitle=remarkframe, coltitle=white, fonttitle=\bfseries\itshape\small,
+    leftrule=4pt, rightrule=0.4pt, toprule=0.4pt, bottomrule=0.4pt, arc=0pt,
+    left=5pt, right=3pt, top=2pt, bottom=2pt, toptitle=1.5mm, bottomtitle=1.5mm}
+}
+
+% --- CONTADORES ---
+\newcounter{tcbdef}[section]
+\newcounter{tcbex}[section]
+\newcounter{tcbrem}[section]
+\renewcommand{\thetcbdef}{\thesection.\arabic{tcbdef}}
+\renewcommand{\thetcbex}{\thesection.\arabic{tcbex}}
+\renewcommand{\thetcbrem}{\thesection.\arabic{tcbrem}}
+
+% --- ENTORNOS ---
+\newenvironment{definition}[1][]{%
+  \refstepcounter{tcbdef}%
+  \begin{tcolorbox}[defstyle, title={Definición~\thetcbdef%
+    \ifx\relax#1\relax\else\ (#1)\fi}]}%
+{\end{tcolorbox}}
+\newenvironment{example}[1][]{%
+  \refstepcounter{tcbex}%
+  \begin{tcolorbox}[examplestyle, title={Ejemplo~\thetcbex%
+    \ifx\relax#1\relax\else\ (#1)\fi}]}%
+{\end{tcolorbox}}
+\newenvironment{remark}{%
+  \refstepcounter{tcbrem}%
+  \begin{tcolorbox}[remarkstyle, title={Observación~\thetcbrem}]}%
+{\end{tcolorbox}}
+
+% --- TÍTULOS Y LISTAS ---
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{enumitem}
+
+% --- HIPERVÍNCULOS ---
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true, linkcolor=darkblue, citecolor=darkblue, urlcolor=darkblue,
+  pdftitle={Un crash course de Dynare — Del papel al código},
+  pdfauthor={Ventura \& Echevarría}}
+
+% --- CABECERAS ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\itshape Un crash course de Dynare}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}}
+
+% --- FORMATO DE CAPÍTULOS (estilo del libro) ---
+\titleformat{\chapter}[display]
+  {\bfseries\Large}
+  {\filleft\MakeUppercase{\chaptertitlename}\Huge\thechapter}
+  {4ex}
+  {\titlerule\vspace{2ex}\filleft}
+  [\vspace{2ex}\titlerule]
+
+% --- MACROS ---
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\Real}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+
+% ============================================================================
+\begin{document}
+
+% ===================== PORTADA =====================
+\begin{titlepage}
+\centering
+\vspace*{1.2cm}
+\includegraphics[width=0.60\textwidth]{assets/UP_logo.jpg}\\[2.2cm]
+{\Large\scshape Macroeconomía II}\\[0.9cm]
+{\color{upblue}\rule{\linewidth}{1.2pt}}\\[0.5cm]
+{\Huge\bfseries Un crash course de Dynare}\\[0.5cm]
+{\large\itshape Del papel al código: un modelo RBC en Dynare}\\[0.5cm]
+{\color{upblue}\rule{\linewidth}{1.2pt}}\\[2.2cm]
+{\large Alejandro Ventura \quad\&\quad Marcelo Echevarría}\\[0.5cm]
+{\normalsize Universidad del Pacífico}\\[0.2cm]
+{\normalsize Semestre 2026-II}\\
+\vfill
+{\small Material para la sesión práctica (hands-on). Acompaña a las diapositivas del curso.}
+\end{titlepage}
+
+\tableofcontents
+\thispagestyle{plain}
+\clearpage
+
+% ===================== CAPÍTULO 1 =====================
+\chapter{Introducción a Dynare}
+
+\begin{quote}\itshape
+Un modelo macroeconómico que no puede ser llevado a los datos ni simulado para
+generar predicciones cuantitativas es, en el mejor de los casos, un ejercicio
+intelectual incompleto. Dynare es la herramienta que cierra esa brecha:
+convierte las ecuaciones abstractas de un DSGE en trayectorias observables,
+funciones de impulso-respuesta y distribuciones posteriores. Aprender a usarlo
+es aprender a \textup{\textit{hablar}} el lenguaje de la macroeconomía aplicada
+moderna.
+\end{quote}
+
+\bigskip
+
+\section{Motivación: por qué bajar de la pizarra}
+
+A lo largo del curso hemos construido, con lápiz y pizarra, el andamiaje de un
+modelo de equilibrio general dinámico: las preferencias del hogar, el problema
+de optimización intertemporal, las condiciones de primer orden, el vaciado de
+los mercados. Todo ese trabajo culmina, invariablemente, en un sistema de
+ecuaciones no lineales que describe las trayectorias de equilibrio de la
+economía. El problema es incómodo pero honesto: salvo en casos muy especiales,
+\emph{ese sistema no tiene solución analítica en forma cerrada}. La pizarra nos
+lleva hasta la puerta del problema cuantitativo, pero no la cruza.
+
+El ejercicio que resolveremos en esta sesión lo ilustra de manera nítida. Para
+el modelo RBC con trabajo que estudiaremos, la pizarra \emph{sí} entrega una
+solución cerrada, pero solo bajo el supuesto artificial de depreciación total
+($\delta=1$): en ese caso las horas no reaccionan al choque de productividad y
+el modelo colapsa a algo que podemos resolver a mano. En cuanto relajamos ese
+supuesto y dejamos que el capital se deprecie de a pocos ($\delta<1$) ---es
+decir, en cuanto el modelo se vuelve \emph{realista}--- la solución cerrada
+desaparece y necesitamos la computadora. Esa frontera, entre lo que la pizarra
+resuelve y lo que exige una herramienta numérica, es precisamente el tema de
+esta guía.
+
+\textbf{Dynare} es la plataforma de referencia para cruzar esa frontera. Es
+software libre, corre sobre MATLAB u Octave, y lo usan bancos centrales,
+ministerios de finanzas y departamentos de economía de todo el mundo. Su
+filosofía de diseño es separar dos capas del trabajo del investigador. La
+primera es la \emph{descripción económica}: uno escribe en un archivo de texto
+(\code{.mod}) las ecuaciones del modelo casi tal como aparecerían en el papel.
+La segunda es la \emph{computación}: Dynare interpreta ese archivo y aplica por
+nosotros los algoritmos numéricos pertinentes ---descomposición de Schur,
+filtros de Kalman, métodos de Monte Carlo--- sin que debamos programarlos. El
+economista se concentra en la economía; Dynare se encarga de la ingeniería.
+
+\begin{definition}[Dynare]
+Dynare es una plataforma de software de código abierto para el manejo de una
+amplia clase de modelos económicos dinámicos, en particular modelos DSGE. Sus
+capacidades incluyen: (i)~simulación determinista bajo previsión perfecta;
+(ii)~simulación estocástica mediante aproximaciones de Taylor de orden~$n$
+alrededor del estado estacionario; (iii)~estimación bayesiana vía filtro de
+Kalman y MCMC; y (iv)~análisis de política óptima.
+\end{definition}
+
+El objetivo de esta sesión es concreto: tomar el modelo RBC del ejercicio,
+escribirlo en Dynare de principio a fin ---declaraciones, ecuaciones, estado
+estacionario, calibración--- y usarlo para generar funciones de
+impulso-respuesta y momentos. Al terminar, cada quien habrá \emph{corrido} su
+propio modelo DSGE, no solo leído sobre él.
+
+\section{De la pizarra al computador: una breve historia}
+
+Conviene detenerse un momento en \emph{de dónde viene} esta forma de hacer
+macroeconomía, porque Dynare no cae del cielo: es el último eslabón de una
+transformación que tomó dos décadas y que cambió lo que significa ``tener un
+modelo''.
+
+\subsection{La visión: el modelo como laboratorio}
+
+El punto de quiebre intelectual lo articuló Robert E.\ Lucas~Jr.\ en
+1980. Su propuesta fue redefinir qué es una teoría económica: no un conjunto de
+afirmaciones sobre la economía real, sino un \emph{sistema artificial} que
+podemos construir y manipular. En sus palabras:
+
+\begin{quote}\itshape
+``One of the functions of theoretical economics is to provide fully articulated,
+artificial economic systems that can serve as laboratories in which policies
+that would be prohibitively expensive to experiment with in actual economies
+can be tested out at much lower cost.''
+\end{quote}
+\hfill{\small(Lucas, 1980, p.~696)}
+
+\noindent La idea del modelo como \emph{laboratorio} ---un lugar donde ensayar
+políticas que sería demasiado caro o peligroso probar en la economía real---
+exige, por supuesto, que ese laboratorio pueda efectivamente ponerse a
+funcionar. Y aquí Lucas fue sorprendentemente literal sobre lo que ello
+significaba:
+
+\begin{quote}\itshape
+``Our task, as I see it \ldots is to write a FORTRAN program that will accept
+specific economic policy rules as `input' and will generate as `output'
+statistics describing the operating characteristics of time series we care
+about.''
+\end{quote}
+\hfill{\small(Lucas, 1980, pp.~709--710)}
+
+\noindent Vale la pena subrayar la fecha: 1980. Mucho antes de que existiera el
+software que hoy damos por sentado, el programa de investigación ya estaba
+planteado en términos computacionales. Escribir el modelo como código no era un
+accesorio: \emph{era} la tarea.
+
+\subsection{La ejecución: el experimento computacional}
+
+Quienes convirtieron esa visión en una metodología operativa fueron Finn
+Kydland y Edward Prescott. Su modelo de ciclos reales ---``Time to Build and
+Aggregate Fluctuations'' (1982)--- no solo propuso una teoría; propuso una
+\emph{manera de trabajar} que Kydland resumiría, al recibir el Nobel, en una
+frase:
+
+\begin{quote}\itshape
+``The key tool macroeconomists use is the computational experiment.''
+\end{quote}
+\hfill{\small(Kydland, 2004, Nobel Prize Lecture, p.~341)}
+
+\noindent En este enfoque el modelo se trata como un instrumento de medición
+que, antes de usarse, debe \emph{calibrarse}: ``In a sense, models are measuring
+devices: they need to be calibrated'' (Kydland, 2004, p.~342). Calibrar
+significa fijar los parámetros con información de largo plazo y de estudios
+microeconómicos, de modo que el modelo reproduzca hechos que ya conocemos,
+para luego interrogarlo sobre los que no.
+
+¿Por qué calibrar, y no simplemente estimar el modelo con toda la maquinaria
+econométrica? La respuesta tiene una anécdota reveladora. Thomas Sargent, que
+había liderado el esfuerzo por llevar las expectativas racionales al terreno
+econométrico formal, recuerda el desencanto que condujo a la calibración:
+
+\begin{quote}\itshape
+``\ldots after about five years of doing likelihood ratio tests on rational
+expectations models, I recall Bob Lucas and Ed Prescott both telling me that
+those tests were rejecting too many good models.''
+\end{quote}
+\hfill{\small(Sargent, en Evans \& Honkapohja, 2005, pp.~561--583)}
+
+\noindent Los tests formales rechazaban modelos que, por lo demás, resultaban
+útiles y económicamente sensatos. La calibración nació, en parte, como una
+respuesta pragmática a esa tensión: conservar las implicaciones del modelo que
+nos interesan y no exigirle que supere todas las pruebas probabilísticas a la
+vez.
+
+\begin{remark}
+Esta tensión ---estimar formalmente versus calibrar--- no está zanjada, y hoy
+conviven ambas tradiciones. Dynare, de hecho, hace las dos cosas: permite
+calibrar y simular un modelo (lo que haremos en esta sesión) y también
+estimarlo bayesianamente con datos reales (el paso siguiente, que solo
+asomaremos al final). La elección es del investigador, no de la herramienta.
+\end{remark}
+
+\subsection{Las herramientas: de los algoritmos a Dynare}
+
+La visión de Lucas y la metodología de Kydland--Prescott necesitaban, para
+volverse práctica cotidiana, algoritmos concretos y software que los
+implementara. Dos piezas resultaron decisivas. Por el lado de los modelos
+\emph{lineales}, Blanchard y Kahn (1980) dieron la condición que determina
+cuándo un modelo de expectativas racionales tiene una solución única y estable
+---la misma condición que Dynare verifica hoy con el comando \code{check} y que
+usaremos en esta sesión. Por el lado de los modelos \emph{no lineales} de
+previsión perfecta, Fair y Taylor (1983) propusieron un método iterativo
+(\emph{extended path}) que es el antecedente directo del solver determinista de
+Dynare.
+
+El software que unificó todo esto lo creó \textbf{Michel Juillard}, quien
+inició el proyecto Dynare en~\textbf{1994} en el CEPREMAP (París). En su origen,
+Dynare resolvía modelos deterministas de previsión perfecta mediante un método
+de Newton sobre el sistema apilado; con los años incorporó la simulación
+estocástica por perturbación y la estimación bayesiana, hasta convertirse en el
+estándar \emph{de facto} de la macroeconomía cuantitativa. En febrero de 2025,
+el Banque de France celebró sus treinta años con una conferencia dedicada.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=2mm]}]
+  % línea
+  \draw[thick, upblue] (0,0) -- (13.2,0);
+  % hitos
+  \foreach \x/\y/\a in {
+      0/1976/{Crítica de Lucas},
+      2.4/1980/{Lucas: ``FORTRAN program''\\ Blanchard--Kahn},
+      5.1/1982/{Kydland--Prescott:\\ Time to Build},
+      7.3/1983/{Fair--Taylor:\\ previsión perfecta},
+      9.8/1994/{Juillard crea\\ \textbf{Dynare} (CEPREMAP)},
+      12.6/2025/{30 años\\ (Banque de France)}}{
+    \filldraw[upblue] (\x,0) circle (2.3pt);
+    \node[upblue, font=\footnotesize\bfseries] at (\x,0.35) {\y};
+    \node[align=center, text width=2.6cm, font=\scriptsize] at (\x,-0.75) {\a};
+  }
+\end{tikzpicture}
+\caption{De la pizarra al computador: hitos del giro cuantitativo en
+macroeconomía y el linaje de Dynare.}
+\label{fig:timeline}
+\end{figure}
+
+\begin{remark}
+El hilo conductor de esta historia es sencillo: \emph{escribir el modelo como
+código no reemplaza la teoría; la completa}. La pizarra plantea el sistema de
+ecuaciones; la computadora lo resuelve, lo simula y lo confronta con los datos.
+Dynare encarna la promesa de Juillard de que uno debería poder ``escribir el
+modelo casi como lo haría en el papel'' y dejar que la máquina haga el resto.
+Es exactamente lo que haremos en lo que resta de esta guía.
+\end{remark}
+
+% ===================== REFERENCIAS =====================
+\begin{thebibliography}{99}
+\addcontentsline{toc}{chapter}{Referencias}
+
+\bibitem{bk1980} Blanchard, O.~J.\ \& Kahn, C.~M.\ (1980). The Solution of
+Linear Difference Models under Rational Expectations. \emph{Econometrica},
+48(5), 1305--1311.
+
+\bibitem{ft1983} Fair, R.~C.\ \& Taylor, J.~B.\ (1983). Solution and Maximum
+Likelihood Estimation of Dynamic Nonlinear Rational Expectations Models.
+\emph{Econometrica}, 51(4), 1169--1185.
+
+\bibitem{kp1982} Kydland, F.~E.\ \& Prescott, E.~C.\ (1982). Time to Build and
+Aggregate Fluctuations. \emph{Econometrica}, 50(6), 1345--1370.
+
+\bibitem{kp1996} Kydland, F.~E.\ \& Prescott, E.~C.\ (1996). The Computational
+Experiment: An Econometric Tool. \emph{Journal of Economic Perspectives},
+10(1), 69--85.
+
+\bibitem{kydland2004} Kydland, F.~E.\ (2004). \emph{Quantitative Aggregate
+Theory}. Nobel Prize Lecture, 8 de diciembre de 2004.
+
+\bibitem{lucas1980} Lucas, R.~E.\ Jr.\ (1980). Methods and Problems in Business
+Cycle Theory. \emph{Journal of Money, Credit and Banking}, 12(4), 696--715.
+
+\bibitem{prescott1986} Prescott, E.~C.\ (1986). Theory Ahead of Business-Cycle
+Measurement. \emph{Federal Reserve Bank of Minneapolis Quarterly Review},
+10(4), 9--22.
+
+\bibitem{sargent2005} Sargent, T.~J.\ (2005). An Interview with Thomas J.\
+Sargent (por G.~W.\ Evans \& S.~Honkapohja). \emph{Macroeconomic Dynamics},
+9, 561--583.
+
+\bibitem{dynare} Adjemian, S., Bastani, H., Juillard, M., Karamé, F.,
+Mutschler, W., Pfeifer, J., Ratto, M., Rion, N.\ \& Villemot, S.\
+\emph{Dynare: Reference Manual}. CEPREMAP, Dynare Working Papers.
+
+\end{thebibliography}
+
+\end{document}
