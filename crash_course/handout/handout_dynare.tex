@@ -1060,31 +1060,217 @@ más fino (¿es único y estable?, ¿cómo responde?). Si algo falla, el primer
 comando que se queja señala dónde está el problema.
 \end{remark}
 
-\section{Resultados y el experimento $\delta=1$ vs.\ $\delta<1$}
+\section{Leer la salida de Dynare}
+\label{sec:salida}
 
-La corrida reproduce \emph{exactamente} lo que derivamos a mano: el estado
-estacionario de la Tabla~\ref{tab:ss} ($c_{ss}=0.4528$, $k_{ss}=4.5785$,
-$\theta=3.342$), los valores propios $\{0.936,\ 0.979,\ 1.086\}$ de la
-\S\ref{sec:bk}, y las funciones de impulso-respuesta de la
-Figura~\ref{fig:irf}.
+Al correr, Dynare imprime mucho más que las IRFs. Conviene leerlo bloque por
+bloque: cada uno confirma ---o delata--- una pieza del modelo. Recorrámoslos en
+el orden en que aparecen.
+
+\paragraph{1. El estado estacionario.} El primer bloque reporta el EE que entregó
+\lstinline@steady_state_model@, seguido de los residuos de \code{resid}:
+
+\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
+STEADY-STATE RESULTS:
+  y 0.567292   c 0.452831   i 0.114462   k 4.57847
+  h 0.200000   r 0.041260   w 1.89192    a 1.00000
+
+Residuals of the static equations:
+  Equation 1 (Euler) ... Equation 8 (TFP):  0.000000
+\end{lstlisting}
+
+\noindent Coincide al dígito con la Tabla~\ref{tab:ss} (parte~C), y los ocho
+residuos son nulos: el estado estacionario satisface exactamente las ecuaciones
+del \code{model}. Si alguno fuera distinto de cero, habría un error de álgebra
+en el EE cerrado.
+
+\paragraph{2. Los valores propios.} \code{check} imprime el espectro del sistema
+linealizado y el veredicto de Blanchard--Kahn:
+
+\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
+EIGENVALUES:
+   Modulus      Real    Imaginary
+     0.936     0.936        0
+     0.979     0.979        0
+     1.086     1.086        0
+  1.145e+18 1.145e+18        0
+There are 2 eigenvalue(s) larger than 1 in modulus
+for 2 forward-looking variable(s).
+The order and rank conditions are verified.
+\end{lstlisting}
+
+\noindent Reconocemos $0.936$, $0.979\,(=\phi)$ y $1.086$: son \emph{exactamente}
+los valores propios de la \S\ref{sec:bk}. Pero aparecen dos novedades frente al
+cálculo a mano ---un cuarto valor propio gigante ($1.145\times10^{18}\approx\infty$)
+y el conteo de ``2 forward-looking variables''--- que conviene reconciliar.
+
+\begin{remark}
+En la \S\ref{sec:bk} redujimos el sistema a uno de $3\times3$ eliminando
+$\hat{r}$, y quedó una única variable de control ($\hat{c}$) con una sola raíz
+inestable ($1.086$). Dynare, en cambio, conserva las ocho variables y, como
+$r$ aparece con adelanto $r(+1)$ en la Euler, la clasifica \emph{también} como
+\emph{jumper}. Esa variable ---estática pero escrita con lead--- genera un valor
+propio infinito ($1.145\times10^{18}$). El conteo cuadra: dos raíces de módulo
+mayor que uno ($1.086$ e $\infty$) para dos \emph{jumpers} ($c$, $r$). La
+economía es la misma ---un único salto genuino, el consumo---; el valor propio
+infinito es un artefacto de escribir $r$ con lead y desaparece al sustituir $r$,
+como hicimos a mano. En ambas lecturas la condición de Blanchard--Kahn se cumple.
+\end{remark}
+
+\paragraph{3. El resumen del modelo.} A continuación, Dynare clasifica las
+variables ---la misma taxonomía de la \S\ref{sec:bk}, hecha por la máquina:
+
+\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
+MODEL SUMMARY
+  Number of variables:         8
+  Number of state variables:   2   (k, a)
+  Number of jumpers:           2   (c, r)
+  Number of static variables:  4   (y, i, h, w)
+\end{lstlisting}
+
+\noindent Dos estados ($k$ predeterminado, $a$ exógeno), los controles
+\emph{forward-looking}, y cuatro variables estáticas que se determinan
+contemporáneamente a partir de las demás.
+
+\paragraph{4. Las funciones de política.} Este es el bloque más rico: la
+\emph{regla de decisión} resuelta, es decir, cada variable en función de los
+estados $k(-1)$, $a(-1)$ y del choque $eps$ (en niveles, como desviación del EE):
+
+\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
+POLICY AND TRANSITION FUNCTIONS
+                   y         c         i         k         h         a
+Constant     0.567292  0.452831  0.114462  4.578467  0.200000  1.000000
+k(-1)        0.013385  0.052384 -0.038999  0.936001 -0.014734  0
+a(-1)        0.820454  0.258377  0.562077  0.562077  0.140109  0.979000
+eps          0.838053  0.263919  0.574134  0.574134  0.143114  1.000000
+\end{lstlisting}
+
+\noindent Tres lecturas, de la más simple a la más reveladora:
+\begin{enumerate}[label=(\roman*),nosep,leftmargin=2.2em]
+\item La fila \code{Constant} es el estado estacionario.
+\item \textbf{La diagonal lleva los valores propios.} El coeficiente de $k$ ante
+  $k(-1)$ es $0.936001$ ---el valor propio estable, es decir, la velocidad con
+  que el capital converge--- y el de $a$ ante $a(-1)$ es $0.979=\phi$. La regla
+  de decisión hereda, en su diagonal, los eigenvalues que vimos en \code{check}.
+\item \textbf{Son las elasticidades $\eta$ de la \S\ref{sec:policy}, en niveles.}
+  Para pasar un coeficiente a elasticidad se multiplica por $x_{ss}/(\text{estado})_{ss}$.
+  Por ejemplo, para el consumo ante el capital,
+  \[
+  \frac{\partial \log c}{\partial \log k}
+  = 0.052384\times\frac{k_{ss}}{c_{ss}}
+  = 0.052384\times\frac{4.5785}{0.4528}=0.530,
+  \]
+  \emph{exactamente} la entrada de $\mathbf{H}$ que obtuvimos en la
+  \S\ref{sec:bk}. La máquina y la pizarra coinciden una vez más.
+\end{enumerate}
+
+\section{Las funciones de impulso-respuesta}
+\label{sec:irf}
+
+Con la regla de decisión en mano, \lstinline@stoch_simul@ traza las funciones de
+impulso-respuesta (IRFs): la trayectoria de cada variable tras un choque de
+productividad de una desviación estándar (Figura~\ref{fig:irf}).
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{assets/irf_base.pdf}
 \caption{IRFs a un choque de productividad de una desviación estándar
-($\delta=0.025$). Reproducen las que genera Dynare con \lstinline@stoch_simul@.}
+($\delta=0.025$), en desviaciones del estado estacionario. Reproducen las que
+genera Dynare con \lstinline@stoch_simul@.}
 \label{fig:irf}
 \end{figure}
 
-Las IRFs cuentan la historia del ciclo real: el producto salta y decae; la
-inversión reacciona con más fuerza en el impacto; el consumo es
-\emph{hump-shaped} (suavización); el capital se acumula despacio. Y las
+Las IRFs cuentan la historia del ciclo real. En el impacto, la productividad
+sube y con ella el producto; la \emph{inversión} es la que más salta ---el hogar
+aprovecha el mayor retorno del capital para acumular---, mientras que el
+\emph{consumo} responde poco al inicio y alcanza su pico más tarde
+(\emph{hump-shaped}): es la suavización intertemporal en acción. El \emph{capital}
+se acumula despacio y revierte con lentitud (su raíz es $0.936$). Y las
 \emph{horas} suben en el impacto ---el mecanismo que, por la \S\ref{sec:policy},
-solo opera cuando $\delta<1$.
+solo opera cuando $\delta<1$--- para luego cruzar a terreno negativo cuando el
+capital ya es alto y la productividad revierte.
 
-\paragraph{El experimento.} Para aislar ese mecanismo, re-ejecutamos con
+\section{Momentos y hechos estilizados del ciclo}
+\label{sec:momentos}
+
+\lstinline@stoch_simul@ también imprime los \emph{momentos teóricos} del modelo:
+medias, desviaciones estándar y correlaciones de las variables en el equilibrio
+estocástico. Aquí está el verdadero termómetro de un modelo de ciclos reales:
+¿reproduce los hechos estilizados del ciclo económico? Como vimos en el
+Capítulo~1, Kydland y Prescott calibraban precisamente para confrontar estos
+momentos con los datos.
+
+\paragraph{Volatilidades.} La columna \code{STD.\ DEV.} da la desviación estándar
+de cada variable (Tabla~\ref{tab:moments}).
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Variable} & \textbf{Media} & \textbf{Desv.\ est.} & \textbf{Volatilidad relativa}\\
+ & & & \textbf{a $y$ (\%)}\\
+\midrule
+$y$ (producto)   & $0.5673$ & $0.0328$ & $1.00$ \\
+$c$ (consumo)    & $0.4528$ & $0.0230$ & $0.88$ \\
+$i$ (inversión)  & $0.1145$ & $0.0123$ & $1.86$ \\
+$h$ (horas)      & $0.2000$ & $0.0026$ & $0.22$ \\
+$w$ (salario)    & $1.8919$ & $0.0980$ & $0.90$ \\
+$k$ (capital)    & $4.5785$ & $0.2757$ & $1.04$ \\
+$a$ (PTF)        & $1.0000$ & $0.0353$ & $0.61$ \\
+\bottomrule
+\end{tabular}
+\caption{Momentos teóricos de primer y segundo orden. La volatilidad relativa es
+$(\sigma_x/x_{ss})/(\sigma_y/y_{ss})$.}
+\label{tab:moments}
+\end{table}
+
+\begin{remark}
+Un error tentador es comparar las desviaciones estándar \emph{en bruto}:
+$\sigma_i=0.0123<\sigma_y=0.0328$ ``diría'' que la inversión es \emph{menos}
+volátil que el producto. Es falso: las variables tienen medias muy distintas
+($i_{ss}=0.11$, $y_{ss}=0.57$). Para comparar volatilidades hay que normalizar
+por la media ---el coeficiente de variación, equivalente a la desviación
+estándar del logaritmo. En términos porcentuales, $\sigma_i/i_{ss}=10.7\%$ frente
+a $\sigma_y/y_{ss}=5.8\%$: la inversión es $\approx1.9$ veces más volátil que el
+producto.
+\end{remark}
+
+\noindent Normalizadas así, las cifras reproducen dos hechos estilizados
+clásicos: la \emph{inversión} es mucho más volátil que el producto ($\approx1.9\times$)
+y el \emph{consumo}, más suave ($0.88\times$). La baja volatilidad de las
+\emph{horas} ($0.22\times$), en cambio, es la conocida debilidad del RBC básico:
+con un solo choque y utilidad logarítmica, el modelo genera menos fluctuación de
+empleo de la que muestran los datos.
+
+\paragraph{Comovimiento.} La matriz de correlaciones dice qué tan procíclica es
+cada variable. La fila del producto da
+$\mathrm{corr}(y,c)=0.96$, $\mathrm{corr}(y,i)=0.87$,
+$\mathrm{corr}(y,h)=0.56$, $\mathrm{corr}(y,w)=0.98$ y
+$\mathrm{corr}(y,a)=0.9984$: consumo, inversión, horas, salarios y PTF son todos
+\emph{procíclicos} ---otro hecho estilizado que el modelo captura.
+
+\paragraph{Persistencia.} Los coeficientes de autocorrelación de orden~1 son
+altos ($\rho_y=0.98$, $\rho_c=0.996$, $\rho_i=0.94$, $\rho_k=0.999$,
+$\rho_a=0.98$): el modelo genera ciclos \emph{persistentes}. La persistencia
+viene de dos fuentes ---el choque de PTF ya es persistente ($\phi=0.979$) y la
+acumulación de capital añade propagación propia.
+
+\begin{remark}
+Estos momentos son de las variables \emph{en niveles, sin filtrar}, de modo que
+están dominados por el componente de baja frecuencia (la PTF es muy persistente).
+Para compararlos con los momentos del \emph{ciclo} que reportan los datos
+---como en Kydland--Prescott--- la serie se filtra con Hodrick--Prescott
+($\lambda=1600$ para datos trimestrales), añadiendo \lstinline@hp_filter=1600@ a
+\lstinline@stoch_simul@. Es uno de los experimentos que proponemos más adelante.
+\end{remark}
+
+\section{El experimento $\delta=1$ vs.\ $\delta<1$}
+\label{sec:experimento}
+
+Cerramos con el experimento que da sentido a todo el capítulo. Para aislar el
+mecanismo de las horas, re-ejecutamos con
 \lstinline@dynare rbc_analytical -DDELTA1=1@ ($\delta=1$, que recalibra
-$\theta\approx 3.968$) y comparamos la respuesta de las horas
+$\theta\approx3.968$) y comparamos la respuesta de las horas
 (Figura~\ref{fig:hours}). Con depreciación parcial las horas responden; con
 depreciación total quedan clavadas en cero, tal como probamos en
 \eqref{eq:mu}--\eqref{eq:hzero}. La pizarra y la máquina dicen lo mismo.
@@ -1096,11 +1282,6 @@ depreciación total quedan clavadas en cero, tal como probamos en
 nulas, confirmando el resultado analítico de la \S\ref{sec:policy}.}
 \label{fig:hours}
 \end{figure}
-
-Con esto cerramos el recorrido: del papel ---preferencias, FONC, estado
-estacionario, log-linealización, Blanchard--Kahn--- al código, y de vuelta, con
-la certeza de que cada número que imprime Dynare tiene detrás una ecuación que
-sabemos resolver a mano.
 
 % ===================== APÉNDICE =====================
 \appendix
