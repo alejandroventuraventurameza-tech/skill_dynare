@@ -823,25 +823,46 @@ f(\bar{x},\bar{x},\bar{x},0)=0.
 \]
 Es el punto alrededor del cual Dynare lineariza (o aproxima con Taylor) el
 modelo, y el que calculamos en forma cerrada en el Capítulo~\ref{ch:modelo}.
+Equivalentemente, en términos de la regla de decisión
+$x_t=g(x_{t-1},\varepsilon_t;\sigma)$ ---donde $\sigma\ge 0$ es un parámetro de
+perturbación que escala la desviación estándar de los choques--- es el punto
+fijo $\bar{x}=g(\bar{x},0;0)$.
 \end{definition}
 
-\begin{definition}[Estado estacionario estocástico]
-Es el punto al que converge la economía en ausencia de \emph{realizaciones} de
-los choques, pero cuando los agentes saben que éstos \emph{pueden} ocurrir: la
-varianza futura $\sigma_\varepsilon^2>0$ forma parte de su información. A
-diferencia del determinista, incorpora el comportamiento precautorio inducido
-por la incertidumbre.
+\begin{definition}[Estado estacionario estocástico (\emph{risky steady state})]
+Con la misma regla de decisión $x_t=g(x_{t-1},\varepsilon_t;\sigma)$, el estado
+estacionario estocástico es el punto fijo $\bar{x}^{\,r}$ al que converge la
+economía cuando no se realiza ningún choque en el presente ($\varepsilon_t=0$),
+pero los agentes internalizan que la varianza futura es positiva ($\sigma>0$):
+\[
+\bar{x}^{\,r}=g\!\left(\bar{x}^{\,r},\,0;\,\sigma\right),\qquad \sigma>0.
+\]
+El determinista es el caso límite sin incertidumbre, $\bar{x}=g(\bar{x},0;0)$.
+En general $\bar{x}^{\,r}\neq\bar{x}$: la brecha recoge el comportamiento
+precautorio inducido por el riesgo (Coeurdacier, Rey y Winant, 2011).
 \end{definition}
 
 \begin{remark}
-La relación entre ambos depende del orden de aproximación. A \textbf{primer
-orden} rige la \emph{equivalencia cierta}: la solución lineal ignora la varianza
-de los choques y el estado estacionario estocástico coincide con el
-determinista. Recién a \textbf{segundo orden} (o superior) aparece un término de
-corrección por riesgo, y la media de la distribución ergódica se separa del
-estado estacionario determinista. En esta sesión trabajamos a primer orden
-(\code{order=1}), de modo que ambos conceptos coinciden; la distinción se vuelve
-material al usar \code{order=2} o al estudiar primas de riesgo.
+La relación entre ambos se obtiene expandiendo $g$ en serie de Taylor alrededor
+de $(\bar{x},0;0)$ en los estados, los choques y el parámetro $\sigma$. A
+\textbf{primer orden},
+\[
+x_t=\bar{x}+g_x\,(x_{t-1}-\bar{x})+g_\varepsilon\,\varepsilon_t,
+\]
+sin ningún término en $\sigma$: los coeficientes son independientes de la
+varianza de los choques ---la \emph{equivalencia cierta} de Schmitt-Grohé y
+Uribe (2004)---, de modo que $\E[x_t]=\bar{x}$ y por tanto
+$\bar{x}^{\,r}=\bar{x}$. A \textbf{segundo orden} aparece la corrección por
+riesgo,
+\[
+x_t=\bar{x}+\underbrace{\tfrac12\,g_{\sigma\sigma}\,\sigma^2}_{\text{corrección por riesgo}}
++g_x\,(x_{t-1}-\bar{x})+\tfrac12\,g_{xx}\,(x_{t-1}-\bar{x})^{2}+\cdots,
+\]
+con $g_{\sigma\sigma}\neq 0$ en general. El término
+$\tfrac12 g_{\sigma\sigma}\sigma^2$ desplaza tanto $\bar{x}^{\,r}$ como la media
+de la distribución ergódica respecto a $\bar{x}$. En esta sesión usamos
+\code{order=1}, así que ambos coinciden; la distinción se vuelve material a
+partir de \code{order=2} (por ejemplo, al estudiar primas de riesgo).
 \end{remark}
 
 % ===================== REFERENCIAS =====================
@@ -889,6 +910,14 @@ Macroeconomics}, vol.~1B, cap.~14. Elsevier.
 Stochastic Models Easily. En R.\ Marimon \& A.\ Scott (eds.), \emph{Computational
 Methods for the Study of Dynamic Economies}. Oxford University Press. (Versión de
 trabajo: 1995.)
+
+\bibitem{sgu2004} Schmitt-Grohé, S.\ \& Uribe, M.\ (2004). Solving Dynamic
+General Equilibrium Models Using a Second-Order Approximation to the Policy
+Function. \emph{Journal of Economic Dynamics and Control}, 28(4), 755--775.
+
+\bibitem{crw2011} Coeurdacier, N., Rey, H.\ \& Winant, P.\ (2011). The Risky
+Steady State. \emph{American Economic Review: Papers \& Proceedings}, 101(3),
+398--401.
 
 \end{thebibliography}
 
