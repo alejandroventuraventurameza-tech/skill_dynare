@@ -1336,7 +1336,7 @@ Para compararlos con los momentos del \emph{ciclo} que reportan los datos
 \section{El experimento $\delta=1$ vs.\ $\delta<1$}
 \label{sec:experimento}
 
-Cerramos con el experimento que da sentido a todo el capítulo. Para aislar el
+Llegamos al experimento que da sentido a todo el modelo. Para aislar el
 mecanismo de las horas, re-ejecutamos con
 \lstinline@dynare rbc_analytical -DDELTA1=1@ ($\delta=1$, que recalibra
 $\theta\approx3.968$) y comparamos la respuesta de las horas
@@ -1484,6 +1484,49 @@ teórica. Los primeros tres cambian un parámetro; los dos últimos, una opción
 $\delta$ (\S\ref{sec:experimento}), con \lstinline@-DDELTA1=1@. Cinco líneas, cinco
 lecciones ---y la certeza, en cada caso, de poder anticipar el resultado antes de
 correr.
+
+\section{Próximos pasos: estimar en vez de calibrar}
+\label{sec:bayes}
+
+Hasta aquí \emph{calibramos}: fijamos los parámetros con información de largo
+plazo y estudios micro, y preguntamos cómo responde el modelo. El otro gran modo
+de Dynare es \emph{estimar} esos parámetros a partir de datos reales. La vía
+estándar es la \textbf{estimación bayesiana}: combina distribuciones \emph{a
+priori} del investigador con la verosimilitud de los datos ---calculada con el
+filtro de Kalman--- para obtener la distribución \emph{posterior} de los
+parámetros, que se explora con métodos de Monte Carlo (Metropolis--Hastings).
+Es, en una línea, la respuesta moderna al dilema calibrar--estimar que vimos en
+el Capítulo~1.
+
+El flujo añade tres bloques al \code{.mod}: \code{varobs} (qué variables del
+modelo se observan en los datos), \lstinline@estimated_params@ (qué parámetros se
+estiman y con qué \emph{priors}) y \code{estimation}:
+
+\begin{lstlisting}
+varobs y c i;              // variables observables (modelo <-> datos)
+
+estimated_params;
+  phi,        beta_pdf,       0.95, 0.03;    // persistencia, prior Beta
+  sigma_eps,  inv_gamma_pdf,  0.007, inf;    // desv. del choque, Inv-Gamma
+end;
+
+estimation(datafile = datos_trimestral, mh_replic = 100000,
+           mh_nblocks = 2, mode_compute = 6, bayesian_irf);
+\end{lstlisting}
+
+\noindent La elección del \emph{prior} debe respetar el soporte del parámetro
+(una $\mathrm{Beta}$ para algo en $(0,1)$ como $\phi$; una Inv-Gamma para una
+desviación estándar positiva). Esto exige series de tiempo reales y su propio
+cuidado econométrico ---por eso lo dejamos como \emph{próximo paso}, no como
+parte de esta sesión. Pero el mensaje es que el mismo \code{.mod} que calibramos
+sirve, casi sin cambios, para confrontarse con los datos.
+
+\bigskip
+
+Con esto cerramos el recorrido: del papel ---preferencias, FONC, estado
+estacionario, log-linealización, Blanchard--Kahn--- al código, y de vuelta, con
+la certeza de que cada número que imprime Dynare tiene detrás una ecuación que
+sabemos resolver a mano.
 
 % ===================== APÉNDICE =====================
 \appendix
