@@ -421,13 +421,13 @@ Tabla~\ref{tab:vars} resume la notación.
 
 \begin{table}[H]
 \centering\small
-\begin{tabular}{cl}
+\begin{tabular}{cc}
 \toprule
 \textbf{Símbolo} & \textbf{Significado} \\
 \midrule
 $c_t,\ h_t$ & consumo y trabajo (horas) en $t$ \\
 $1-h_t$ & ocio (dotación de tiempo normalizada a $1$) \\
-$k_t,\ k_{t+1}$ & capital al inicio de $t$ / capital elegido en $t$ \\
+$k_t,\ k_{t+1}$ & capital al inicio de $t$ y capital elegido en $t$ \\
 $i_t,\ y_t$ & inversión y producto \\
 $r_t,\ w_t$ & tasa real de alquiler del capital y salario real \\
 $a_t$ & productividad total de factores (PTF) \\
@@ -439,7 +439,7 @@ $\phi\in(0,1)$ & persistencia del choque de PTF \\
 $\varepsilon_t$ & innovación, $\varepsilon_t\sim N(0,\sigma_\varepsilon^2)$ \\
 \bottomrule
 \end{tabular}
-\caption{Variables y parámetros del modelo.}
+\caption{Variables endógenas, exógenas y parámetros del modelo.}
 \label{tab:vars}
 \end{table}
 
@@ -535,10 +535,17 @@ incógnitas es lo primero que Dynare verificará.
 
 \section{Estado estacionario}
 
-En el estado estacionario las variables son constantes y $\varepsilon_t=0$;
-entonces $\ln a_{ss}=\phi\ln a_{ss}$ implica $a_{ss}=1$. Denotamos con el
-subíndice $ss$ los valores de largo plazo, y la estrategia es trabajar con
-\emph{ratios} antes de despejar niveles.
+En el estado estacionario \emph{determinista} ---es decir, con todos los choques
+apagados, $\varepsilon_t=0$--- las variables son constantes;\footnote{La
+distinción entre el estado estacionario \emph{determinista} (\textit{non-stochastic})
+y el \emph{estocástico} se formaliza en el Apéndice~\ref{app:ss}; a primer orden,
+por equivalencia cierta, ambos coinciden.} entonces $\ln a_{ss}=\phi\ln a_{ss}$
+implica $a_{ss}=1$. Denotamos con el subíndice $ss$ los valores de largo plazo, y
+la estrategia es trabajar con \emph{ratios} antes de despejar niveles.\footnote{%
+¿Por qué ratios? Porque desacoplan el sistema: cocientes como $y_{ss}/k_{ss}$
+quedan fijados solo por parámetros, sin depender de la escala de la economía. Eso
+permite resolver el estado estacionario \emph{en cascada} ---una variable a la
+vez--- en lugar de enfrentar simultáneamente un sistema no lineal en niveles.}
 
 De la Euler \eqref{eq:euler} en estado estacionario, $1=\beta(r_{ss}+1-\delta)$,
 sale de inmediato la tasa de alquiler:
@@ -625,9 +632,217 @@ valor & $0.0413$ & $4.5785$ & $0.5673$ & $0.4528$ & $0.1145$ & $1.8919$ \\
 \label{tab:ss}
 \end{table}
 
-Con el modelo completamente especificado ---ecuaciones, estado estacionario y
-calibración--- estamos listos para traducirlo a Dynare. Ese es el tema del
-próximo capítulo.
+\section{Log-linealización}
+\label{sec:loglin}
+
+El sistema de equilibrio es no lineal, de modo que para resolverlo y simularlo
+lo aproximamos alrededor del estado estacionario. Seguimos el método de Uhlig
+(1995): reemplazamos cada variable por su desviación logarítmica,
+$x_t=x_{ss}\,e^{\hat{x}_t}$ con $\hat{x}_t=\ln(x_t/x_{ss})$, y usamos las
+aproximaciones para desviaciones pequeñas
+\[
+e^{\hat{x}_t}\approx 1+\hat{x}_t, \qquad \hat{x}_t\,\hat{y}_t\approx 0.
+\]
+Aplicándolas a cada ecuación del sistema se obtiene el sistema log-lineal; las
+variables son ahora \emph{desviaciones porcentuales} respecto al estado
+estacionario:
+\begin{align}
+\text{Producción:}&\quad \hat{y}_t=\hat{a}_t+(1-\alpha)\hat{k}_t+\alpha\hat{h}_t, \label{eq:ll_prod}\\
+\text{Demanda de capital:}&\quad \hat{r}_t=\hat{y}_t-\hat{k}_t, \label{eq:ll_kd}\\
+\text{Demanda de trabajo:}&\quad \hat{w}_t=\hat{y}_t-\hat{h}_t, \label{eq:ll_ld}\\
+\text{Oferta de trabajo:}&\quad \hat{c}_t+\tfrac{h_{ss}}{1-h_{ss}}\,\hat{h}_t=\hat{w}_t, \label{eq:ll_ls}\\
+\text{Euler:}&\quad \E_t\hat{c}_{t+1}-\hat{c}_t=\beta r_{ss}\,\E_t\hat{r}_{t+1}, \label{eq:ll_euler}\\
+\text{Ley de movimiento:}&\quad \hat{k}_{t+1}=(1-\delta)\hat{k}_t+\delta\,\hat{\imath}_t, \label{eq:ll_lom}\\
+\text{Vaciado de mercado:}&\quad \hat{y}_t=s_c\hat{c}_t+s_i\hat{\imath}_t, \label{eq:ll_clear}\\
+\text{Productividad:}&\quad \hat{a}_t=\phi\hat{a}_{t-1}+\varepsilon_t, \label{eq:ll_tfp}
+\end{align}
+donde $s_c\equiv c_{ss}/y_{ss}$ y $s_i\equiv i_{ss}/y_{ss}$ son las
+participaciones del consumo y la inversión en el producto ($s_c+s_i=1$), y
+$\beta r_{ss}=1-\beta(1-\delta)$.
+
+\begin{remark}
+Dos coeficientes merecen atención. En la oferta de trabajo \eqref{eq:ll_ls}, el
+factor $h_{ss}/(1-h_{ss})$ proviene de log-linealizar $\ln(1-h_t)$: como el ocio
+es $1-h_t$, una subida de las horas reduce el ocio en esa proporción. En la
+Euler \eqref{eq:ll_euler}, $\beta r_{ss}$ mide cuánto se transmite una variación
+del retorno del capital a la pendiente del consumo.
+\end{remark}
+
+\section{Solución analítica: funciones de política}
+\label{sec:policy}
+
+Resolvamos ahora el modelo \emph{a mano}. Para que ello sea posible imponemos,
+por el momento, depreciación total ($\delta=1$); al final de la sección veremos
+por qué es justamente este supuesto el que abre la puerta a la solución cerrada.
+Buscamos funciones de política lineales en los estados,
+$\hat{x}_t=\eta_{xk}\hat{k}_t+\eta_{xa}\hat{a}_t$.
+
+\subsection{Las horas no responden}
+
+Combinando la oferta \eqref{eq:ll_ls} y la demanda de trabajo \eqref{eq:ll_ld}
+para eliminar $\hat{w}_t$ se obtiene
+\begin{equation}
+\hat{c}_t=\hat{y}_t-\frac{1}{1-h_{ss}}\,\hat{h}_t. \label{eq:cy}
+\end{equation}
+Con $\delta=1$, la ley de movimiento \eqref{eq:ll_lom} se reduce a
+$\hat{k}_{t+1}=\hat{\imath}_t$, y el vaciado de mercado \eqref{eq:ll_clear} da
+$\hat{k}_{t+1}=(\hat{y}_t-s_c\hat{c}_t)/s_i$. Sustituyendo la demanda de capital
+\eqref{eq:ll_kd} en la Euler \eqref{eq:ll_euler} (con $\beta r_{ss}=1$ cuando
+$\delta=1$) y usando \eqref{eq:cy}, tras simplificar se llega a una ecuación en
+diferencias que gobierna las horas:
+\begin{equation}
+\boxed{\ \E_t\hat{h}_{t+1}=\mu\,\hat{h}_t,\qquad \mu=\frac{1}{(1-\alpha)\beta}\ }. \label{eq:mu}
+\end{equation}
+Como $(1-\alpha)\beta<1$, se tiene $\mu>1$: la recursión \eqref{eq:mu} es
+\emph{explosiva}, y la única trayectoria acotada es
+\begin{equation}
+\boxed{\ \hat{h}_t=0\quad\text{para todo }t\ }. \label{eq:hzero}
+\end{equation}
+
+\begin{remark}
+La intuición es nítida: con utilidad logarítmica y $\delta=1$, ante un choque de
+productividad el efecto ingreso y el efecto sustitución sobre la oferta de
+trabajo se cancelan \emph{exactamente}. El hogar transforma toda la ganancia de
+productividad en mayor consumo e inversión, pero no altera cuánto trabaja hoy.
+\end{remark}
+
+\subsection{Las funciones de política}
+
+Con $\hat{h}_t=0$ el resto de la solución es inmediato: de la producción
+\eqref{eq:ll_prod}, $\hat{y}_t=\hat{a}_t+(1-\alpha)\hat{k}_t$; de \eqref{eq:cy},
+$\hat{c}_t=\hat{y}_t$; y de la ley de movimiento, $\hat{k}_{t+1}=\hat{y}_t$. Las
+elasticidades a los estados $(\hat{k}_t,\hat{a}_t)$ quedan como en la
+Tabla~\ref{tab:policy}.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{ccccccc}
+\toprule
+ & $\hat{y}_t$ & $\hat{c}_t$ & $\hat{\imath}_t$ & $\hat{k}_{t+1}$ & $\hat{r}_t$ & $\hat{w}_t$ \\
+\midrule
+$\eta_{\cdot k}$ (ante $\hat{k}_t$) & $1-\alpha$ & $1-\alpha$ & $1-\alpha$ & $1-\alpha$ & $-\alpha$ & $1-\alpha$ \\
+$\eta_{\cdot a}$ (ante $\hat{a}_t$) & $1$ & $1$ & $1$ & $1$ & $1$ & $1$ \\
+\bottomrule
+\end{tabular}
+\caption{Funciones de política para $\delta=1$ (con $\hat{h}_t=0$).}
+\label{tab:policy}
+\end{table}
+
+\subsection{Por qué $\delta=1$ es especial}
+
+Si $\delta<1$ e insistimos en $\hat{h}_t=0$, la Euler \eqref{eq:ll_euler} deja de
+poder satisfacerse: con depreciación parcial el retorno bruto del capital
+$r_{t+1}+1-\delta$ ya no es proporcional a $y_{t+1}/k_t$, y la cancelación
+exacta de efectos ingreso y sustitución se rompe. En consecuencia, \emph{las
+horas deben responder} al choque ($\hat{h}_t\neq 0$). Este es el mecanismo
+central del modelo RBC: es la respuesta endógena del trabajo lo que permite
+generar fluctuaciones de la amplitud y la persistencia que se observan en los
+datos. Y es, también, la razón por la que con $\delta<1$ la pizarra ya no basta:
+no hay solución cerrada y entra Dynare.
+
+\section{Estabilidad y unicidad: Blanchard--Kahn}
+\label{sec:bk}
+
+Volvamos al caso general $\delta\in(0,1]$. El método de Blanchard y Kahn (1980)
+determina cuándo el equilibrio de expectativas racionales existe y es único, a
+partir de la estructura de valores propios del sistema linealizado.
+
+Despejando $\hat{h}_t$ de \eqref{eq:cy} y sustituyéndolo en la producción
+\eqref{eq:ll_prod}, el producto queda en función de los estados y del consumo:
+\begin{equation}
+\hat{y}_t=n_y\hat{a}_t+n_k\hat{k}_t+n_c\hat{c}_t,\qquad
+n_y=\tfrac{1}{\Delta},\quad n_k=\tfrac{1-\alpha}{\Delta},\quad
+n_c=-\tfrac{\alpha(1-h_{ss})}{\Delta}, \label{eq:ncoefs}
+\end{equation}
+con $\Delta\equiv 1-\alpha(1-h_{ss})$. Eliminando además $\hat{r}_t$,
+$\hat{w}_t$ e $\hat{\imath}_t$, el sistema se reduce a tres ecuaciones en
+$(\hat{k}_t,\hat{a}_t,\hat{c}_t)$, que escribimos en forma matricial
+\begin{equation}
+\mathbf{A}\begin{pmatrix}\hat{k}_{t+1}\\[2pt]\hat{a}_{t+1}\\[2pt]\E_t\hat{c}_{t+1}\end{pmatrix}
+=\mathbf{B}\begin{pmatrix}\hat{k}_{t}\\[2pt]\hat{a}_{t}\\[2pt]\hat{c}_{t}\end{pmatrix}
++\mathbf{C}\,\varepsilon_{t+1}. \label{eq:ABC}
+\end{equation}
+Premultiplicando por $\mathbf{A}^{-1}$ se obtiene
+$\mathbf{F}=\mathbf{A}^{-1}\mathbf{B}$, cuya estructura de valores propios lo
+decide todo.
+
+\begin{proposition}[Condición de Blanchard--Kahn]
+Los valores propios de $\mathbf{F}$ son $\phi$ y las dos raíces de un polinomio
+cuadrático $P(\lambda)$ que satisfacen $\lambda_1\lambda_2=1/\beta$ y $P(1)<0$;
+en consecuencia una raíz cae dentro y la otra fuera del círculo unitario. El
+sistema tiene dos estados predeterminados ($\hat{k}$, $\hat{a}$) y una variable
+de control \emph{forward-looking} ($\hat{c}$). Como el número de valores propios
+inestables ($|\lambda|>1$) es exactamente \emph{uno} ---igual al número de
+controles--- se cumple la condición de Blanchard--Kahn: el equilibrio de
+expectativas racionales existe y es único.
+\end{proposition}
+
+\begin{example}[Verificación numérica]
+Con la calibración base ($\delta=0.025$) los coeficientes de \eqref{eq:ncoefs}
+son $n_y=2.144$, $n_k=0.714$, $n_c=-1.144$, y los valores propios de
+$\mathbf{F}$ resultan
+\[
+\big\{\,0.936,\ \underbrace{0.979}_{=\,\phi},\ 1.086\,\big\}.
+\]
+Las dos raíces no triviales cumplen $0.936\times 1.086\approx 1.016=1/\beta$:
+una estable y una inestable, justo lo que exige Blanchard--Kahn. Son
+\emph{exactamente} los valores propios que reporta Dynare con el comando
+\code{check}, como veremos en el próximo capítulo.
+\end{example}
+
+\begin{remark}
+Si el número de valores propios inestables \emph{excediera} al de controles, no
+existiría ninguna trayectoria estable (modelo explosivo); si fuera \emph{menor},
+habría infinitas (indeterminación). La igualdad exacta es lo que garantiza una
+única regla de decisión. Por eso \code{check} es la primera prueba que todo
+modelo debe pasar en Dynare: un error de \emph{timing} altera el conteo de
+valores propios y hace fallar la condición.
+\end{remark}
+
+Con el modelo completamente especificado \emph{y resuelto analíticamente}
+---ecuaciones, estado estacionario, log-linealización, funciones de política y
+condición de estabilidad--- estamos listos para traducirlo a Dynare y confirmar,
+con la máquina, lo que ya sabemos con el lápiz. Ese es el tema del próximo
+capítulo.
+
+% ===================== APÉNDICE =====================
+\appendix
+\chapter{Estado estacionario: determinista vs.\ estocástico}
+\label{app:ss}
+
+A lo largo de este handout trabajamos con el \textbf{estado estacionario
+determinista}. Conviene precisar qué es y en qué se distingue del estocástico.
+
+\begin{definition}[Estado estacionario determinista]
+Es el punto $\bar{x}$ en el que todas las variables son constantes cuando se
+apagan todos los choques, presentes y futuros ($\varepsilon_t=0$ para todo $t$).
+Si el modelo se escribe como $\E_t\, f(x_{t+1},x_t,x_{t-1},\varepsilon_t)=0$, el
+estado estacionario determinista resuelve
+\[
+f(\bar{x},\bar{x},\bar{x},0)=0.
+\]
+Es el punto alrededor del cual Dynare lineariza (o aproxima con Taylor) el
+modelo, y el que calculamos en forma cerrada en el Capítulo~\ref{ch:modelo}.
+\end{definition}
+
+\begin{definition}[Estado estacionario estocástico]
+Es el punto al que converge la economía en ausencia de \emph{realizaciones} de
+los choques, pero cuando los agentes saben que éstos \emph{pueden} ocurrir: la
+varianza futura $\sigma_\varepsilon^2>0$ forma parte de su información. A
+diferencia del determinista, incorpora el comportamiento precautorio inducido
+por la incertidumbre.
+\end{definition}
+
+\begin{remark}
+La relación entre ambos depende del orden de aproximación. A \textbf{primer
+orden} rige la \emph{equivalencia cierta}: la solución lineal ignora la varianza
+de los choques y el estado estacionario estocástico coincide con el
+determinista. Recién a \textbf{segundo orden} (o superior) aparece un término de
+corrección por riesgo, y la media de la distribución ergódica se separa del
+estado estacionario determinista. En esta sesión trabajamos a primer orden
+(\code{order=1}), de modo que ambos conceptos coinciden; la distinción se vuelve
+material al usar \code{order=2} o al estudiar primas de riesgo.
+\end{remark}
 
 % ===================== REFERENCIAS =====================
 \begin{thebibliography}{99}
@@ -665,6 +880,15 @@ Sargent (por G.~W.\ Evans \& S.~Honkapohja). \emph{Macroeconomic Dynamics},
 \bibitem{dynare} Adjemian, S., Bastani, H., Juillard, M., Karamé, F.,
 Mutschler, W., Pfeifer, J., Ratto, M., Rion, N.\ \& Villemot, S.\
 \emph{Dynare: Reference Manual}. CEPREMAP, Dynare Working Papers.
+
+\bibitem{kingrebelo1999} King, R.~G.\ \& Rebelo, S.~T.\ (1999). Resuscitating
+Real Business Cycles. En J.~B.\ Taylor \& M.\ Woodford (eds.), \emph{Handbook of
+Macroeconomics}, vol.~1B, cap.~14. Elsevier.
+
+\bibitem{uhlig1999} Uhlig, H.\ (1999). A Toolkit for Analysing Nonlinear Dynamic
+Stochastic Models Easily. En R.\ Marimon \& A.\ Scott (eds.), \emph{Computational
+Methods for the Study of Dynamic Economies}. Oxford University Press. (Versión de
+trabajo: 1995.)
 
 \end{thebibliography}
 
