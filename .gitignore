@@ -37,3 +37,14 @@ _preview_*
 *.synctex.gz
 *.fls
 *.fdb_latexmk
+
+# Dynare: carpeta de salida que se crea al correr (<nombre_del_.mod>/):
+# Output/ (*_results.mat), model/ (bytecode/json), graphs/ (IRFs) y checksum.
+# Se regeneran en cada corrida — NO versionar. (+<nombre>/ ya cubierto por +*/ arriba.)
+examples/**/Output/
+examples/**/model/
+examples/**/graphs/
+examples/**/checksum
+
+# Estado local de herramientas de IA (no versionar)
+.claude/
