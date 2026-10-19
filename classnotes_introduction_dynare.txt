@@ -1,0 +1,976 @@
+% ============================================================
+%  CHAPTER — Introducción a Dynare
+%  Guía para estudiantes de Macroeconomía II
+%  Compatible con el Preamble de Ventura & Narrea
+% ============================================================
+
+\chapter{Introducción a Dynare}
+
+\begin{quote}
+\itshape
+Un modelo macroeconómico que no puede ser llevado a los datos ni simulado para generar
+predicciones cuantitativas es, en el mejor de los casos, un ejercicio intelectual incompleto.
+Dynare es la herramienta que cierra esa brecha: convierte las ecuaciones abstractas de un
+DSGE en trayectorias observables, funciones de impulso-respuesta y distribuciones
+posteriores. Aprender a usarlo es aprender a \textup{\textit{hablar}} el lenguaje de la
+macroeconomía aplicada moderna.
+\end{quote}
+
+\bigskip
+
+\section{Motivación y panorama general}
+
+A lo largo de los capítulos anteriores hemos construido con rigurosidad los fundamentos
+teóricos del marco DSGE: las preferencias del hogar, el problema de optimización intertemporal,
+las condiciones de primer orden, el equilibrio competitivo y la equivalencia con el problema del
+planificador. Todo ese andamiaje culmina, invariablemente, en un sistema de ecuaciones
+funcionales no-lineales que describen las trayectorias de equilibrio de las variables
+macroeconómicas. El problema es que estos sistemas, salvo en casos muy especiales, no admiten
+solución analítica en forma cerrada. Se requiere, por tanto, de métodos numéricos para
+aproximar sus soluciones.
+
+\textbf{Dynare} es la plataforma computacional de referencia para este propósito en la
+macroeconomía moderna. Desarrollado principalmente en el CEPREMAP (París) y mantenido por
+un equipo internacional de investigadores, Dynare es software libre y de código abierto que
+corre sobre MATLAB u Octave. Dado que es utilizado por bancos centrales, ministerios de
+finanzas, organismos internacionales e instituciones académicas de todo el mundo, comprender
+su funcionamiento resulta indispensable para cualquier economista que desee trabajar con
+modelos DSGE, ya sea para investigación o para política económica aplicada
+\parencite[véase][para una historia del software]{Adjemianetal2026}.
+
+\begin{definition}[Dynare]
+Dynare es una plataforma de software de código abierto diseñada para el manejo de una
+amplia clase de modelos económicos dinámicos, en particular modelos de Equilibrio General
+Dinámico Estocástico (DSGE) y modelos de Generaciones Traslapadas (OLG). Sus
+capacidades incluyen: (i) simulación determinista bajo previsión perfecta; (ii) simulación
+estocástica mediante aproximaciones de Taylor de orden $n$ alrededor del estado
+estacionario; (iii) estimación bayesiana vía filtro de Kalman y métodos de cadenas de
+Markov Monte Carlo (MCMC); (iv) análisis de política óptima tipo Ramsey; y (v) análisis
+de sensibilidad e identificación de parámetros.
+\end{definition}
+
+La filosofía de Dynare es separar con claridad dos capas del trabajo del investigador. La
+primera capa es la \textit{descripción económica}: el usuario escribe en un archivo de texto
+(\texttt{.mod}) las ecuaciones del modelo en su forma casi-natural, declarando variables,
+parámetros y perturbaciones tal y como aparecerían en el papel. La segunda capa es la
+\textit{computación}: Dynare interpreta ese archivo, ejecuta internamente un preprocesador
+que transforma las ecuaciones a las representaciones matriciales requeridas, y luego aplica
+los algoritmos numéricos pertinentes (descomposición de Schur, filtros de Kalman, algoritmos
+MCMC, etc.) sin que el usuario deba programarlos. Esta separación le permite al
+macroeconomista enfocarse en la economía, delegando en Dynare la ingeniería computacional.
+
+\begin{remark}
+A lo largo de esta guía se utilizará Dynare 7.0 (versión lanzada en 2026). Los archivos
+\texttt{.mod} son retrocompatibles en su mayoría, aunque algunos comandos de versiones
+antiguas han sido deprecados. Se recomienda siempre verificar la versión con el comando
+\texttt{dynare\_version} en la ventana de comandos de MATLAB/Octave.
+\end{remark}
+
+\section{Instalación y configuración}
+
+\subsection{Requisitos de software}
+
+Dynare requiere una de las siguientes plataformas de cómputo matemático:
+
+\begin{itemize}
+    \item \textbf{MATLAB}: cualquier versión desde la 9.8 (R2020a) hasta la 25.2 (R2025b).
+    \item \textbf{GNU Octave}: versiones 8.4.0 a 11.1.0, con los paquetes
+          \texttt{statistics} y \texttt{datatypes} instalados.
+\end{itemize}
+
+Aunque MATLAB ofrece mayor velocidad y compatibilidad, Octave es completamente gratuito
+y funciona para la gran mayoría de las aplicaciones docentes. Para estudiantes, Octave es
+la opción recomendada.
+
+\subsection{Proceso de instalación}
+
+\begin{example}[Instalación en Windows]
+\begin{enumerate}[(i)]
+    \item Descargar el instalador \texttt{dynare-7.0-win.exe} desde
+          \url{https://www.dynare.org}.
+    \item Ejecutar el instalador y seguir las instrucciones. El directorio por defecto
+          es \texttt{c:\textbackslash dynare\textbackslash 7.0}.
+    \item Abrir MATLAB y agregar la ruta del subdirectorio \texttt{matlab} al
+          \textit{path}:
+\begin{verbatim}
+>> addpath c:/dynare/7.0/matlab
+\end{verbatim}
+    \item Para que MATLAB recuerde esta configuración en sesiones futuras, usar
+          \textit{File} $\to$ \textit{Set Path} $\to$ \textit{Add Folder} y guardar.
+\end{enumerate}
+\end{example}
+
+\begin{example}[Instalación en macOS]
+En macOS, ejecutar el instalador \texttt{dynare-7.0-arm64.pkg} (para Apple Silicon) o
+\texttt{dynare-7.0-x86\_64.pkg} (para Intel). Luego, en la ventana de MATLAB:
+\begin{verbatim}
+>> addpath /Applications/Dynare/7.0-arm64/matlab
+\end{verbatim}
+Para Octave en macOS vía Homebrew: \texttt{brew install dynare}.
+\end{example}
+
+\begin{assumption}[Verificación de la instalación]
+Una vez configurado el \textit{path}, verificar que Dynare está correctamente instalado
+ejecutando desde la ventana de MATLAB/Octave:
+\begin{verbatim}
+>> dynare_version
+\end{verbatim}
+Esto debe devolver el número de versión actual (e.g. \texttt{7.0}). Si aparece un error
+del tipo \textit{undefined function}, significa que el \textit{path} no fue configurado
+correctamente.
+\end{assumption}
+
+\begin{remark}
+Una advertencia importante sobre el \textit{path}: \textbf{nunca} se deben agregar todos
+los subdirectorios de la carpeta \texttt{matlab} de Dynare. Dynare gestiona
+automáticamente qué subdirectorios adicionales necesita en cada ejecución. Agregar
+subdirectorios manualmente puede generar conflictos entre funciones y producir resultados
+inesperados o errores difíciles de depurar.
+\end{remark}
+
+\section{El archivo \texttt{.mod}: estructura general}
+
+El corazón de todo flujo de trabajo en Dynare es el \textbf{archivo modelo} (\textit{model
+file}), cuya extensión es \texttt{.mod} (o \texttt{.dyn}). Este archivo de texto contiene
+tres grandes bloques de información: (1) la descripción del modelo (variables, parámetros,
+ecuaciones); (2) las condiciones iniciales y terminales; y (3) las instrucciones de cómputo
+(qué tareas debe realizar Dynare).
+
+\begin{definition}[Archivo \texttt{.mod}]
+Un archivo \texttt{.mod} es un archivo de texto plano que Dynare interpreta como un
+programa. Contiene una sucesión de \textbf{comandos} (instrucciones que terminan con punto y coma
+\texttt{;}) y \textbf{bloques} (secciones delimitadas por una palabra clave de apertura y
+\texttt{end;}). Cada bloque y cada comando le transmiten al preprocesador de Dynare
+información sobre el modelo o una tarea de cómputo a ejecutar.
+\end{definition}
+
+La estructura general de un archivo \texttt{.mod} sigue este esquema:
+
+\begin{verbatim}
+// 1. Declaración de variables
+var ...;
+varexo ...;
+parameters ...;
+
+// 2. Inicialización de parámetros
+alpha = 0.36;
+beta  = 0.99;
+...
+
+// 3. Bloque del modelo
+model;
+   [ecuaciones del modelo]
+end;
+
+// 4. Condiciones iniciales / estado estacionario
+initval;
+   [valores iniciales]
+end;
+steady;
+
+// 5. Perturbaciones
+shocks;
+   [especificación de shocks]
+end;
+
+// 6. Instrucción de cómputo
+stoch_simul(options);
+\end{verbatim}
+
+\begin{remark}
+Los comentarios en un archivo \texttt{.mod} siguen la sintaxis de C++: \texttt{//} para
+comentarios de una línea y \texttt{/* ... */} para bloques multilínea. Esto es distinto
+de MATLAB, donde los comentarios se introducen con \texttt{\%}. Usar \texttt{\%} dentro
+de un bloque \texttt{model} causará un error del preprocesador.
+\end{remark}
+
+\subsection{Convenciones de notación temporal}
+
+Una convención crucial de Dynare que debe internalizarse desde el principio es la del
+\textbf{timing de las variables}. En Dynare, el tiempo en que aparece una variable en una
+ecuación refleja \textit{cuándo fue decidida} esa variable, no cuándo es físicamente
+utilizada. Esto tiene implicancias importantes para las variables de estado (stock):
+
+\begin{itemize}
+    \item \texttt{k} denota el capital decidido (i.e., la inversión realizada) en el
+          período actual $t$.
+    \item \texttt{k(-1)} denota el capital que fue decidido el período anterior $t-1$ y
+          que ahora se usa en producción.
+    \item \texttt{c(+1)} denota el consumo esperado en el período $t+1$, tal como lo
+          anticipa el hogar en $t$.
+\end{itemize}
+
+Así, la ley de movimiento del capital se escribe en Dynare como:
+\[
+    k = i + (1-\delta)\,k(-1)
+\]
+y la condición de Euler del consumo como:
+\[
+    c^{-\sigma} = \beta \bigl[\alpha A k^{\alpha-1} + (1-\delta)\bigr]\, c(+1)^{-\sigma}
+\]
+
+\begin{remark}
+Este convenio es el estándar ``capital al final del período'' (\textit{end-of-period stock
+convention}). Existen modelos que prefieren la convención opuesta (``capital al inicio del
+período''), en cuyo caso se utiliza el comando \texttt{predetermined\_variables} antes del
+bloque \texttt{model}. Para esta guía utilizaremos siempre la convención por defecto de
+Dynare.
+\end{remark}
+
+\section{Declaración de variables y parámetros}
+
+\subsection{Variables endógenas: \texttt{var}}
+
+\begin{definition}[Comando \texttt{var}]
+El comando \texttt{var} declara las variables endógenas del modelo, es decir, aquellas
+cuya trayectoria el modelo resuelve endógenamente. La sintaxis básica es:
+\begin{verbatim}
+var NOMBRE_1 NOMBRE_2 ... NOMBRE_N;
+\end{verbatim}
+Los nombres de variables distinguen entre mayúsculas y minúsculas, deben comenzar con
+una letra y no pueden contener los caracteres \texttt{() + - * / \^ = ! ; : @ \# .}
+\end{definition}
+
+\begin{example}[Declaración de variables endógenas en un modelo RBC]
+\begin{verbatim}
+var y c i k n w r a;
+\end{verbatim}
+Aquí \texttt{y} es producto, \texttt{c} consumo, \texttt{i} inversión, \texttt{k} capital,
+\texttt{n} trabajo, \texttt{w} salario real, \texttt{r} tasa de retorno del capital y
+\texttt{a} la productividad total de los factores (PTF).
+\end{example}
+
+\subsection{Variables exógenas: \texttt{varexo}}
+
+\begin{definition}[Comando \texttt{varexo}]
+El comando \texttt{varexo} declara las variables exógenas del modelo, es decir, las
+innovaciones o perturbaciones ($\varepsilon_t$) que no pueden predecirse a partir del
+estado corriente de la economía. Estas son las ``perturbaciones'' (\textit{shocks}) del
+modelo. La sintaxis es:
+\begin{verbatim}
+varexo NOMBRE_1 NOMBRE_2 ... NOMBRE_N;
+\end{verbatim}
+\end{definition}
+
+Es importante distinguir: si la PTF sigue un proceso AR(1),
+\[
+    \ln a_t = \rho \ln a_{t-1} + \varepsilon_t^a,
+\]
+entonces $a_t$ es una variable \textit{endógena} (se declara con \texttt{var}) porque se
+predice parcialmente a partir de $a_{t-1}$, mientras que $\varepsilon_t^a$ es la
+innovación \textit{exógena} (se declara con \texttt{varexo}).
+
+\begin{example}[Declaración de perturbaciones]
+\begin{verbatim}
+varexo eps_a eps_m;
+\end{verbatim}
+Donde \texttt{eps\_a} es la perturbación tecnológica y \texttt{eps\_m} es la perturbación
+de política monetaria.
+\end{example}
+
+\subsection{Parámetros: \texttt{parameters}}
+
+\begin{definition}[Comando \texttt{parameters}]
+El comando \texttt{parameters} declara los parámetros estructurales del modelo, es decir,
+las constantes calibradas o estimadas que caracterizan las preferencias, la tecnología y
+las políticas. La sintaxis es:
+\begin{verbatim}
+parameters NOMBRE_1 NOMBRE_2 ... NOMBRE_N;
+\end{verbatim}
+Los parámetros deben recibir un valor numérico antes de que Dynare intente resolver el
+modelo.
+\end{definition}
+
+\begin{remark}
+Dynare impone una restricción importante: el nombre de un parámetro o variable
+\textbf{no} puede coincidir con el nombre de un comando de Dynare o una función
+incorporada de MATLAB/Octave. Por ejemplo, no se deben nombrar variables o parámetros
+\texttt{i} (interfiere con el número imaginario), \texttt{alpha} (función de MATLAB), o
+\texttt{inv} (operador inversa de matriz). Se recomienda usar nombres como
+\texttt{alph}, \texttt{bet}, \texttt{delt} en lugar de \texttt{alpha}, \texttt{beta},
+\texttt{delta} cuando se trabaja con archivos de estado estacionario definidos por el
+usuario.
+\end{remark}
+
+\subsection{Inicialización de parámetros}
+
+Una vez declarados los parámetros, se les asignan valores numéricos mediante una sintaxis
+directa:
+\begin{verbatim}
+NOMBRE_PARÁMETRO = EXPRESIÓN;
+\end{verbatim}
+
+\begin{example}[Calibración de un modelo RBC estándar]
+\begin{verbatim}
+parameters alph bet delt sig rho_a sig_a;
+
+alph  = 0.36;    % Participación del capital
+bet   = 0.99;    % Factor de descuento (frecuencia trimestral)
+delt  = 0.025;   % Tasa de depreciación trimestral
+sig   = 2.00;    % Elasticidad intertemporal inversa de sustitución
+rho_a = 0.95;    % Persistencia del shock tecnológico
+sig_a = 0.007;   % Desviación estándar del shock tecnológico
+\end{verbatim}
+\end{example}
+
+Los valores de los parámetros se almacenan internamente en el vector \texttt{M\_.params}.
+Es posible modificarlos desde MATLAB/Octave incluso después de haber corrido Dynare,
+usando el comando \texttt{set\_param\_value('nombre', valor)}.
+
+\section{El bloque \texttt{model}: las ecuaciones del modelo}
+
+\subsection{Sintaxis básica}
+
+El bloque \texttt{model} es el corazón del archivo \texttt{.mod}. Contiene el sistema de
+ecuaciones que describe la economía. Debe haber exactamente tantas ecuaciones como
+variables endógenas declaradas (salvo en ejercicios de política óptima tipo Ramsey).
+
+\begin{definition}[Bloque \texttt{model}]
+El bloque \texttt{model} delimita el sistema de ecuaciones del modelo dinámico. Está
+delimitado por las palabras clave \texttt{model;} y \texttt{end;}. Cada ecuación debe
+terminar con punto y coma (\texttt{;}). Dynare interpreta cada ecuación como una
+condición de igualdad $f(y_t, y_{t-1}, y_{t+1}, x_t) = 0$, donde el sistema completo
+define el equilibrio general.
+\end{definition}
+
+La forma estándar de una ecuación es:
+\begin{verbatim}
+LHS = RHS;
+\end{verbatim}
+También se acepta la forma homogénea (omitiendo el \texttt{= 0}):
+\begin{verbatim}
+LHS - RHS;
+\end{verbatim}
+
+\subsection{Variables locales del modelo}
+
+Dentro del bloque \texttt{model} es posible definir variables locales usando el símbolo
+\texttt{\#}. Estas variables no se declaran globalmente; son simplemente abreviaciones
+algebraicas que Dynare sustituye en cada ecuación donde aparecen:
+\begin{verbatim}
+model;
+  # Omega = 1 - 1/sigma;
+  u = c^Omega / Omega;
+  ...
+end;
+\end{verbatim}
+
+\subsection{Etiquetas de ecuaciones}
+
+Es buena práctica nombrar las ecuaciones mediante \textbf{etiquetas} (\textit{tags}). Esto
+facilita la depuración de errores, pues Dynare puede reportar residuos por nombre en lugar
+de solo por número de ecuación:
+\begin{verbatim}
+model;
+  [name = 'Euler_consumo']
+  c^(-sig) = bet*(alph*a(+1)*k^(alph-1) + 1 - delt)*c(+1)^(-sig);
+  ...
+end;
+\end{verbatim}
+
+\subsection{Ejemplo completo: modelo RBC estándar}
+
+Construyamos el modelo RBC canónico. El hogar representativo maximiza:
+\[
+    \mathbb{E}_0 \sum_{t=0}^{\infty} \beta^t \frac{c_t^{1-\sigma}-1}{1-\sigma}
+\]
+sujeto a la restricción presupuestaria y la ley de movimiento del capital:
+\[
+    c_t + k_t = y_t + (1-\delta)k_{t-1}, \quad y_t = a_t k_{t-1}^\alpha.
+\]
+La PTF sigue un proceso AR(1): $\ln a_t = \rho_a \ln a_{t-1} + \varepsilon_t^a$.
+
+Las condiciones de optimalidad (Euler, oferta de trabajo inelástica, vaciamiento de
+mercados) dan lugar al siguiente sistema de ecuaciones de equilibrio:
+
+\begin{example}[Bloque \texttt{model} para el RBC estándar]
+\begin{verbatim}
+model;
+  [name = 'Función de producción']
+  y = a*k(-1)^alph;
+
+  [name = 'Vaciamiento de mercado']
+  y = c + i;
+
+  [name = 'Ley de movimiento del capital']
+  k = (1-delt)*k(-1) + i;
+
+  [name = 'Ecuación de Euler']
+  c^(-sig) = bet*(alph*a(+1)*k^(alph-1) + 1 - delt)*c(+1)^(-sig);
+
+  [name = 'Proceso AR(1) de PTF']
+  log(a) = rho_a*log(a(-1)) + eps_a;
+end;
+\end{verbatim}
+Nótese que tenemos 5 ecuaciones y 5 variables endógenas: \texttt{y, c, i, k, a}.
+\end{example}
+
+\section{El estado estacionario}
+
+Antes de simular o estimar el modelo, Dynare necesita conocer (o encontrar numéricamente)
+el \textbf{estado estacionario}, es decir, los valores de las variables endógenas cuando
+todos los shocks son iguales a cero y el sistema no cambia en el tiempo. Este es el punto
+alrededor del cual se lineariza (o se aproxima con Taylor) el modelo para obtener la
+solución numérica.
+
+\subsection{Valores iniciales: bloque \texttt{initval}}
+
+\begin{definition}[Bloque \texttt{initval}]
+El bloque \texttt{initval} cumple un doble propósito. En modelos estocásticos, proporciona
+los \textbf{valores iniciales} para el solver no-lineal que busca el estado estacionario.
+En modelos deterministas, además fija las condiciones iniciales de la simulación. Su
+sintaxis es:
+\begin{verbatim}
+initval;
+  VARIABLE_1 = VALOR_1;
+  VARIABLE_2 = VALOR_2;
+  ...
+end;
+\end{verbatim}
+Cualquier variable no mencionada toma el valor 0 por defecto.
+\end{definition}
+
+\subsection{El comando \texttt{steady}}
+
+\begin{definition}[Comando \texttt{steady}]
+El comando \texttt{steady} invoca el solver no-lineal de Dynare (algoritmo tipo Newton)
+para encontrar el estado estacionario del modelo, partiendo de los valores declarados en
+el bloque \texttt{initval} previo. Dynare desplegará los valores del estado estacionario y
+verificará que los residuos del sistema estático sean (numéricamente) cero.
+\end{definition}
+
+\begin{example}[Estado estacionario del RBC]
+Para el modelo RBC con las ecuaciones anteriores, el estado estacionario analítico puede
+calcularse a mano. Dado que en el estado estacionario $a^* = 1$ (pues $\varepsilon = 0$
+y $\log(a^*) = 0$), se tiene:
+\begin{align*}
+r^* &= \frac{1}{\beta} - (1-\delta), \quad
+k^* = \left(\frac{r^*}{\alpha}\right)^{1/(\alpha-1)}, \\
+y^* &= (k^*)^\alpha, \quad
+i^* = \delta k^*, \quad c^* = y^* - i^*.
+\end{align*}
+
+En el archivo \texttt{.mod}:
+\begin{verbatim}
+initval;
+  k = ((1/bet - 1 + delt)/alph)^(1/(alph-1));
+  a = 1;
+  y = k^alph;
+  i = delt*k;
+  c = y - i;
+end;
+steady;
+\end{verbatim}
+\end{example}
+
+\subsection{El bloque \texttt{steady\_state\_model}}
+
+Para modelos más complejos, o cuando se desea mayor robustez en la estimación (donde el
+estado estacionario debe recomputarse para cada vector de parámetros), es preferible
+proveer una \textbf{solución analítica} del estado estacionario usando el bloque
+\texttt{steady\_state\_model}:
+
+\begin{definition}[Bloque \texttt{steady\_state\_model}]
+El bloque \texttt{steady\_state\_model} permite al investigador definir algebraicamente
+la solución del estado estacionario. Dynare utiliza estas ecuaciones para construir
+automáticamente una función MATLAB/Octave que calcula el estado estacionario de forma
+exacta, sin necesidad de un solver numérico iterativo. Cada línea tiene la forma:
+\begin{verbatim}
+VARIABLE = EXPRESIÓN;
+\end{verbatim}
+donde la expresión puede referenciar parámetros y variables ya calculadas en líneas
+anteriores del mismo bloque.
+\end{definition}
+
+\begin{example}[Uso de \texttt{steady\_state\_model} en el RBC]
+\begin{verbatim}
+steady_state_model;
+  a   = 1;
+  r   = 1/bet - 1 + delt;
+  k   = (r/alph)^(1/(alph-1));
+  y   = k^alph;
+  i   = delt*k;
+  c   = y - i;
+end;
+\end{verbatim}
+\end{example}
+
+\begin{proposition}[Verificación del estado estacionario]
+Para verificar que el estado estacionario calculado satisface efectivamente el sistema de
+ecuaciones del modelo, se utiliza el comando \texttt{resid}, que computa los residuos de
+las ecuaciones estáticas para los valores de las variables endógenas provistos. Todos los
+residuos deben ser numéricamente cero (o muy próximos a cero según la tolerancia del
+solver).
+\end{proposition}
+
+\section{Perturbaciones: el bloque \texttt{shocks}}
+
+Una vez especificado el modelo y su estado estacionario, se debe caracterizar la
+distribución de las perturbaciones estocásticas. El bloque \texttt{shocks} cumple esta
+función.
+
+\begin{definition}[Bloque \texttt{shocks} (contexto estocástico)]
+En un modelo estocástico, el bloque \texttt{shocks} especifica los elementos no nulos de
+la matriz de varianzas-covarianzas de los choques exógenos. Las entradas posibles son:
+\begin{itemize}
+    \item Desviación estándar: \texttt{var VARIABLE; stderr EXPRESIÓN;}
+    \item Varianza: \texttt{var VARIABLE = EXPRESIÓN;}
+    \item Covarianza: \texttt{var VAR1, VAR2 = EXPRESIÓN;}
+    \item Correlación: \texttt{corr VAR1, VAR2 = EXPRESIÓN;}
+\end{itemize}
+\end{definition}
+
+\begin{example}[Especificación de shocks para el RBC]
+\begin{verbatim}
+shocks;
+  var eps_a; stderr sig_a;
+end;
+\end{verbatim}
+Si el modelo tuviera además un shock de demanda \texttt{eps\_d} correlacionado con
+\texttt{eps\_a}:
+\begin{verbatim}
+shocks;
+  var eps_a; stderr 0.007;
+  var eps_d; stderr 0.003;
+  corr eps_a, eps_d = 0.3;
+end;
+\end{verbatim}
+\end{example}
+
+\section{Simulación estocástica: \texttt{stoch\_simul}}
+
+\subsection{Fundamento teórico: la aproximación de Taylor}
+
+El núcleo computacional de Dynare para modelos estocásticos es la \textbf{aproximación
+perturbacional} de las funciones de decisión y transición del modelo. El punto de
+partida es el sistema de ecuaciones de expectativas racionales:
+\[
+    \mathbb{E}_t \bigl[ F(y_{t+1}, y_t, y_{t-1}, u_t) \bigr] = 0,
+\]
+donde $y_t$ es el vector de variables endógenas y $u_t$ el vector de perturbaciones.
+Dynare linealiza (o aproxima a orden superior) este sistema alrededor del estado
+estacionario determinista $y^*$, obteniendo la \textbf{regla de decisión}:
+
+\begin{theorem}[Representación de primer orden]
+\label{thm:primer_orden}
+Bajo una aproximación de primer orden (\textit{log-linearización}), la solución al modelo
+de expectativas racionales tiene la forma:
+\[
+    \hat{y}_t = A\,\hat{y}_{t-1} + B\,u_t,
+\]
+donde $\hat{y}_t = y_t - y^*$ denota las desviaciones porcentuales respecto al estado
+estacionario, $A$ es la matriz de coeficientes de las variables de estado
+(\texttt{oo\_.dr.ghx} en Dynare) y $B$ es la matriz de coeficientes de los shocks
+(\texttt{oo\_.dr.ghu} en Dynare). Esta representación constituye un VAR(1) en el espacio
+de estado.
+\end{theorem}
+
+Para la aproximación de segundo orden, la solución incorpora un término de corrección por
+la varianza de los shocks futuros (``efecto nivel''):
+\[
+    y_t = y^* + \tfrac{1}{2}\Delta^2 + A\,\hat{y}_{t-1} + B\,u_t
+    + \tfrac{1}{2}C(\hat{y}_{t-1} \otimes \hat{y}_{t-1})
+    + \tfrac{1}{2}D(u_t \otimes u_t) + E(\hat{y}_{t-1} \otimes u_t),
+\]
+donde $\Delta^2$ captura el efecto de la incertidumbre sobre el nivel medio de las
+variables, conocido como la \textbf{corrección de segundo orden}. Esto implica que, a
+diferencia del modelo lineal, las medias de las variables en el modelo de segundo orden
+difieren en general de sus valores en el estado estacionario determinista.
+
+\subsection{El comando \texttt{stoch\_simul}}
+
+\begin{definition}[Comando \texttt{stoch\_simul}]
+El comando \texttt{stoch\_simul} es la instrucción central para la solución y simulación
+de modelos estocásticos en Dynare. Calcula la aproximación de Taylor del modelo alrededor
+del estado estacionario y, a partir de ella, computa: (i) las \textbf{funciones de
+impulso-respuesta} (IRFs); (ii) los \textbf{momentos teóricos} (medias, varianzas,
+covarianzas, autocorrelaciones, descomposición de varianza); y opcionalmente (iii)
+\textbf{simulaciones temporales} del modelo.
+\end{definition}
+
+La sintaxis básica es:
+\begin{verbatim}
+stoch_simul(opciones) [lista_de_variables];
+\end{verbatim}
+
+Si se especifica una lista de variables, los resultados solo se despliegan para esas
+variables (aunque la solución se calcula para todas). Si no se especifica lista, se
+muestran resultados para todas las variables endógenas.
+
+\subsection{Opciones principales de \texttt{stoch\_simul}}
+
+Las opciones más utilizadas, separadas por comas dentro del paréntesis, son:
+
+\begin{itemize}
+    \item \textbf{\texttt{order = n}}: orden de la aproximación de Taylor. Los valores
+          posibles son 1, 2 o 3 (y superiores con el solver de alto orden). El valor
+          por defecto es \texttt{order=2}.
+
+    \item \textbf{\texttt{periods = T}}: si se especifica un valor positivo, Dynare
+          genera una simulación temporal de $T$ períodos y calcula \textit{momentos
+          empíricos} a partir de la simulación (en lugar de momentos teóricos). Las
+          series simuladas quedan disponibles en \texttt{oo\_.endo\_simul}.
+
+    \item \textbf{\texttt{irf = H}}: número de períodos para las funciones de impulso-
+          respuesta. El valor por defecto es \texttt{irf=40}. Para suprimir las IRFs:
+          \texttt{irf=0}.
+
+    \item \textbf{\texttt{ar = p}}: orden máximo de autocorrelación a calcular y
+          reportar. El valor por defecto es \texttt{ar=5}.
+
+    \item \textbf{\texttt{drop = n}}: número de períodos de \textit{burn-in} a
+          descartar antes de calcular momentos empíricos. Por defecto, \texttt{drop=100}.
+
+    \item \textbf{\texttt{hp\_filter = $\lambda$}}: aplica el filtro Hodrick-Prescott con
+          parámetro $\lambda$ antes de calcular los momentos. Para datos trimestrales se
+          usa típicamente $\lambda = 1600$.
+
+    \item \textbf{\texttt{nograph}}: suprime la generación de gráficos.
+
+    \item \textbf{\texttt{noprint}}: suprime la impresión de resultados en la ventana de
+          comandos.
+\end{itemize}
+
+\begin{example}[Simulación estocástica del modelo RBC]
+\begin{verbatim}
+stoch_simul(order=1, irf=40, hp_filter=1600) y c i k;
+\end{verbatim}
+Esto calcula la solución lineal del modelo, genera IRFs de 40 períodos y reporta los
+momentos filtrados con HP ($\lambda=1600$) para las variables \texttt{y, c, i, k}.
+\end{example}
+
+\subsection{Interpretando los resultados}
+
+Dynare almacena los resultados de \texttt{stoch\_simul} en la estructura \texttt{oo\_}
+(``output object''). Las entradas más relevantes son:
+
+\begin{itemize}
+    \item \texttt{oo\_.dr}: estructura con las reglas de decisión. \texttt{oo\_.dr.ghx}
+          contiene la matriz $A$ y \texttt{oo\_.dr.ghu} contiene la matriz $B$ de la
+          aproximación de primer orden.
+    \item \texttt{oo\_.mean}: medias de las variables endógenas.
+    \item \texttt{oo\_.var}: matriz de varianzas-covarianzas de las variables endógenas.
+    \item \texttt{oo\_.autocorr}: cell array con las matrices de autocorrelación de
+          orden 1 hasta \texttt{ar}.
+    \item \texttt{oo\_.irfs}: estructura con las IRFs. Cada campo sigue la convención
+          \texttt{VARIABLE\_SHOCK}, por ejemplo, \texttt{oo\_.irfs.y\_eps\_a} contiene
+          la IRF del producto ante una perturbación de un desvío estándar en
+          \texttt{eps\_a}.
+    \item \texttt{oo\_.endo\_simul}: si \texttt{periods>0}, contiene las series
+          temporales simuladas para todas las variables endógenas.
+\end{itemize}
+
+\begin{remark}
+El campo \texttt{oo\_.dr.order\_var} es un índice que mapea el orden de las variables en
+las reglas de decisión (``DR-order'') al orden de declaración. Dynare internamente
+clasifica las variables en cuatro categorías: puramente hacia atrás (\textit{purely
+backward}), puramente hacia adelante (\textit{purely forward}), mixtas y estáticas. Las
+reglas de decisión se expresan en DR-order, no en orden de declaración. Este detalle
+técnico es importante cuando se accede manualmente a \texttt{oo\_.dr.ghx} o
+\texttt{oo\_.dr.ghu}.
+\end{remark}
+
+\section{Simulación determinista: previsión perfecta}
+
+Además de los modelos estocásticos, Dynare resuelve modelos bajo el supuesto de
+\textbf{previsión perfecta} (\textit{perfect foresight}): los agentes conocen con
+certeza la trayectoria completa de los shocks desde el período 1 en adelante.
+Matemáticamente, el problema consiste en resolver un sistema no-lineal de $n \times T$
+ecuaciones simultáneas (donde $n$ es el número de variables y $T$ el horizonte de
+simulación), que Dynare ataca con métodos de Newton disperso.
+
+\subsection{Comandos para simulación determinista}
+
+El flujo de trabajo para una simulación determinista involucra tres pasos:
+
+\begin{enumerate}[(i)]
+    \item \textbf{Definir condiciones iniciales} con \texttt{initval} (y terminales
+          con \texttt{endval} si hay un shock permanente).
+    \item \textbf{Especificar el shock temporal} con el bloque \texttt{shocks} en
+          contexto determinista.
+    \item \textbf{Preparar y resolver} con \texttt{perfect\_foresight\_setup} y
+          \texttt{perfect\_foresight\_solver}.
+\end{enumerate}
+
+\begin{definition}[Shocks deterministas]
+En contexto determinista, el bloque \texttt{shocks} especifica cambios temporales en el
+valor de las variables exógenas. La sintaxis es:
+\begin{verbatim}
+shocks;
+  var NOMBRE_EXOGENO;
+  periods PERIODO_INICIO:PERIODO_FIN;
+  values VALOR;
+end;
+\end{verbatim}
+Para shocks permanentes (transición de un estado estacionario a otro), se utiliza
+\texttt{endval} en lugar de (o en adición a) \texttt{initval}, seguido de
+\texttt{steady}.
+\end{definition}
+
+\begin{example}[Respuesta a un shock tecnológico transitorio (previsión perfecta)]
+Supongamos que partimos del estado estacionario y en el período 1 la PTF aumenta un 1\%
+por encima de su estado estacionario durante 4 períodos:
+\begin{verbatim}
+initval;
+  k = ((1/bet - 1 + delt)/alph)^(1/(alph-1));
+  a = 1;
+  y = k^alph;
+  i = delt*k;
+  c = y - i;
+end;
+steady;
+
+shocks;
+  var eps_a;
+  periods 1:4;
+  values 0.01;
+end;
+
+perfect_foresight_setup(periods=200);
+perfect_foresight_solver;
+\end{verbatim}
+Los resultados quedan en \texttt{oo\_.endo\_simul} (matriz de $n \times (T+2)$ columnas,
+donde las primeras y últimas columnas contienen las condiciones inicial y terminal
+respectivamente).
+\end{example}
+
+\section{Verificación del modelo: el comando \texttt{check}}
+
+\begin{proposition}[Condición de Blanchard-Kahn]
+Para que el modelo de expectativas racionales tenga una solución única y estable en el
+vecindario del estado estacionario, se debe cumplir la \textbf{condición de
+Blanchard-Kahn}: el número de valores propios del sistema linealizado que son mayores que
+uno en módulo debe ser exactamente igual al número de variables \textit{forward-looking}
+(variables de control o ``jumpers'') del modelo.
+\end{proposition}
+
+El comando \texttt{check} calcula los valores propios del sistema linealizado alrededor
+del estado estacionario y verifica la condición de Blanchard-Kahn:
+
+\begin{verbatim}
+check;
+\end{verbatim}
+
+Dynare reportará el número de valores propios mayores que uno en módulo y determinará si
+el modelo tiene solución única (\textit{BK conditions satisfied}), múltiples soluciones
+(\textit{indeterminacy}) o ninguna (\textit{explosive path}). Los valores propios quedan
+almacenados en \texttt{oo\_.dr.eigval}.
+
+\begin{remark}
+Un error frecuente de los principiantes es especificar incorrectamente el timing de las
+variables, lo que altera el número de variables forward-looking y hace que falle la
+condición de Blanchard-Kahn. Si \texttt{check} reporta ``Blanchard \& Kahn conditions
+are not satisfied: indeterminacy'', el primer paso de depuración es revisar
+cuidadosamente el timing de cada variable en el bloque \texttt{model}.
+\end{remark}
+
+\section{Estimación bayesiana: panorama general}
+
+Una de las capacidades más poderosas de Dynare es la \textbf{estimación bayesiana} de los
+parámetros del modelo, combinando la verosimilitud de los datos (calculada mediante el
+filtro de Kalman) con distribuciones a priori del investigador. El resultado es la
+distribución posterior de los parámetros, de la que se extrae información mediante
+métodos de cadenas de Markov Monte Carlo (MCMC, específicamente el algoritmo de
+Metropolis-Hastings).
+
+El flujo de trabajo de estimación en Dynare requiere tres bloques adicionales:
+
+\begin{enumerate}[(i)]
+    \item \textbf{\texttt{varobs}}: declara qué variables endógenas del modelo son
+          observables (tienen un contraparte en los datos).
+    \item \textbf{\texttt{estimated\_params}}: especifica qué parámetros se estiman y
+          sus distribuciones a priori.
+    \item \textbf{\texttt{estimation}}: ejecuta la estimación, con opciones para el modo
+          de cómputo (moda del posterior, MCMC, etc.) y la gestión de los datos.
+\end{enumerate}
+
+\begin{example}[Estructura básica de estimación bayesiana]
+\begin{verbatim}
+varobs y c i;    % Variables observables (en el modelo y en los datos)
+
+estimated_params;
+  alph,   beta_pdf,   0.36,  0.05;   % prior: Beta(media=0.36, std=0.05)
+  bet,    beta_pdf,   0.99,  0.002;
+  delt,   beta_pdf,   0.025, 0.003;
+  sig,    norm_pdf,   2.00,  0.50;   % prior: Normal
+  rho_a,  beta_pdf,   0.95,  0.05;
+  stderr eps_a, inv_gamma_pdf, 0.007, inf;  % prior: Inv-Gamma
+end;
+
+estimation(datafile=datos_trimestral,
+           mh_replic=100000,
+           mh_nblocks=2,
+           mode_compute=6,
+           bayesian_irf);
+\end{verbatim}
+\end{example}
+
+\begin{remark}
+La especificación de las distribuciones a priori en \texttt{estimated\_params} sigue la
+convención \texttt{(distribución, hiperparámetro1, hiperparámetro2)}, donde los
+hiperparámetros son la media y la desviación estándar para la mayoría de distribuciones.
+Las distribuciones disponibles incluyen: \texttt{beta\_pdf}, \texttt{gamma\_pdf},
+\texttt{norm\_pdf}, \texttt{uniform\_pdf} e \texttt{inv\_gamma\_pdf}. La elección
+de la distribución debe ser coherente con el soporte del parámetro: parámetros en $(0,1)$
+usan beta, parámetros positivos usan gamma o inv-gamma, y parámetros en $\mathbb{R}$
+usan normal.
+\end{remark}
+
+\section{Flujo de trabajo completo: modelo RBC canónico}
+
+Para consolidar todos los elementos presentados, reconstruimos a continuación el archivo
+\texttt{.mod} completo de un modelo RBC estándar, listo para ser ejecutado en Dynare:
+
+\begin{example}[Archivo \texttt{rbc\_basico.mod} completo]
+\begin{verbatim}
+// ===================================================
+// RBC Estándar — Macroeconomía II
+// Ventura & Narrea (2025)
+// ===================================================
+
+// 1. Declaraciones
+var y c i k a;
+varexo eps_a;
+parameters alph bet delt sig rho_a;
+
+// 2. Calibración
+alph  = 0.36;
+bet   = 0.99;
+delt  = 0.025;
+sig   = 2.00;
+rho_a = 0.95;
+
+// 3. Modelo
+model;
+  [name = 'Producción']
+  y = a*k(-1)^alph;
+
+  [name = 'Vaciamiento']
+  y = c + i;
+
+  [name = 'Capital']
+  k = (1-delt)*k(-1) + i;
+
+  [name = 'Euler']
+  c^(-sig) = bet*(alph*a(+1)*k^(alph-1)+1-delt)*c(+1)^(-sig);
+
+  [name = 'PTF']
+  log(a) = rho_a*log(a(-1)) + eps_a;
+end;
+
+// 4. Estado estacionario
+steady_state_model;
+  a = 1;
+  k = (alph*bet/(1 - bet*(1-delt)))^(1/(1-alph));
+  y = k^alph;
+  i = delt*k;
+  c = y - i;
+end;
+
+// 5. Verificación
+check;
+
+// 6. Shocks
+shocks;
+  var eps_a; stderr 0.007;
+end;
+
+// 7. Simulación estocástica
+stoch_simul(order=1, irf=40, hp_filter=1600) y c i k a;
+\end{verbatim}
+\end{example}
+
+Para ejecutar este modelo desde MATLAB/Octave (asumiendo que el archivo se llama
+\texttt{rbc\_basico.mod} y está en el directorio de trabajo actual):
+\begin{verbatim}
+>> dynare rbc_basico
+\end{verbatim}
+
+Dynare ejecutará automáticamente el preprocesador, calculará el estado estacionario,
+verificará la condición de Blanchard-Kahn, resolverá el modelo a primer orden y generará
+las funciones de impulso-respuesta y los momentos del modelo.
+
+\section{Depuración de errores comunes}
+
+\subsection{Errores del preprocesador}
+
+Los errores del preprocesador siguen el formato:
+\begin{verbatim}
+ERROR: archivo.mod: line A, col B: <mensaje>
+\end{verbatim}
+
+El error más común es la \textbf{falta de un punto y coma}. Debido al funcionamiento del
+parser, el error no se reporta en la línea donde falta el punto y coma, sino en la línea
+siguiente (cuando el parser encuentra una palabra clave inesperada). Si el mensaje de
+error señala una línea que parece correcta, revisar la línea anterior.
+
+\subsection{Errores en el estado estacionario}
+
+Si el solver no-lineal falla al encontrar el estado estacionario, el comando
+\texttt{resid} es de gran utilidad. Muestra el residuo de cada ecuación para los valores
+actuales de las variables endógenas, permitiendo identificar qué ecuación está lejos de
+satisfacerse:
+\begin{verbatim}
+resid(non_zero);   % Muestra solo los residuos no nulos
+\end{verbatim}
+
+\subsection{Errores de Blanchard-Kahn}
+
+Los errores más frecuentes que causan violaciones de las condiciones de Blanchard-Kahn
+son: (i) timing incorrecto en las variables del modelo; (ii) una ecuación del tipo
+``$x_{t+1}$ = $f(...)$'' en lugar de ``$x$ = $f(...(-1))$''; (iii) un parámetro con
+valor fuera del rango admisible (e.g., $\beta > 1$ o $\delta > 1$).
+
+\begin{remark}
+Una herramienta de diagnóstico adicional es el comando \texttt{model\_diagnostics}, que
+realiza verificaciones de consistencia del modelo (variables faltantes, Jacobiano singular
+del modelo estático, etc.) y reporta mensajes descriptivos sobre los problemas
+encontrados. Se recomienda ejecutarlo siempre que el estado estacionario o la solución
+falle de manera inesperada.
+\end{remark}
+
+\section{Recursos adicionales y buenas prácticas}
+
+\subsection{Documentación oficial}
+
+\begin{itemize}
+    \item \textbf{Manual de referencia}: \url{https://www.dynare.org/manual.pdf} ---
+          documenta exhaustivamente todos los comandos, opciones y estructuras de
+          resultados.
+    \item \textbf{Foro de Dynare}: \url{https://forum.dynare.org} --- comunidad activa
+          donde los desarrolladores y usuarios responden preguntas técnicas.
+    \item \textbf{Ejemplos oficiales}: el directorio \texttt{examples} de la
+          instalación de Dynare contiene modelos de referencia (RBC, Smets-Wouters,
+          etc.) que sirven como punto de partida.
+    \item \textbf{Escuela de Verano de Dynare}: curso anual intensivo organizado por
+          CEPREMAP, con materiales disponibles en línea.
+\end{itemize}
+
+\subsection{Citación académica}
+
+Si se utiliza Dynare en investigación, la referencia correcta es:
+
+\begin{quote}
+\small
+Adjemian, S., Juillard, M., Karamé, F., Mutschler, W., Pfeifer, J., Ratto, M., Rion, N. y
+Villemot, S. (2026). \textit{Dynare: Reference Manual, Version 7}. Dynare Working Papers,
+87, CEPREMAP.
+\end{quote}
+
+\subsection{Buenas prácticas de flujo de trabajo}
+
+\begin{itemize}
+    \item \textbf{Comenzar simple}: antes de construir un modelo grande, verificar que
+          el núcleo del modelo (2-3 ecuaciones) funciona correctamente.
+    \item \textbf{Un archivo, un modelo}: mantener el archivo \texttt{.mod} en un
+          directorio separado del directorio de instalación de Dynare.
+    \item \textbf{Guardar resultados}: los resultados de Dynare se guardan
+          automáticamente en \texttt{FILENAME\_results.mat} dentro de la carpeta
+          \texttt{FILENAME/Output}. Esto permite recuperar resultados previos sin
+          re-ejecutar el modelo.
+    \item \textbf{Control de versiones}: dado que los archivos \texttt{.mod} son texto
+          plano, son ideales para sistemas de control de versiones como \texttt{git}.
+    \item \textbf{Documentar el archivo}: usar comentarios (\texttt{//}) y etiquetas de
+          ecuaciones para que el código sea legible para colaboradores (y para uno mismo
+          en el futuro).
+\end{itemize}
