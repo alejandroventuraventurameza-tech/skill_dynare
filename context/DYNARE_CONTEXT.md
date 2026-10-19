@@ -431,7 +431,78 @@ a  = rho_a*a(-1) - eta_a;              // un proceso por shock
 > *Nota: el corpus completo (MMB, Pfeifer) se usa como referencia local; aquí se
 > destilan los PATRONES, no se copia el código (respeto de licencias y atribución).*
 
+
+---
+
+## Sintaxis verificada del bloque `model` (manual oficial *The Model File*)
+
+**Verificado contra el manual de referencia oficial de Dynare** (*The Model File*,
+https://www.dynare.org/manual/the-model-file.html).
+
+**Operadores y funciones permitidas dentro de `model;`:**
+- Aritméticos: `+  -  *  /  ^` ; comparadores: `<  >  <=  >=  ==  !=`.
+  - ⚠️ Dynare interpreta `a >= b` como la ecuación homogénea `(a>=b)=0` (un indicador 0/1),
+    **no** como restricción de desigualdad. No usar comparadores salvo que se sepa qué se hace.
+- Funciones incorporadas: `exp, log, ln, log10, sqrt, cbrt, sign, abs, sin, cos, tan,
+  asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, max, min, normcdf, normpdf, erf, erfc`.
+- Cualquier otra función debe declararse con `external_function` antes del bloque `model`.
+- Leads/lags de más de un período permitidos para endógenas y exógenas: `c(+2)`, `k(-3)`.
+
+### Operador `EXPECTATION(INTEGER)(expr)`
+Esperanza de una expresión formada con el conjunto de información de **otra** fecha.
+`EXPECTATION(-1)(x(+1))` = valor esperado de `x` en `t+1` con información de `t-1`.
+Dynare lo reemplaza internamente por una variable auxiliar.
+
+### Operador `STEADY_STATE(expr)`
+Evalúa la expresión en el estado estacionario (usa `oo_.steady_state`). Útil para el
+output gap en una regla de Taylor: `STEADY_STATE(y)`. No puede contener variables exógenas.
+
+### Variables locales del modelo `#`
+`#NAME = EXPRESIÓN;` dentro de `model;`. Abreviación algebraica que Dynare sustituye donde
+aparezca; alcance limitado al bloque `model`; NO se declara en `var`. (El manual es ambiguo
+sobre leads/lags en estas locales — evitar depender de ello.)
+
+### `model(linear);`
+Declara que el modelo ya es lineal/log-lineal (evita dar valores iniciales para el EE).
+**No** linealiza un modelo no lineal; solo afirma que ya lo está.
+
+### Etiquetas de ecuación (tags)
+`[name = 'Euler']` en la línea previa a la ecuación. Se combinan varias por comas:
+`[name='Taylor rule', endogenous='r']`. Con `name`, `resid` muestra el nombre junto al
+número de ecuación. Las tags también identifican ecuaciones para `model_remove` y `model_replace`.
+
+## `steady_state_model`: reglas confirmadas
+*(Confirmado con la guía de W. Mutschler, core dev de Dynare: https://mutschler.eu/dynare/best-practices/steadystate/)*
+- **Admite variables intermedias/auxiliares NO declaradas en `var`** (p. ej. ratios `K_L`, `Y_L`):
+  se calculan en secuencia como pasos intermedios.
+- **Orden**: cada variable se expresa en función de parámetros y de cantidades ya calculadas
+  en líneas anteriores del mismo bloque.
+- Si parte del EE no tiene forma cerrada, se puede llamar a una **función auxiliar de MATLAB**
+  dentro del bloque para resolver esas variables numéricamente.
+- Es el método **preferido** cuando el EE es derivable analíticamente (exacto, sin solver);
+  `initval + steady` es la alternativa cuando no se puede derivar.
+- **Patrón de calibración endógena (casa Ventura & Echevarría):** declarar los valores de EE como
+  parámetros, calcularlos en el preámbulo desde los parámetros estructurales, y despejar el peso
+  de utilidad (p. ej. θ) desde una condición de EE y un target (p. ej. `h_ss`).
+  Ver `examples/01_rbc/rbc_analytical.mod` y `examples/01_rbc/RBC_BarroKing.mod`.
+
+## `stoch_simul`: valores por defecto (Dynare 7.0)
+| Opción | Default | Nota |
+|--------|:---:|------|
+| `order` | 2 | usar `order=1` para log-linealización de primer orden |
+| `irf` | 40 | `irf=0` suprime las IRFs |
+| `ar` | 5 | órdenes de autocorrelación reportados |
+| `drop` | 100 | burn-in descartado para momentos empíricos |
+| `periods` | 0 | `0` → momentos **teóricos**; `>0` → simula y reporta momentos **empíricos** |
+
+Otras: `hp_filter=1600` (momentos de ciclo económico), `loglinear`, `nograph`, `nomoments`,
+`nocorr`, `noprint`, `graph_format=pdf`.
+
+> Nota de versión: el repo originalmente apuntaba a 5.x/6.x; el curso y las classnotes
+> Ventura & Echevarría usan **Dynare 7.0** (retrocompatible en su mayoría).
+
+
 ---
 
 *Este archivo es un documento vivo — se actualizará con cada sesión de trabajo.*  
-*Última actualización: 2026-06-21*
+*Última actualización: 2026-10-18 (ingesta: manual oficial *The Model File* + Mutschler)*
