@@ -38,7 +38,7 @@ var
 
 // ---- Shock exógeno ----------------------------------------------------------
 varexo
-    eps     // innovación de productividad,  eps ~ N(0, sigma_eps^2)
+    eps     // innovación de productividad estandarizada,  eps ~ N(0, 1)
 ;
 
 // ---- Parámetros -------------------------------------------------------------
@@ -113,7 +113,7 @@ k = (1 - delta)*k(-1) + i;
 y = c + i;
 
 [name = 'Proceso AR(1) de la TFP (en logs)']
-log(a) = phi*log(a(-1)) + eps;
+log(a) = phi*log(a(-1)) + sigma_eps*eps;
 
 end;
 
@@ -134,10 +134,12 @@ end;
 
 // ============================================================================
 //  SHOCKS
-//  ε_t ~ N(0, σ_ε²).  La desv. est. entra directo en el bloque shocks.
+//  eps estandarizado ~ N(0,1); sigma_eps escala el shock DENTRO de la ecuacion
+//  de TFP (asi sigma_eps aparece en el bloque model y Dynare no la marca
+//  como "no usada"). El resultado es identico a usar stderr sigma_eps.
 // ============================================================================
 shocks;
-var eps; stderr sigma_eps;
+var eps; stderr 1;
 end;
 
 // ============================================================================
