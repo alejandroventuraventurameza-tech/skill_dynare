@@ -693,8 +693,20 @@ diferencias que gobierna las horas:
 \begin{equation}
 \boxed{\ \E_t\hat{h}_{t+1}=\mu\,\hat{h}_t,\qquad \mu=\frac{1}{(1-\alpha)\beta}\ }. \label{eq:mu}
 \end{equation}
-Como $(1-\alpha)\beta<1$, se tiene $\mu>1$: la recursión \eqref{eq:mu} es
-\emph{explosiva}, y la única trayectoria acotada es
+Como $(1-\alpha)\beta<1$, se tiene $\mu>1$. Para ver por qué eso obliga a que las
+horas no se muevan, iteremos \eqref{eq:mu} hacia adelante: aplicando esperanzas
+sucesivas y la ley de expectativas iteradas,
+\[
+\E_t\hat{h}_{t+k}=\mu\,\E_t\hat{h}_{t+k-1}=\cdots=\mu^{k}\,\hat{h}_t,
+\qquad k=1,2,\dots
+\]
+Ahora bien, $\hat{h}_t$ es una variable de control: no tiene un valor heredado
+del pasado que la ancle, y \eqref{eq:mu} es su única ecuación. Como $\mu>1$,
+cualquier $\hat{h}_t\neq0$ implicaría $|\E_t\hat{h}_{t+k}|=\mu^{k}|\hat{h}_t|\to\infty$:
+la trayectoria esperada de las horas explotaría, violando la condición de
+acotamiento (transversalidad) que todo equilibrio de expectativas racionales
+debe satisfacer. La única solución compatible con un equilibrio acotado es, por
+tanto,
 \begin{equation}
 \boxed{\ \hat{h}_t=0\quad\text{para todo }t\ }. \label{eq:hzero}
 \end{equation}
@@ -730,15 +742,33 @@ $\eta_{\cdot a}$ (ante $\hat{a}_t$) & $1$ & $1$ & $1$ & $1$ & $1$ & $1$ \\
 
 \subsection{Por qué $\delta=1$ es especial}
 
-Si $\delta<1$ e insistimos en $\hat{h}_t=0$, la Euler \eqref{eq:ll_euler} deja de
-poder satisfacerse: con depreciación parcial el retorno bruto del capital
-$r_{t+1}+1-\delta$ ya no es proporcional a $y_{t+1}/k_t$, y la cancelación
-exacta de efectos ingreso y sustitución se rompe. En consecuencia, \emph{las
-horas deben responder} al choque ($\hat{h}_t\neq 0$). Este es el mecanismo
-central del modelo RBC: es la respuesta endógena del trabajo lo que permite
-generar fluctuaciones de la amplitud y la persistencia que se observan en los
-datos. Y es, también, la razón por la que con $\delta<1$ la pizarra ya no basta:
-no hay solución cerrada y entra Dynare.
+Mostremos \emph{en ecuaciones} que, con $\delta<1$, el supuesto $\hat{h}_t=0$ es
+inconsistente con la Euler. Si $\hat{h}_t=0$, la producción da
+$\hat{y}_t=\hat{a}_t+(1-\alpha)\hat{k}_t$ y el consumo $\hat{c}_t=\hat{y}_t$ (de
+\eqref{eq:cy}); combinando el vaciado de mercado con la ley de movimiento, el
+capital y el retorno quedan
+\[
+\hat{k}_{t+1}=(1-\alpha\delta)\,\hat{k}_t+\delta\,\hat{a}_t,
+\qquad
+\hat{r}_t=\hat{a}_t-\alpha\hat{k}_t.
+\]
+Sustituimos estas expresiones en la Euler \eqref{eq:ll_euler}, usamos
+$\E_t\hat{a}_{t+1}=\phi\hat{a}_t$ y agrupamos. La igualdad debe cumplirse
+\emph{para todo} $(\hat{k}_t,\hat{a}_t)$, de modo que los coeficientes de
+$\hat{k}_t$ a cada lado tienen que coincidir; eso exige
+\begin{equation}
+(1-\alpha)\,\delta=\beta r_{ss}\,(1-\alpha\delta). \label{eq:e3cond}
+\end{equation}
+Pero $\beta r_{ss}=1-\beta(1-\delta)$, y \eqref{eq:e3cond} se satisface
+\emph{únicamente} cuando $\delta=1$ (donde $\beta r_{ss}=1$). Para la calibración
+base el lado izquierdo vale $0.0083$ y el derecho $0.0399$: la condición falla.
+No existe, pues, equilibrio con $\hat{h}_t\equiv0$ cuando $\delta<1$: \emph{las
+horas deben responder} al choque ($\hat{h}_t\neq0$).
+
+Este es el mecanismo central del modelo RBC ---la respuesta endógena del trabajo
+es lo que genera fluctuaciones de la amplitud y la persistencia observadas en
+los datos--- y es, también, la razón por la que con $\delta<1$ la pizarra ya no
+basta: no hay solución cerrada y entra Dynare.
 
 \section{Estabilidad y unicidad: Blanchard--Kahn}
 \label{sec:bk}
@@ -747,31 +777,91 @@ Volvamos al caso general $\delta\in(0,1]$. El método de Blanchard y Kahn (1980)
 determina cuándo el equilibrio de expectativas racionales existe y es único, a
 partir de la estructura de valores propios del sistema linealizado.
 
-Despejando $\hat{h}_t$ de \eqref{eq:cy} y sustituyéndolo en la producción
-\eqref{eq:ll_prod}, el producto queda en función de los estados y del consumo:
+\subsection{Qué variable es de qué tipo}
+
+El sistema log-lineal tiene ocho variables, pero no todas juegan el mismo papel.
+El criterio para clasificarlas es \emph{dinámico}, no de gusto:
+\begin{itemize}
+\item \textbf{Estados} (dos). El capital $\hat{k}_t$ es un estado \emph{endógeno
+  y predeterminado}: se decidió en $t-1$ (recuérdese el \emph{timing}
+  $k_{t+1}$), de modo que su valor en $t$ no reacciona a la innovación corriente.
+  La productividad $\hat{a}_t$ es un estado \emph{exógeno}: no es un parámetro
+  sino una variable, pero su ley de movimiento \eqref{eq:ll_tfp} es puramente
+  backward-looking más la innovación $\varepsilon_t$.
+\item \textbf{Control} (uno). El consumo $\hat{c}_t$ es \emph{forward-looking}:
+  la Euler \eqref{eq:ll_euler} ---la única ecuación del sistema que contiene un
+  término esperado $\E_t(\cdot)_{t+1}$--- lo obliga a ``saltar'' para situarse
+  sobre la trayectoria estable. Es el único control porque es la única variable
+  atada a una ecuación de expectativas.
+\item \textbf{Estáticas} (cinco). $\hat{y}_t,\hat{\imath}_t,\hat{r}_t,\hat{w}_t,\hat{h}_t$
+  quedan determinadas \emph{contemporáneamente} por las tres anteriores, sin
+  dinámica propia; por eso las eliminamos.
+\end{itemize}
+
+\subsection{Eliminación de las estáticas y forma matricial}
+
+Eliminar las estáticas es sustitución directa. Despejando $\hat{h}_t$ de
+\eqref{eq:cy}, $\hat{h}_t=(1-h_{ss})(\hat{y}_t-\hat{c}_t)$, y llevándolo a la
+producción \eqref{eq:ll_prod}, el producto queda en función de estados y consumo:
 \begin{equation}
 \hat{y}_t=n_y\hat{a}_t+n_k\hat{k}_t+n_c\hat{c}_t,\qquad
 n_y=\tfrac{1}{\Delta},\quad n_k=\tfrac{1-\alpha}{\Delta},\quad
 n_c=-\tfrac{\alpha(1-h_{ss})}{\Delta}, \label{eq:ncoefs}
 \end{equation}
-con $\Delta\equiv 1-\alpha(1-h_{ss})$. Eliminando además $\hat{r}_t$,
-$\hat{w}_t$ e $\hat{\imath}_t$, el sistema se reduce a tres ecuaciones en
-$(\hat{k}_t,\hat{a}_t,\hat{c}_t)$, que escribimos en forma matricial
+con $\Delta\equiv 1-\alpha(1-h_{ss})$. Con $\hat{y}_t$ así expresado, las demás
+estáticas salen de inmediato: $\hat{r}_t=\hat{y}_t-\hat{k}_t$ de
+\eqref{eq:ll_kd}, $\hat{w}_t=\hat{y}_t-\hat{h}_t$ de \eqref{eq:ll_ld}, y
+$\hat{\imath}_t=(\hat{y}_t-s_c\hat{c}_t)/s_i$ del vaciado de mercado
+\eqref{eq:ll_clear}.
+
+Sustituyendo esas estáticas en las tres ecuaciones con dinámica ---la ley de
+movimiento del capital \eqref{eq:ll_lom}, el proceso de la PTF \eqref{eq:ll_tfp}
+y la Euler \eqref{eq:ll_euler}--- el sistema se escribe en la forma estándar de
+Blanchard--Kahn,
 \begin{equation}
 \mathbf{A}\begin{pmatrix}\hat{k}_{t+1}\\[2pt]\hat{a}_{t+1}\\[2pt]\E_t\hat{c}_{t+1}\end{pmatrix}
 =\mathbf{B}\begin{pmatrix}\hat{k}_{t}\\[2pt]\hat{a}_{t}\\[2pt]\hat{c}_{t}\end{pmatrix}
-+\mathbf{C}\,\varepsilon_{t+1}. \label{eq:ABC}
++\mathbf{C}\,\varepsilon_{t+1}, \label{eq:ABC}
 \end{equation}
-Premultiplicando por $\mathbf{A}^{-1}$ se obtiene
-$\mathbf{F}=\mathbf{A}^{-1}\mathbf{B}$, cuya estructura de valores propios lo
-decide todo.
+donde, escribiendo $g\equiv r_{ss}/(1-\alpha)=\delta/s_i$ y recordando
+$\beta r_{ss}=1-\beta(1-\delta)$,
+\begin{equation}
+\mathbf{A}=\begin{pmatrix}
+1 & 0 & 0\\[2pt]
+0 & 1 & 0\\[2pt]
+-\beta r_{ss}(n_k-1) & -\beta r_{ss}\,n_y & 1-\beta r_{ss}\,n_c
+\end{pmatrix},\quad
+\mathbf{B}=\begin{pmatrix}
+1-\delta+g\,n_k & g\,n_y & g\,(n_c-s_c)\\[2pt]
+0 & \phi & 0\\[2pt]
+0 & 0 & 1
+\end{pmatrix},\quad
+\mathbf{C}=\begin{pmatrix}0\\1\\0\end{pmatrix}. \label{eq:ABCmat}
+\end{equation}
+La primera fila es la ley de movimiento del capital (tras sustituir
+$\hat{\imath}_t$); la segunda, el AR(1) de la productividad; la tercera, la Euler
+(tras sustituir $\hat{r}_{t+1}=\hat{y}_{t+1}-\hat{k}_{t+1}$). Premultiplicando por
+$\mathbf{A}^{-1}$ se obtiene $\mathbf{F}=\mathbf{A}^{-1}\mathbf{B}$, cuya
+estructura de valores propios lo decide todo.
+
+\begin{remark}
+Formalmente, una variable es \emph{predeterminada} cuando su valor en $t$ ya está
+fijado por la información de $t-1$ ---su error de previsión a un paso es
+exógeno: nulo para $\hat{k}$, la innovación $\varepsilon_t$ para $\hat{a}$. Es
+\emph{forward-looking} (control) cuando una ecuación con expectativas futuras la
+obliga a ubicarse sobre la trayectoria estable. En Blanchard--Kahn, cada estado
+predeterminado se empareja con un valor propio \emph{estable} y cada control con
+uno \emph{inestable}; de ahí que la cuenta ---un control, un valor propio
+inestable--- sea exactamente lo que se debe verificar.
+\end{remark}
 
 \begin{proposition}[Condición de Blanchard--Kahn]
 Los valores propios de $\mathbf{F}$ son $\phi$ y las dos raíces de un polinomio
 cuadrático $P(\lambda)$ que satisfacen $\lambda_1\lambda_2=1/\beta$ y $P(1)<0$;
 en consecuencia una raíz cae dentro y la otra fuera del círculo unitario. El
-sistema tiene dos estados predeterminados ($\hat{k}$, $\hat{a}$) y una variable
-de control \emph{forward-looking} ($\hat{c}$). Como el número de valores propios
+sistema tiene dos variables de estado ---una endógena predeterminada ($\hat{k}$)
+y una exógena ($\hat{a}$)--- y una única variable de control
+\emph{forward-looking} ($\hat{c}$). Como el número de valores propios
 inestables ($|\lambda|>1$) es exactamente \emph{uno} ---igual al número de
 controles--- se cumple la condición de Blanchard--Kahn: el equilibrio de
 expectativas racionales existe y es único.
@@ -864,6 +954,48 @@ de la distribución ergódica respecto a $\bar{x}$. En esta sesión usamos
 \code{order=1}, así que ambos coinciden; la distinción se vuelve material a
 partir de \code{order=2} (por ejemplo, al estudiar primas de riesgo).
 \end{remark}
+
+\chapter{Por qué funciona el \emph{guess} lineal}
+\label{app:undetermined}
+
+En la \S\ref{sec:policy} propusimos que la solución tiene la forma lineal
+$\hat{x}_t=\eta_{xk}\hat{k}_t+\eta_{xa}\hat{a}_t$, sin término independiente.
+Como son dudas que todo estudiante atento se hará, justificamos aquí por qué ese
+\emph{guess} es válido, cuándo falla, y por qué no lleva constante.
+
+\paragraph{Por qué una solución lineal.} El sistema que resolvemos
+\eqref{eq:ll_prod}--\eqref{eq:ll_tfp} es \emph{lineal} en las variables ---es el
+log-lineal--- y de expectativas racionales. Para esta clase de sistemas, el
+teorema de Blanchard--Kahn garantiza que, cuando el número de valores propios
+inestables iguala al de controles, existe una \emph{única} regla de decisión
+estable, y ésta es \emph{lineal} en los estados: la solución vive sobre el
+subespacio estable (la \emph{variedad estable}) generado por los vectores
+propios asociados a los valores propios de módulo menor que uno. Buscar una
+función lineal no pierde, por tanto, generalidad: la solución del sistema
+log-lineal realmente lo es. (La técnica de igualar coeficientes en el
+\emph{guess} para hallar los $\eta$ se conoce como \emph{método de los
+coeficientes indeterminados}.)
+
+\paragraph{Cuándo falla.} El \emph{guess} lineal deja de ser aplicable si la
+condición de Blanchard--Kahn no se cumple. Si hay \emph{más} valores propios
+inestables que controles, no existe ninguna trayectoria estable (el sistema es
+explosivo) y el problema no tiene solución acotada; si hay \emph{menos}, la
+solución estable no es única ---indeterminación--- y caben equilibrios
+adicionales de tipo \emph{sunspot}. Además, al ser una linealización es
+\emph{local}: aproxima bien cerca del estado estacionario, pero puede fallar
+como aproximación si el modelo es fuertemente no lineal y la economía se aleja
+de él (ahí se recurre a órdenes superiores o a métodos globales).
+
+\paragraph{Por qué sin término independiente.} Porque trabajamos con
+\emph{desviaciones logarítmicas} respecto al estado estacionario. Por
+construcción, en el estado estacionario toda desviación es nula:
+$\hat{x}_{ss}=\ln(x_{ss}/x_{ss})=0$. Si la función de política fuese
+$\hat{x}_t=\eta_0+\eta_{xk}\hat{k}_t+\eta_{xa}\hat{a}_t$, evaluarla en el estado
+estacionario ($\hat{k}=\hat{a}=0$) daría $\hat{x}_{ss}=\eta_0$, que \emph{debe}
+ser cero. De ahí $\eta_0=0$: la función de política pasa por el origen, y el
+estado estacionario (determinista) es su punto fijo. El término independiente
+reaparecería solo a segundo orden, como la corrección por riesgo del
+Apéndice~\ref{app:ss}.
 
 % ===================== REFERENCIAS =====================
 \begin{thebibliography}{99}
