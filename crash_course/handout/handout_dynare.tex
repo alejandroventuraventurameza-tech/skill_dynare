@@ -102,10 +102,12 @@
 \newcounter{tcbex}[section]
 \newcounter{tcbrem}[section]
 \newcounter{tcbprop}[section]
+\newcounter{tcbthm}[section]
 \renewcommand{\thetcbdef}{\thesection.\arabic{tcbdef}}
 \renewcommand{\thetcbex}{\thesection.\arabic{tcbex}}
 \renewcommand{\thetcbrem}{\thesection.\arabic{tcbrem}}
 \renewcommand{\thetcbprop}{\thesection.\arabic{tcbprop}}
+\renewcommand{\thetcbthm}{\thesection.\arabic{tcbthm}}
 
 % --- ENTORNOS ---
 \newenvironment{definition}[1][]{%
@@ -121,6 +123,11 @@
 \newenvironment{proposition}[1][]{%
   \refstepcounter{tcbprop}%
   \begin{tcolorbox}[propstyle, title={Proposición~\thetcbprop%
+    \ifx\relax#1\relax\else\ (#1)\fi}]}%
+{\end{tcolorbox}}
+\newenvironment{theorem}[1][]{%
+  \refstepcounter{tcbthm}%
+  \begin{tcolorbox}[thmstyle, title={Teorema~\thetcbthm%
     \ifx\relax#1\relax\else\ (#1)\fi}]}%
 {\end{tcolorbox}}
 \newenvironment{remark}{%
@@ -958,44 +965,92 @@ partir de \code{order=2} (por ejemplo, al estudiar primas de riesgo).
 \chapter{Por qué funciona el \emph{guess} lineal}
 \label{app:undetermined}
 
-En la \S\ref{sec:policy} propusimos que la solución tiene la forma lineal
-$\hat{x}_t=\eta_{xk}\hat{k}_t+\eta_{xa}\hat{a}_t$, sin término independiente.
-Como son dudas que todo estudiante atento se hará, justificamos aquí por qué ese
-\emph{guess} es válido, cuándo falla, y por qué no lleva constante.
+En la \S\ref{sec:policy} propusimos, sin demostrarlo, que la solución tiene la
+forma lineal $\hat{x}_t=\eta_{xk}\hat{k}_t+\eta_{xa}\hat{a}_t$ y sin término
+independiente. Formalicemos ambos hechos.
 
-\paragraph{Por qué una solución lineal.} El sistema que resolvemos
-\eqref{eq:ll_prod}--\eqref{eq:ll_tfp} es \emph{lineal} en las variables ---es el
-log-lineal--- y de expectativas racionales. Para esta clase de sistemas, el
-teorema de Blanchard--Kahn garantiza que, cuando el número de valores propios
-inestables iguala al de controles, existe una \emph{única} regla de decisión
-estable, y ésta es \emph{lineal} en los estados: la solución vive sobre el
-subespacio estable (la \emph{variedad estable}) generado por los vectores
-propios asociados a los valores propios de módulo menor que uno. Buscar una
-función lineal no pierde, por tanto, generalidad: la solución del sistema
-log-lineal realmente lo es. (La técnica de igualar coeficientes en el
-\emph{guess} para hallar los $\eta$ se conoce como \emph{método de los
-coeficientes indeterminados}.)
+\paragraph{El sistema en forma canónica.} Escribamos el sistema log-lineal como
+\begin{equation}
+\E_t\,\mathbf{z}_{t+1}=\mathbf{F}\,\mathbf{z}_t,\qquad
+\mathbf{z}_t=\begin{pmatrix}\mathbf{s}_t\\[1pt]\mathbf{x}_t\end{pmatrix}, \label{eq:canon}
+\end{equation}
+donde $\mathbf{s}_t\in\Real^{n_s}$ reúne las variables \emph{predeterminadas}
+(con $\mathbf{s}_0$ dado) y $\mathbf{x}_t\in\Real^{n_x}$ las \emph{no
+predeterminadas} o controles.\footnote{Omitimos los choques, que no alteran la
+clasificación de valores propios. En nuestro modelo
+$\mathbf{s}_t=(\hat{k}_t,\hat{a}_t)^{\!\top}$ ($n_s=2$),
+$\mathbf{x}_t=\hat{c}_t$ ($n_x=1$) y $\mathbf{F}=\mathbf{A}^{-1}\mathbf{B}$ de
+\eqref{eq:ABCmat}.} Un equilibrio admisible debe satisfacer la \textbf{condición
+de no explosividad}: $\E_t\mathbf{z}_{t+j}$ permanece acotado cuando
+$j\to\infty$.
 
-\paragraph{Cuándo falla.} El \emph{guess} lineal deja de ser aplicable si la
-condición de Blanchard--Kahn no se cumple. Si hay \emph{más} valores propios
-inestables que controles, no existe ninguna trayectoria estable (el sistema es
-explosivo) y el problema no tiene solución acotada; si hay \emph{menos}, la
-solución estable no es única ---indeterminación--- y caben equilibrios
-adicionales de tipo \emph{sunspot}. Además, al ser una linealización es
-\emph{local}: aproxima bien cerca del estado estacionario, pero puede fallar
-como aproximación si el modelo es fuertemente no lineal y la economía se aleja
-de él (ahí se recurre a órdenes superiores o a métodos globales).
+\begin{theorem}[Blanchard--Kahn, 1980]
+Sea $m$ el número de valores propios de $\mathbf{F}$ fuera del círculo unitario
+($|\lambda|>1$). Bajo la condición de no explosividad, el sistema
+\eqref{eq:canon} cumple:
+\begin{enumerate}[label=(\roman*),nosep,leftmargin=2.2em]
+\item si $m=n_x$, existe una \emph{única} solución acotada;
+\item si $m>n_x$, no existe ninguna solución acotada;
+\item si $m<n_x$, existen infinitas (indeterminación).
+\end{enumerate}
+\end{theorem}
 
-\paragraph{Por qué sin término independiente.} Porque trabajamos con
-\emph{desviaciones logarítmicas} respecto al estado estacionario. Por
-construcción, en el estado estacionario toda desviación es nula:
-$\hat{x}_{ss}=\ln(x_{ss}/x_{ss})=0$. Si la función de política fuese
-$\hat{x}_t=\eta_0+\eta_{xk}\hat{k}_t+\eta_{xa}\hat{a}_t$, evaluarla en el estado
-estacionario ($\hat{k}=\hat{a}=0$) daría $\hat{x}_{ss}=\eta_0$, que \emph{debe}
-ser cero. De ahí $\eta_0=0$: la función de política pasa por el origen, y el
-estado estacionario (determinista) es su punto fijo. El término independiente
-reaparecería solo a segundo orden, como la corrección por riesgo del
-Apéndice~\ref{app:ss}.
+\begin{proposition}[La solución es lineal y vive en la variedad estable]
+Supóngase $m=n_x$ y $\mathbf{F}$ diagonalizable,
+$\mathbf{F}=\mathbf{P}\boldsymbol{\Lambda}\mathbf{P}^{-1}$, con los valores
+propios ordenados en $\boldsymbol{\Lambda}=\operatorname{diag}(\boldsymbol{\Lambda}_e,\boldsymbol{\Lambda}_u)$,
+$|\boldsymbol{\Lambda}_e|<1$ (estables) y $|\boldsymbol{\Lambda}_u|>1$
+(inestables). Entonces los controles son función \emph{lineal} de los estados,
+\[
+\boxed{\ \mathbf{x}_t=\mathbf{H}\,\mathbf{s}_t,\qquad
+\mathbf{H}=-\,\mathbf{Q}_{ux}^{-1}\mathbf{Q}_{us}\ }
+\]
+donde $\mathbf{P}^{-1}=\left(\begin{smallmatrix}\mathbf{Q}_{es}&\mathbf{Q}_{ex}\\ \mathbf{Q}_{us}&\mathbf{Q}_{ux}\end{smallmatrix}\right)$,
+y $\mathbf{Q}_{ux}$ es invertible \emph{si y solo si} $m=n_x$.
+\end{proposition}
+\begin{proof}
+Defínanse las variables canónicas $\mathbf{w}_t=\mathbf{P}^{-1}\mathbf{z}_t$.
+Como $\mathbf{P}^{-1}\mathbf{F}=\boldsymbol{\Lambda}\mathbf{P}^{-1}$, el sistema
+se desacopla en $\E_t\mathbf{w}_{t+1}=\boldsymbol{\Lambda}\mathbf{w}_t$. El bloque
+inestable obedece $\E_t\mathbf{w}^{u}_{t+1}=\boldsymbol{\Lambda}_u\mathbf{w}^{u}_t$
+con $|\boldsymbol{\Lambda}_u|>1$; iterando, $\E_t\mathbf{w}^{u}_{t+j}=\boldsymbol{\Lambda}_u^{\,j}\mathbf{w}^{u}_t$,
+que diverge salvo que $\mathbf{w}^{u}_t=\mathbf{0}$ para todo $t$. Particionando,
+$\mathbf{w}^{u}_t=\mathbf{Q}_{us}\mathbf{s}_t+\mathbf{Q}_{ux}\mathbf{x}_t=\mathbf{0}$.
+El bloque $\mathbf{Q}_{ux}$ es de orden $m\times n_x$; es cuadrado e invertible
+exactamente cuando $m=n_x$, y entonces
+$\mathbf{x}_t=-\mathbf{Q}_{ux}^{-1}\mathbf{Q}_{us}\mathbf{s}_t$. Si $m>n_x$ el
+sistema $\mathbf{w}^{u}_t=\mathbf{0}$ está sobredeterminado (no hay solución); si
+$m<n_x$, subdeterminado (infinitas).
+\end{proof}
+
+La proposición justifica el \emph{guess}: la solución no es que \emph{pueda}
+escribirse lineal, \emph{es} lineal ---las filas de $\mathbf{H}$ son los
+$\eta$---, y el método de los coeficientes indeterminados solo halla
+$\mathbf{H}$ sin diagonalizar de forma explícita.
+
+\begin{proposition}[Ausencia de término independiente]
+Si se busca la solución en la forma afín
+$\hat{x}_t=\eta_0+\boldsymbol{\eta}^{\!\top}\hat{\mathbf{s}}_t$, entonces $\eta_0=0$.
+\end{proposition}
+\begin{proof}
+El sistema log-lineal es la aproximación de primer orden alrededor del estado
+estacionario determinista, en el que toda desviación logarítmica se anula:
+$\hat{x}_{ss}=\ln(x_{ss}/x_{ss})=0$ y $\hat{\mathbf{s}}_{ss}=\mathbf{0}$.
+Evaluando la forma afín en el estado estacionario,
+\[
+0=\hat{x}_{ss}=\eta_0+\boldsymbol{\eta}^{\!\top}\hat{\mathbf{s}}_{ss}=\eta_0,
+\]
+luego $\eta_0=0$: la función de política pasa por el origen y el estado
+estacionario es su punto fijo.
+\end{proof}
+
+\begin{remark}
+El término independiente reaparece solo a partir de segundo orden, como la
+corrección por riesgo $\tfrac12 g_{\sigma\sigma}\sigma^2$ del
+Apéndice~\ref{app:ss}. Y, por ser local, la linealización puede fallar como
+aproximación lejos del estado estacionario: ahí se recurre a órdenes superiores
+o a métodos globales.
+\end{remark}
 
 % ===================== REFERENCIAS =====================
 \begin{thebibliography}{99}
