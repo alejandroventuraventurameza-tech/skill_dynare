@@ -935,6 +935,75 @@ Por eso la producción $y_t=a_t k_t^{1-\alpha}h_t^{\alpha}$ se codea
 \lstinline@y = a*k(-1)^(1-alpha)*h^alpha@.
 \end{remark}
 
+\section{Calentamiento: el RBC más simple}
+\label{sec:calentamiento}
+
+Antes de atacar el pd06 ---ocho ecuaciones con trabajo endógeno--- conviene
+montar el \code{.mod} más simple posible y ver los seis bloques ``en vivo'' sin la
+complejidad. El candidato natural es un RBC \emph{sin trabajo}: cinco ecuaciones,
+la misma anatomía.
+
+La economía es la de siempre, despojada de la decisión de horas: un hogar que
+maximiza $\E_0\sum\beta^t\,c_t^{1-\sigma}/(1-\sigma)$, una firma con tecnología
+$y_t=a_t k_t^{\alpha}$ (trabajo normalizado e inelástico), y la PTF en AR(1). Las
+cinco condiciones de equilibrio ---producción, vaciado de mercado, ley de
+movimiento del capital, Euler y proceso de la TFP--- se transcriben así (no
+re-derivamos las FONC: el método es el del Capítulo~\ref{ch:modelo}; aquí
+importa la \emph{anatomía}):
+
+\begin{lstlisting}
+var     y c i k a;          // 5 endogenas (sin h ni w ni r)
+varexo  eps_a;
+parameters alph bet delt sig rho_a sig_a;
+
+alph  = 0.36;    // participacion del CAPITAL (ver observacion)
+bet   = 0.99;    // factor de descuento
+delt  = 0.025;   // depreciacion
+sig   = 1.00;    // utilidad log (inversa de la EIS)
+rho_a = 0.95;    // persistencia de la TFP
+sig_a = 0.007;   // desv. est. del choque
+
+model;
+  [name = 'Produccion']
+  y = a*k(-1)^alph;
+  [name = 'Vaciado de mercado']
+  y = c + i;
+  [name = 'Ley de movimiento del capital']
+  k = (1 - delt)*k(-1) + i;
+  [name = 'Euler']
+  c^(-sig) = bet*c(+1)^(-sig)*(alph*a(+1)*k^(alph-1) + 1 - delt);
+  [name = 'Proceso AR(1) de la TFP']
+  log(a) = rho_a*log(a(-1)) + sig_a*eps_a;
+end;
+
+steady_state_model;
+  a = 1;
+  k = (alph/(1/bet - 1 + delt))^(1/(1 - alph));
+  y = k^alph;
+  i = delt*k;
+  c = y - i;
+end;
+
+shocks; var eps_a; stderr 1; end;
+
+steady;  check;
+stoch_simul(order = 1, irf = 40) y c i k a;
+\end{lstlisting}
+
+\begin{remark}
+\textbf{Cuidado con $\alpha$.} En este modelo de calentamiento $\alpha$ es la
+participación del \emph{capital} (convención estándar de la mayoría de los libros,
+$y=ak^\alpha$). En el pd06, en cambio, $\alpha$ es la participación del
+\emph{trabajo} ($y=ak^{1-\alpha}h^\alpha$). Es el mismo símbolo con dos papeles:
+al leer un \code{.mod} ajeno, lo primero es fijar qué denota cada parámetro.
+\end{remark}
+
+\noindent Son \emph{los mismos seis bloques} que usaremos en el pd06, con tres
+variables menos y sin la FOC de trabajo. La Euler aquí lleva $c^{-\sigma}$ (CRRA
+general) en lugar de $1/c$ (log); con \lstinline@sig = 1@ ambas coinciden.
+Entendido este esqueleto, el pd06 es el mismo patrón, ampliado con la oferta de
+trabajo endógena y la calibración de $\theta$.
+
 \section{El modelo pd06, bloque por bloque}
 
 \paragraph{Declaraciones y calibración.} Se declaran las ocho endógenas, el
