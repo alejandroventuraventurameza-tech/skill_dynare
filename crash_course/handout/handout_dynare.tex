@@ -163,7 +163,7 @@
 \centering
 \vspace*{1.2cm}
 \includegraphics[width=0.60\textwidth]{assets/UP_logo.jpg}\\[2.2cm]
-{\Large\scshape Macroeconomía II}\\[0.9cm]
+{\Large\scshape Repensando la Macroeconomía}\\[0.9cm]
 {\color{upblue}\rule{\linewidth}{1.2pt}}\\[0.5cm]
 {\Huge\bfseries Un crash course de Dynare}\\[0.5cm]
 {\large\itshape Del papel al código: un modelo RBC en Dynare}\\[0.5cm]
@@ -201,20 +201,18 @@ modelo de equilibrio general dinámico: las preferencias del hogar, el problema
 de optimización intertemporal, las condiciones de primer orden, el vaciado de
 los mercados. Todo ese trabajo culmina, invariablemente, en un sistema de
 ecuaciones no lineales que describe las trayectorias de equilibrio de la
-economía. El problema es incómodo pero honesto: salvo en casos muy especiales,
-\emph{ese sistema no tiene solución analítica en forma cerrada}. La pizarra nos
-lleva hasta la puerta del problema cuantitativo, pero no la cruza.
+economía.
 
-El ejercicio que resolveremos en esta sesión lo ilustra de manera nítida. Para
-el modelo RBC con trabajo que estudiaremos, la pizarra \emph{sí} entrega una
-solución cerrada, pero solo bajo el supuesto artificial de depreciación total
-($\delta=1$): en ese caso las horas no reaccionan al choque de productividad y
-el modelo colapsa a algo que podemos resolver a mano. En cuanto relajamos ese
-supuesto y dejamos que el capital se deprecie de a pocos ($\delta<1$) ---es
-decir, en cuanto el modelo se vuelve \emph{realista}--- la solución cerrada
-desaparece y necesitamos la computadora. Esa frontera, entre lo que la pizarra
-resuelve y lo que exige una herramienta numérica, es precisamente el tema de
-esta guía.
+El ejercicio que resolveremos en esta sesión ilustra bien hasta dónde llega el
+lápiz. Para el modelo RBC con trabajo que estudiaremos, la pizarra \emph{sí}
+entrega una solución cerrada, pero solo bajo el supuesto artificial de
+depreciación total ($\delta=1$): en ese caso las horas no reaccionan al choque
+de productividad y el modelo colapsa a algo que podemos resolver a mano. En
+cuanto relajamos ese supuesto y dejamos que el capital se deprecie de a pocos
+($\delta<1$) ---es decir, en cuanto el modelo se vuelve \emph{realista}--- la
+solución cerrada desaparece y necesitamos la computadora. Esa frontera, entre
+lo que la pizarra resuelve y lo que exige una herramienta numérica, es
+precisamente el asunto que nos trae a colación.
 
 \textbf{Dynare} es la plataforma de referencia para cruzar esa frontera. Es
 software libre, corre sobre MATLAB u Octave, y lo usan bancos centrales,
@@ -224,8 +222,9 @@ primera es la \emph{descripción económica}: uno escribe en un archivo de texto
 (\code{.mod}) las ecuaciones del modelo casi tal como aparecerían en el papel.
 La segunda es la \emph{computación}: Dynare interpreta ese archivo y aplica por
 nosotros los algoritmos numéricos pertinentes ---descomposición de Schur,
-filtros de Kalman, métodos de Monte Carlo--- sin que debamos programarlos. El
-economista se concentra en la economía; Dynare se encarga de la ingeniería.
+filtros de Kalman, métodos de Monte Carlo--- sin que debamos programarlos. Así,
+el investigador concentra su esfuerzo en las decisiones económicas del modelo,
+mientras Dynare se ocupa de resolverlo y simularlo numéricamente.
 
 \begin{definition}[Dynare]
 Dynare es una plataforma de software de código abierto para el manejo de una
@@ -248,6 +247,21 @@ Conviene detenerse un momento en \emph{de dónde viene} esta forma de hacer
 macroeconomía, porque Dynare no cae del cielo: es el último eslabón de una
 transformación que tomó dos décadas y que cambió lo que significa ``tener un
 modelo''.
+
+\begin{remark}
+Dynare no es la única forma de llevar un modelo DSGE al computador. Hoy existe
+un ecosistema amplio ---Python (con bibliotecas como QuantEcon, de Sargent y
+Stachurski), Julia, R--- y no faltan quienes sostienen que, para muchos
+problemas modernos, las bibliotecas científicas de Python ya superan a MATLAB
+(véase QuantEcon, \url{https://python-programming.quantecon.org}), además de
+integrarse mejor con campos como el aprendizaje automático. En esta sesión
+optamos por Dynare, sobre MATLAB u Octave, por tres razones prácticas: su
+sintaxis declarativa permite escribir el modelo casi como en el papel, es el
+estándar \emph{de facto} en bancos centrales y la academia, y los alumnos de la
+UP cuentan con licencia de MATLAB. La elección de plataforma, en todo caso, no
+cambia la economía del modelo: lo que aprendamos aquí se traslada a cualquier
+otro entorno.
+\end{remark}
 
 \subsection{La visión: el modelo como laboratorio}
 
@@ -368,8 +382,7 @@ el Banque de France celebró sus treinta años con una conferencia dedicada.
     \node[align=center, text width=2.6cm, font=\scriptsize] at (\x,-0.75) {\a};
   }
 \end{tikzpicture}
-\caption{De la pizarra al computador: hitos del giro cuantitativo en
-macroeconomía y el linaje de Dynare.}
+\caption{Evolución cuantitativa de la macroeconomía y la influencia de Dynare.}
 \label{fig:timeline}
 \end{figure}
 
@@ -377,9 +390,8 @@ macroeconomía y el linaje de Dynare.}
 El hilo conductor de esta historia es sencillo: \emph{escribir el modelo como
 código no reemplaza la teoría; la completa}. La pizarra plantea el sistema de
 ecuaciones; la computadora lo resuelve, lo simula y lo confronta con los datos.
-Dynare encarna la promesa de Juillard de que uno debería poder ``escribir el
-modelo casi como lo haría en el papel'' y dejar que la máquina haga el resto.
-Es exactamente lo que haremos en lo que resta de esta guía.
+Esa es, en una frase, la filosofía de diseño de Dynare: escribir el modelo casi
+como se haría en el papel y dejar que la máquina haga el resto.
 \end{remark}
 
 % ===================== REFERENCIAS =====================
