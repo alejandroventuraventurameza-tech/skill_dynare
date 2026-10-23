@@ -923,23 +923,21 @@ resolución y simulación.
 \paragraph{La convención de timing.} El punto que más confunde al principiante
 es el \emph{timing}. Dynare fecha cada variable por \emph{cuándo se decide}, no
 por cuándo se usa físicamente. El capital productivo de hoy se decidió ayer, de
-modo que \code{k} denota el capital \emph{elegido} en $t$ (el $k_{t+1}$ del
-enunciado) y \code{k(-1)} el disponible al inicio de $t$ (el $k_t$).
-Simétricamente, \code{c(+1)} es el consumo esperado en $t+1$. Un error aquí
-cambia el número de variables predeterminadas y hace fallar Blanchard--Kahn.
+modo que \code{k} denota el capital \emph{elegido} en $t$ (lo que en el modelo
+llamamos $k_{t+1}$) y \code{k(-1)} el disponible al inicio de $t$ (el $k_t$).
+Simétricamente, \code{c(+1)} es el consumo \emph{esperado} en $t+1$. Esta
+convención se traduce directamente al código: la producción
+$y_t=a_t k_t^{1-\alpha}h_t^{\alpha}$ se escribe
+\lstinline@y = a*k(-1)^(1-alpha)*h^alpha@ ---con \code{k(-1)}, nunca \code{k}---,
+y la ley de movimiento $k_{t+1}=(1-\delta)k_t+i_t$ como
+\lstinline@k = (1-delta)*k(-1) + i@. Un error de timing aquí cambia el número de
+variables predeterminadas y hace fallar Blanchard--Kahn.
 
-\begin{remark}
-Traducción de notación: el $k_t$ del Capítulo~\ref{ch:modelo} (capital al inicio
-de $t$) es \code{k(-1)} en Dynare, y el $k_{t+1}$ (elegido en $t$) es \code{k}.
-Por eso la producción $y_t=a_t k_t^{1-\alpha}h_t^{\alpha}$ se codea
-\lstinline@y = a*k(-1)^(1-alpha)*h^alpha@.
-\end{remark}
-
-\section{Calentamiento: el RBC más simple}
+\section{Calentando motores}
 \label{sec:calentamiento}
 
-Antes de atacar el pd06 ---ocho ecuaciones con trabajo endógeno--- conviene
-montar el \code{.mod} más simple posible y ver los seis bloques ``en vivo'' sin la
+Antes de atacar el RBC con trabajo ---ocho ecuaciones--- conviene montar el
+\code{.mod} más simple posible y ver los seis bloques ``en vivo'' sin la
 complejidad. El candidato natural es un RBC \emph{sin trabajo}: cinco ecuaciones,
 la misma anatomía.
 
@@ -993,22 +991,23 @@ stoch_simul(order = 1, irf = 40) y c i k a;
 \begin{remark}
 \textbf{Cuidado con $\alpha$.} En este modelo de calentamiento $\alpha$ es la
 participación del \emph{capital} (convención estándar de la mayoría de los libros,
-$y=ak^\alpha$). En el pd06, en cambio, $\alpha$ es la participación del
+$y=ak^\alpha$). En el RBC con trabajo, en cambio, $\alpha$ es la participación del
 \emph{trabajo} ($y=ak^{1-\alpha}h^\alpha$). Es el mismo símbolo con dos papeles:
 al leer un \code{.mod} ajeno, lo primero es fijar qué denota cada parámetro.
 \end{remark}
 
-\noindent Son \emph{los mismos seis bloques} que usaremos en el pd06, con tres
-variables menos y sin la FOC de trabajo. La Euler aquí lleva $c^{-\sigma}$ (CRRA
-general) en lugar de $1/c$ (log); con \lstinline@sig = 1@ ambas coinciden.
-Entendido este esqueleto, el pd06 es el mismo patrón, ampliado con la oferta de
-trabajo endógena y la calibración de $\theta$.
+\noindent Son \emph{los mismos seis bloques} que usaremos en el RBC con trabajo,
+con tres variables menos y sin la FOC de trabajo. La Euler aquí lleva $c^{-\sigma}$
+(CRRA general) en lugar de $1/c$ (log); con \lstinline@sig = 1@ ambas coinciden.
+Entendido este esqueleto, el RBC con trabajo es el mismo patrón, ampliado con la
+oferta de trabajo endógena y la calibración de $\theta$.
 
-\section{El modelo pd06, bloque por bloque}
+\section{El modelo RBC con trabajo, bloque por bloque}
+\label{sec:rbctrabajo}
 
 \paragraph{Declaraciones y calibración.} Se declaran las ocho endógenas, el
 choque y los parámetros ---incluidos los valores de estado estacionario, que se
-calculan en forma cerrada para \emph{calibrar} $\theta$ (parte C):
+calculan en forma cerrada para \emph{calibrar} $\theta$ (Cap.~\ref{ch:modelo}):
 
 \begin{lstlisting}
 var     y c i k h r w a;
@@ -1019,7 +1018,7 @@ parameters alpha beta delta phi sigma_eps theta hss
 alpha = 0.667;  beta = 0.984;  delta = 0.025;
 phi = 0.979;    sigma_eps = 0.0072;  hss = 0.20;
 
-// estado estacionario cerrado (parte C) y calibracion de theta
+// estado estacionario cerrado (Cap. 2) y calibracion de theta
 r_ss = 1/beta - (1 - delta);
 k_ss = hss*((1 - alpha)/r_ss)^(1/alpha);
 y_ss = k_ss^(1 - alpha)*hss^alpha;
@@ -1148,7 +1147,7 @@ Residuals of the static equations:
   Equation 1 (Euler) ... Equation 8 (TFP):  0.000000
 \end{lstlisting}
 
-\noindent Coincide al dígito con la Tabla~\ref{tab:ss} (parte~C), y los ocho
+\noindent Coincide al dígito con la Tabla~\ref{tab:ss} (Cap.~\ref{ch:modelo}), y los ocho
 residuos son nulos: el estado estacionario satisface exactamente las ecuaciones
 del \code{model}. Si alguno fuera distinto de cero, habría un error de álgebra
 en el EE cerrado.
@@ -1462,7 +1461,7 @@ teórica. Los primeros tres cambian un parámetro; los dos últimos, una opción
   \emph{Qué observar:} se recalcula \emph{todo} el estado estacionario
   (la relación capital--producto, $\theta$). \emph{Por qué:} la calibración no es
   neutra; $\alpha$ fija la tecnología y, con ella, los niveles de largo plazo que
-  calculamos en forma cerrada en el estado estacionario (parte~C).
+  calculamos en forma cerrada en el estado estacionario (Cap.~\ref{ch:modelo}).
 
 \item \textbf{Los momentos del ciclo (filtro HP).} Añade \lstinline@hp_filter=1600@
   a la línea de \lstinline@stoch_simul@. \emph{Qué observar:} las desviaciones
