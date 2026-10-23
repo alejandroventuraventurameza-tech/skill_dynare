@@ -48,3 +48,6 @@ examples/**/checksum
 
 # Estado local de herramientas de IA (no versionar)
 .claude/
+
+# Material de referencia con copyright (NO publicar)
+crash_course/galindo_montecinos_ortiz*.pdf
