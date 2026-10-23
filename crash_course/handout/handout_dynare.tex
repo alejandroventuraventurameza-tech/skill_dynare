@@ -931,7 +931,39 @@ $y_t=a_t k_t^{1-\alpha}h_t^{\alpha}$ se escribe
 \lstinline@y = a*k(-1)^(1-alpha)*h^alpha@ ---con \code{k(-1)}, nunca \code{k}---,
 y la ley de movimiento $k_{t+1}=(1-\delta)k_t+i_t$ como
 \lstinline@k = (1-delta)*k(-1) + i@. Un error de timing aquí cambia el número de
-variables predeterminadas y hace fallar Blanchard--Kahn.
+variables predeterminadas y hace fallar Blanchard--Kahn. La
+Figura~\ref{fig:timing} resume la convención.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>={Stealth[length=2.4mm]}, font=\small]
+  % eje de tiempo
+  \draw[thick,->] (-0.3,0) -- (12.3,0) node[right]{\footnotesize tiempo};
+  \foreach \x/\lab in {2/{$t-1$}, 6/{$t$}, 10/{$t+1$}}{
+     \draw[thick] (\x,0.14)--(\x,-0.14);
+     \node[below=5pt] at (\x,0) {\lab};
+  }
+  % capital que produce hoy: decidido en t-1, usado en t  -> k(-1)
+  \draw[->, upblue, line width=1pt] (2,0.3) to[bend left=38] (6,0.3);
+  \node[upblue, align=center, font=\footnotesize] at (4,2.0)
+      {decidido en $t-1$,\\ usado en $t$};
+  \node[upblue] at (4,1.15) {$k_t \;=\;$\,\code{k(-1)}};
+  % capital elegido hoy: decidido en t, usado en t+1 -> k
+  \draw[->, defframe, line width=1pt] (6,0.3) to[bend left=38] (10,0.3);
+  \node[defframe, align=center, font=\footnotesize] at (8,2.0)
+      {decidido en $t$,\\ usado en $t+1$};
+  \node[defframe] at (8,1.15) {$k_{t+1} \;=\;$\,\code{k}};
+  % expectativa de consumo
+  \draw[->, remarkframe, dashed, line width=0.8pt] (6,-0.32) to[bend right=30] (10,-0.32);
+  \node[remarkframe, align=center, font=\footnotesize] at (8,-1.3)
+      {esperado en $t$:\ $\E_t c_{t+1}=$\,\code{c(+1)}};
+\end{tikzpicture}
+\caption{La convención de \emph{timing} de Dynare. El capital que produce hoy
+($k_t$) se decidió ayer: por eso es \code{k(-1)}. El que se elige hoy
+($k_{t+1}$) es \code{k}. Las variables con adelanto, como \code{c(+1)}, son
+expectativas formadas en $t$.}
+\label{fig:timing}
+\end{figure}
 
 \section{Calentando motores}
 \label{sec:calentamiento}
