@@ -973,13 +973,36 @@ Antes de atacar el RBC con trabajo ---ocho ecuaciones--- conviene montar el
 complejidad. El candidato natural es un RBC \emph{sin trabajo}: cinco ecuaciones,
 la misma anatomía.
 
-La economía es la de siempre, despojada de la decisión de horas: un hogar que
-maximiza $\E_0\sum\beta^t\,c_t^{1-\sigma}/(1-\sigma)$, una firma con tecnología
-$y_t=a_t k_t^{\alpha}$ (trabajo normalizado e inelástico), y la PTF en AR(1). Las
-cinco condiciones de equilibrio ---producción, vaciado de mercado, ley de
-movimiento del capital, Euler y proceso de la TFP--- se transcriben así (no
-re-derivamos las FONC: el método es el del Capítulo~\ref{ch:modelo}; aquí
-importa la \emph{anatomía}):
+La economía es la de siempre, despojada de la decisión de horas. El hogar
+representativo elige consumo e inversión para maximizar
+\[
+  \E_0 \sum_{t=0}^{\infty} \beta^t\,\frac{c_t^{1-\sigma}}{1-\sigma},
+\]
+sujeto a su restricción presupuestaria y a la ley de movimiento del capital,
+\[
+  c_t + i_t = y_t, \qquad k_{t+1} = (1-\delta)\,k_t + i_t .
+\]
+La firma produce con una tecnología Cobb--Douglas en la que el trabajo está
+normalizado e inelástico, $y_t = a_t\,k_t^{\alpha}$, y la productividad sigue un
+AR(1) en logaritmos, $\ln a_t = \rho\ln a_{t-1}+\varepsilon_t$.
+
+Combinando las condiciones de primer orden del hogar y de la firma con el
+vaciado del mercado, el equilibrio queda descrito por \emph{cinco} ecuaciones
+en cinco incógnitas $(c_t,\,i_t,\,y_t,\,k_t,\,a_t)$:
+\begin{equation}
+\left\{
+\begin{aligned}
+  c_t^{-\sigma} &= \beta\,\E_t\!\big[c_{t+1}^{-\sigma}\,(\alpha\,a_{t+1} k_t^{\alpha-1}+1-\delta)\big], &&\quad\text{(Euler)}\\[2pt]
+  y_t &= a_t\,k_t^{\alpha}, &&\quad\text{(producción)}\\[2pt]
+  y_t &= c_t + i_t, &&\quad\text{(vaciado de mercado)}\\[2pt]
+  k_{t+1} &= (1-\delta)\,k_t + i_t, &&\quad\text{(ley de movimiento)}\\[2pt]
+  \ln a_t &= \rho\,\ln a_{t-1} + \varepsilon_t. &&\quad\text{(TFP)}
+\end{aligned}
+\right.
+\label{eq:rbc5}
+\end{equation}
+No re-derivamos las FONC ---el método es el del Capítulo~\ref{ch:modelo}; aquí
+importa la \emph{anatomía}. Así se transcribe el sistema \eqref{eq:rbc5} a Dynare:
 
 \begin{lstlisting}
 var     y c i k a;          // 5 endogenas (sin h ni w ni r)
@@ -1115,9 +1138,22 @@ TFP \eqref{eq:tfp} & \lstinline@log(a) = phi*log(a(-1)) + sigma_eps*eps@ & \code
 \label{tab:map}
 \end{table}
 
-\paragraph{Estado estacionario y shocks.} El bloque \lstinline@steady_state_model@
-entrega el EE cerrado ---Dynare no resuelve nada numéricamente---, y el bloque
-\code{shocks} fija la desviación estándar del choque:
+\paragraph{Estado estacionario y shocks.} Aquí conviene detenerse en una pregunta
+natural: ¿cómo conoce Dynare el estado estacionario? Tiene \emph{dos} caminos. El
+primero es \textbf{numérico}: uno le entrega valores iniciales (en un bloque
+\code{initval}) y Dynare resuelve el sistema estático ---el modelo sin rezagos ni
+adelantos--- con el método de Newton. El segundo ---el que usamos aquí--- es
+\textbf{analítico}: como ya derivamos el estado estacionario en forma cerrada
+(Cap.~\ref{ch:modelo}), se lo entregamos nosotros en el bloque
+\lstinline@steady_state_model@ y Dynare no resuelve nada numéricamente. Es más
+exacto y más robusto.
+
+¿Y qué son los \code{r\_ss}, \code{k\_ss}, \dots? Son los \emph{parámetros} que
+declaramos arriba y a los que, en la calibración, asignamos las fórmulas cerradas
+del estado estacionario en función de $\alpha,\beta,\delta,h_{ss}$. El bloque
+\lstinline@steady_state_model@ entonces solo mapea cada variable del modelo a su
+valor de largo plazo. El bloque \code{shocks} cierra la especificación fijando la
+desviación estándar del choque:
 
 \begin{lstlisting}
 steady_state_model;
@@ -1130,26 +1166,50 @@ shocks;
 end;
 \end{lstlisting}
 
+\begin{remark}
+El sufijo \code{\_ss} es \emph{nuestra} convención para ``\emph{steady state}'',
+no sintaxis de Dynare: podríamos llamarlos \code{rbar}, \code{kstar} o como
+quisiéramos. Lo esencial es declararlos como parámetros y calcularlos \emph{antes}
+del bloque \code{model}, porque en la solución log-lineal los valores de estado
+estacionario aparecen multiplicando a las variables, y Dynare los necesita ya
+fijados.
+\end{remark}
+
 \section{Correr en Dynare, comando por comando}
 
-En la ventana de comandos de MATLAB, basta situarse en la carpeta del \code{.mod}
-y ejecutar \lstinline@dynare rbc_analytical@. Eso dispara, en orden, cuatro
-comandos cuya función conviene entender:
+Con el \code{.mod} guardado, correrlo toma tres líneas en la ventana de comandos
+de MATLAB: añadir Dynare al \emph{path} (una vez por sesión), situarse en la
+carpeta del archivo, y llamar a Dynare por su nombre \emph{sin} la extensión
+\code{.mod}:
 
-\begin{description}[leftmargin=1.4em,style=nextline]
-\item[\code{steady}] calcula el estado estacionario determinista. Como lo dimos
-  en forma cerrada (\lstinline@steady_state_model@), Dynare solo lo evalúa y lo
-  reporta; debe coincidir con la Tabla~\ref{tab:ss}.
+\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
+>> addpath C:\dynare\7.1\matlab      % la ruta de tu instalacion de Dynare
+>> cd     <carpeta donde esta el .mod>
+>> dynare rbc_analytical             % sin ".mod"
+\end{lstlisting}
+
+\noindent Esa última línea no ejecuta un comando, sino \emph{cuatro}, en el orden
+en que los escribimos dentro del \code{.mod}. Conviene entender qué hace cada uno
+y qué imprime en pantalla:
+
+\begin{description}[leftmargin=1.6em,style=nextline]
+\item[\code{steady}] calcula (o, en nuestro caso, evalúa) el estado estacionario
+  determinista. Como se lo dimos en forma cerrada
+  (\lstinline@steady_state_model@), Dynare solo lo evalúa y lo \emph{imprime} en
+  la tabla \texttt{STEADY-STATE RESULTS}; debe coincidir con la
+  Tabla~\ref{tab:ss}.
 \item[\code{resid}] evalúa el residuo de cada ecuación del \code{model} en ese
-  estado estacionario. Si el EE es correcto, los ocho residuos son $\approx 0$:
-  es la primera señal de que no hay un error de álgebra en el \code{.mod}.
-\item[\code{check}] calcula los valores propios del sistema linealizado y
-  verifica la condición de Blanchard--Kahn (\S\ref{sec:bk}). Debe hallar un
-  valor propio fuera del círculo unitario ---uno por cada control--- y reportar
-  ``Blanchard \& Kahn conditions are met''.
-\item[\code{stoch\_simul(order=1, irf=40)}] resuelve el modelo a primer orden
-  (log-linealización), computa las funciones de política, las IRFs a un choque de
-  una desviación estándar y los momentos teóricos. La lista final
+  estado estacionario y los \emph{imprime}. Si el EE es correcto, los ocho
+  residuos salen en \texttt{0.000000}: es la primera señal de que no hay un error
+  de álgebra en el \code{.mod}.
+\item[\code{check}] calcula los valores propios del sistema linealizado, los
+  \emph{imprime} y verifica la condición de Blanchard--Kahn (\S\ref{sec:bk}).
+  Debe hallar tantos valores propios fuera del círculo unitario como variables de
+  control y reportar \texttt{The rank condition is verified}.
+\item[\code{stoch\_simul(order=1, irf=40)}] es el comando central: resuelve el
+  modelo a primer orden (log-linealización), e imprime las \emph{funciones de
+  política}, los \emph{momentos teóricos}, y dibuja las \emph{IRFs} a un choque de
+  una desviación estándar durante 40 períodos. La lista final
   (\code{y c i k h r w a}) elige qué variables reportar.
 \end{description}
 
@@ -1157,7 +1217,8 @@ comandos cuya función conviene entender:
 El orden \code{steady} $\to$ \code{resid} $\to$ \code{check} $\to$
 \lstinline@stoch_simul@ no es casual: va de lo más básico (¿existe el EE?) a lo
 más fino (¿es único y estable?, ¿cómo responde?). Si algo falla, el primer
-comando que se queja señala dónde está el problema.
+comando que se queja señala dónde está el problema. En la \S\ref{sec:salida}
+leemos, bloque por bloque, todo lo que estos comandos imprimen.
 \end{remark}
 
 \section{Leer la salida de Dynare}
