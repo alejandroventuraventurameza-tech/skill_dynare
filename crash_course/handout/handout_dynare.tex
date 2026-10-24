@@ -45,6 +45,10 @@
 \definecolor{assbg}{RGB}{255, 245, 232}
 \definecolor{assframe}{RGB}{190, 95, 0}
 \definecolor{upblue}{RGB}{15, 35, 85}
+\definecolor{errbg}{RGB}{255, 238, 236}
+\definecolor{errframe}{RGB}{193, 42, 32}
+\definecolor{tipbg}{RGB}{231, 248, 243}
+\definecolor{tipframe}{RGB}{0, 128, 102}
 
 % --- TABLAS Y FIGURAS ---
 \usepackage{booktabs}
@@ -98,7 +102,15 @@
   remarkstyle/.style={breakable, colback=remarkamber, colframe=remarkframe,
     colbacktitle=remarkframe, coltitle=white, fonttitle=\bfseries\itshape\small,
     leftrule=4pt, rightrule=0.4pt, toprule=0.4pt, bottomrule=0.4pt, arc=0pt,
-    left=5pt, right=3pt, top=2pt, bottom=2pt, toptitle=1.5mm, bottomtitle=1.5mm}
+    left=5pt, right=3pt, top=2pt, bottom=2pt, toptitle=1.5mm, bottomtitle=1.5mm},
+  errorstyle/.style={breakable, colback=errbg, colframe=errframe,
+    colbacktitle=errframe, coltitle=white, fonttitle=\bfseries\small,
+    boxrule=0.5pt, arc=2pt, toptitle=1.5mm, bottomtitle=1.5mm,
+    left=3pt, right=3pt, top=2pt, bottom=2pt},
+  tipstyle/.style={breakable, colback=tipbg, colframe=tipframe,
+    colbacktitle=tipframe, coltitle=white, fonttitle=\bfseries\small,
+    boxrule=0.5pt, arc=2pt, toptitle=1.5mm, bottomtitle=1.5mm,
+    left=3pt, right=3pt, top=2pt, bottom=2pt}
 }
 
 % --- CONTADORES ---
@@ -138,6 +150,14 @@
   \refstepcounter{tcbrem}%
   \begin{tcolorbox}[remarkstyle, title={Observación~\thetcbrem}]}%
 {\end{tcolorbox}}
+\newenvironment{errorbox}[1][]{%
+  \begin{tcolorbox}[errorstyle, title={\erroricon~~Error común%
+    \ifx\relax#1\relax\else: #1\fi}]}%
+{\end{tcolorbox}}
+\newenvironment{tipbox}[1][]{%
+  \begin{tcolorbox}[tipstyle, title={\tipicon~~Buena práctica%
+    \ifx\relax#1\relax\else: #1\fi}]}%
+{\end{tcolorbox}}
 
 % --- TÍTULOS Y LISTAS ---
 \usepackage{titlesec}
@@ -172,6 +192,24 @@
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\Real}{\mathbb{R}}
 \newcommand{\E}{\mathbb{E}}
+
+% --- ICONOS (dibujados en TikZ, autocontenidos) ---
+\newcommand{\erroricon}{\raisebox{-0.5pt}{\begin{tikzpicture}[scale=0.11,baseline=-0.5ex]
+  \draw[line width=2.4pt, line join=round] (0,1.9) -- (-1.1,-0.05) -- (1.1,-0.05) -- cycle;
+  \draw[line width=2.2pt, line cap=round] (0,1.28) -- (0,0.58);
+  \fill (0,0.28) circle (1.7pt);
+\end{tikzpicture}}}
+\newcommand{\tipicon}{\raisebox{-1pt}{\begin{tikzpicture}[scale=0.12,baseline=-0.5ex,line cap=round]
+  \draw[line width=1.9pt] (0,1.05) circle (0.92);
+  \draw[line width=1.9pt] (-0.48,0.12) -- (0.48,0.12);
+  \draw[line width=1.9pt] (-0.44,-0.18) -- (0.44,-0.18);
+  \draw[line width=1.9pt] (-0.34,-0.48) -- (0.34,-0.48);
+  \draw[line width=1.5pt] (0,2.35) -- (0,2.95);
+  \draw[line width=1.5pt] (1.35,1.05) -- (1.95,1.05);
+  \draw[line width=1.5pt] (-1.35,1.05) -- (-1.95,1.05);
+  \draw[line width=1.5pt] (1.0,2.05) -- (1.45,2.5);
+  \draw[line width=1.5pt] (-1.0,2.05) -- (-1.45,2.5);
+\end{tikzpicture}}}
 
 % ============================================================================
 \begin{document}
@@ -1082,6 +1120,22 @@ i_ss = delta*k_ss;   c_ss = y_ss - i_ss;   w_ss = alpha*y_ss/hss;
 theta = w_ss*(1 - hss)/c_ss;              // theta endogeno desde h_ss
 \end{lstlisting}
 
+\begin{tipbox}[nombres de parámetros]
+El profesor Marco Ortiz insiste en una convención que conviene adoptar temprano:
+escribir los parámetros \emph{en mayúsculas y duplicando la primera letra} ---
+\code{AALPHA}, \code{BBETA}, \code{DDELTA}--- en vez de \code{alpha}, \code{beta},
+\code{delta}. La razón no es cosmética. En MATLAB, \code{beta} y \code{gamma} son
+\emph{funciones} ya definidas (las funciones Beta y Gamma de Euler); aunque el
+preprocesador de Dynare aísla los nombres \emph{dentro} del \code{.mod}, en cuanto
+escribes un \emph{steady-state file} en MATLAB o manipulas los parámetros fuera del
+archivo, el sombreado reaparece y produce errores difíciles de rastrear. Duplicar
+la inicial (\code{BBETA}) elimina toda colisión y, de paso, hace que los parámetros
+``salten a la vista'' frente a las variables. En este handout mantenemos los
+nombres cortos por legibilidad en una primera sesión; en código que vayas a
+reutilizar, adopta \code{AALPHA}, \code{BBETA}, \dots \ (volvemos a estilo en la
+\S\ref{sec:estilo}).
+\end{tipbox}
+
 \paragraph{El bloque \code{model}: la traducción ecuación por ecuación.} Es el
 corazón. Cada ecuación del Capítulo~\ref{ch:modelo} se escribe en una línea, con
 una etiqueta \code{[name=...]} que la identifica:
@@ -1113,6 +1167,21 @@ model;
   log(a) = phi*log(a(-1)) + sigma_eps*eps;
 end;
 \end{lstlisting}
+
+\begin{errorbox}[al teclear el bloque \code{model}]
+Dos tropiezos aparecen casi siempre al escribir estas ecuaciones en vivo:
+\begin{itemize}[leftmargin=1.2em, topsep=2pt, itemsep=2pt]
+\item \textbf{El punto y coma fantasma.} Si olvidas un \code{;}, Dynare reporta
+  \texttt{syntax error, unexpected \ldots} en la línea \emph{siguiente} a la del
+  error real. Regla: cuando una línea ``que se ve bien'' falla, el culpable suele
+  ser la línea de \emph{arriba}.
+\item \textbf{El conteo.} \texttt{The model doesn't have the same number of
+  equations and endogenous variables} significa que el número de ecuaciones del
+  bloque \code{model} no iguala al de variables en \code{var}. Aquí deben ser
+  ocho y ocho. Cuéntalas a mano: casi siempre falta (o sobra) una.
+\end{itemize}
+El catálogo completo de errores está en la \S\ref{sec:debug}.
+\end{errorbox}
 
 El mapeo es casi literal (Tabla~\ref{tab:map}). Obsérvese el timing: la Euler
 usa \code{c(+1)} y \code{r(+1)} (expectativas); producción y demanda de capital
@@ -1221,6 +1290,20 @@ más fino (¿es único y estable?, ¿cómo responde?). Si algo falla, el primer
 comando que se queja señala dónde está el problema. En la \S\ref{sec:salida}
 leemos, bloque por bloque, todo lo que estos comandos imprimen.
 \end{remark}
+
+\begin{errorbox}[cada comando falla a su manera]
+Esa secuencia es también un diagnóstico: el comando que se detiene localiza la
+avería.
+\begin{itemize}[leftmargin=1.2em, topsep=2pt, itemsep=2pt]
+\item \code{steady} $\Rightarrow$ \texttt{Impossible to find the steady state}:
+  el \lstinline@steady_state_model@ está mal o el \code{initval} es pobre. Corre
+  \lstinline@resid(non_zero)@ para ver \emph{qué} ecuación no cierra.
+\item \code{resid} con residuos $\neq$ \texttt{0.000000}: hay un error de álgebra
+  en el \code{.mod}; la ecuación con residuo grande es la sospechosa.
+\item \code{check} $\Rightarrow$ \texttt{Blanchard \& Kahn conditions are not
+  satisfied}: casi siempre, un \emph{timing} mal escrito (ver \S\ref{sec:debug}).
+\end{itemize}
+\end{errorbox}
 
 \section{Leer la salida de Dynare}
 \label{sec:salida}
@@ -1691,6 +1774,90 @@ nulas, confirmando el resultado analítico de la \S\ref{sec:policy}.}
 \label{fig:hours}
 \end{figure}
 
+\section{Estilo: cómo se ve un \code{.mod} profesional}
+\label{sec:estilo}
+
+Un \code{.mod} que \emph{corre} no es lo mismo que un \code{.mod} \emph{bueno}. El
+segundo se lee de un vistazo, se reutiliza sin reescribirlo y se depura en minutos
+en vez de horas. Las convenciones de abajo ---parte folclore del oficio, parte
+recomendaciones explícitas de Marco Ortiz--- cuestan poco al teclear y se pagan
+solas la primera vez que un modelo se rompe.
+
+\paragraph{1. Nomenclatura.} Nombrar bien es la mitad de la legibilidad.
+\begin{itemize}[leftmargin=1.4em, topsep=2pt, itemsep=3pt]
+\item \textbf{Parámetros en mayúsculas con inicial duplicada}: \code{AALPHA},
+  \code{BBETA}, \code{DDELTA}, \code{RRHO}. Evita colisiones con funciones de MATLAB
+  (\code{beta}, \code{gamma}) y separa visualmente parámetros de variables. Elige
+  una convención y aplícala sin excepciones ---la consistencia importa más que la
+  convención concreta.
+\item \textbf{Variables en minúsculas, cortas y fieles a la notación del papel}:
+  \code{c}, \code{k}, \code{h}, \code{y}. Quien leyó el Capítulo~\ref{ch:modelo}
+  debe reconocer cada símbolo sin traducir.
+\item \textbf{Un sufijo único para los valores de estado estacionario}: \code{\_ss},
+  \code{bar} o \code{star}, pero \emph{uno solo} en todo el archivo.
+\end{itemize}
+
+\paragraph{2. Indentación y estructura visual.} El bloque \code{model} es un párrafo,
+no una lista de la compra. Indenta su cuerpo, deja una ecuación por línea y separa
+con líneas en blanco los grupos lógicos ---FOCs del hogar, FOCs de la firma,
+tecnología, mercados--- como hicimos en la \S\ref{sec:rbctrabajo}. El ojo debe poder
+saltar de un bloque económico al siguiente sin leer ecuación por ecuación.
+
+\paragraph{3. Documentación: comentarios y etiquetas.} Dynare ofrece dos
+herramientas que no son decorativas:
+\begin{itemize}[leftmargin=1.4em, topsep=2pt, itemsep=3pt]
+\item Las etiquetas \lstinline@[name='...']@ en cada ecuación. No son un comentario:
+  Dynare las usa en los mensajes de error, en \lstinline@model_diagnostics@ y al
+  exportar el modelo a \LaTeX. Una ecuación con nombre se localiza al instante
+  cuando algo falla.
+\item El atributo \lstinline@long_name@ al declarar variables ---
+  \lstinline@var c (long_name='consumo');@--- que Dynare imprime en tablas y
+  gráficos, volviendo legible la salida para quien no conoce tus abreviaturas.
+\item Comentarios \code{//} para marcar secciones y, sobre todo, para registrar
+  la \emph{fuente} de cada valor calibrado (\code{// beta: King-Rebelo 1999}).
+\end{itemize}
+
+\paragraph{4. Organización del archivo.} Respeta el orden canónico ---\code{var}
+$\to$ \code{varexo} $\to$ \code{parameters} $\to$ calibración $\to$ \code{model}
+$\to$ \lstinline@steady_state_model@ $\to$ \code{shocks} $\to$ \code{steady},
+\code{resid}, \code{check} $\to$ \lstinline@stoch_simul@--- porque es el orden en
+que Dynare \emph{necesita} la información. Y \textbf{un modelo por archivo}: no
+acumules variantes (distintos $\delta$, distintos $\rho$) en un mismo \code{.mod} a
+golpe de comentar y descomentar líneas; usa archivos separados o un \emph{script}
+que los invoque. Declarar los valores de estado estacionario como parámetros y
+calcularlos \emph{antes} del \code{model} (\S\ref{sec:rbctrabajo}) también es parte
+de esta disciplina.
+
+\paragraph{5. Reproducibilidad.} Fija la semilla del generador aleatorio con
+\lstinline@set_dynare_seed(123)@ antes de \lstinline@stoch_simul@ si quieres que las
+simulaciones sean replicables bit a bit. Y mantén el \code{.mod} bajo control de
+versiones: las figuras y los cuadros de este handout se regeneran desde el archivo,
+no se guardan a mano.
+
+El contraste siguiente resume el espíritu. A la izquierda, un bloque que corre pero
+que nadie quiere heredar; a la derecha, el mismo bloque escrito con oficio:
+
+\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\scriptsize]
+// ---- ANTES: corre, pero ilegible ----      // ---- DESPUES: mismo modelo, con oficio ----
+model;                                         model;
+1/c=beta*(1/c(+1))*(r(+1)+1-delta);              [name='Euler (FOC capital)']
+r=(1-alpha)*y/k(-1);                             1/c = BBETA*(1/c(+1))*(r(+1) + 1 - DDELTA);
+y=a*k(-1)^(1-alpha)*h^alpha;
+k=(1-delta)*k(-1)+i;                             [name='Demanda de capital (FOC firma)']
+end;                                             r = (1 - AALPHA)*y/k(-1);
+                                                 ...
+\end{lstlisting}
+
+\begin{tipbox}[la lista de verificación]
+Antes de dar por terminado un \code{.mod}, revisa: (i) parámetros en
+\code{MAYÚSCULAS} duplicadas y sin colisiones; (ii) cuerpo de \code{model}
+indentado y agrupado por bloque económico; (iii) toda ecuación con su etiqueta
+\lstinline@[name='...']@; (iv) orden canónico de bloques y \emph{un modelo por
+archivo}; (v) fuentes de calibración en comentarios; (vi) semilla fija si simulas.
+Seis hábitos que convierten un archivo desechable en uno que tu yo de dentro de
+seis meses ---o el profesor que lo revise--- te agradecerá.
+\end{tipbox}
+
 \section{Depuración: los errores que vas a cometer}
 \label{sec:debug}
 
@@ -1763,14 +1930,15 @@ de lugar--- porque altera el conteo de estados y controles. El comando
 estático singular y otras inconsistencias de especificación.
 \end{remark}
 
-\paragraph{Un tropiezo que no es del modelo: los gráficos.} Si al correr las
-figuras salen \emph{en blanco} o MATLAB se cuelga al plotear las IRFs, no es tu
-\code{.mod}: es el motor gráfico (OpenGL) de MATLAB en esa máquina ---típico en
-laboratorios o por escritorio remoto. El modelo ya quedó resuelto en memoria
-(\code{oo\_}); solo falla el dibujo. Arreglo: ejecutar una vez
+\begin{errorbox}[un tropiezo que no es del modelo: los gráficos]
+Si al correr las figuras salen \emph{en blanco} o MATLAB se cuelga al plotear las
+IRFs, no es tu \code{.mod}: es el motor gráfico (OpenGL) de MATLAB en esa máquina
+---típico en laboratorios o por escritorio remoto. El modelo ya quedó resuelto en
+memoria (\code{oo\_}); solo falla el dibujo. Arreglo: ejecutar una vez
 \lstinline@opengl('save','software')@ y reiniciar MATLAB. Como alternativa,
 \lstinline@graph_format=pdf@ en \lstinline@stoch_simul@ evita el exportador a
 \code{.eps} que falla en varias versiones de MATLAB.
+\end{errorbox}
 
 \section{Tu turno: experimentos guiados}
 \label{sec:tuturno}
