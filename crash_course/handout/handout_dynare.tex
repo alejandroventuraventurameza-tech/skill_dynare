@@ -2371,6 +2371,102 @@ aproximación lejos del estado estacionario: ahí se recurre a órdenes superior
 o a métodos globales.
 \end{remark}
 
+\chapter{Información, filtraciones y medibilidad}
+\label{app:filtration}
+
+A lo largo del texto escribimos $\E_t[\cdot]$, llamamos al capital una variable
+\emph{predeterminada} y dijimos que el consumo \emph{salta}. Esas tres ideas tienen
+un significado preciso en teoría de la probabilidad, que conviene hacer explícito:
+formaliza la \S\ref{sec:bk} y da sentido exacto al conteo de Blanchard--Kahn del
+Apéndice~\ref{app:undetermined}.\footnote{El tratamiento estándar está en Ljungqvist
+\& Sargent (2018); aquí damos solo lo imprescindible para fijar el vocabulario.}
+
+\paragraph{El espacio de probabilidad y la filtración.} Sea $(\Omega,\mathcal{F},
+\mathbb{P})$ un espacio de probabilidad: $\Omega$ es el espacio de estados de la
+naturaleza, $\mathcal{F}$ una $\sigma$-álgebra de eventos y $\mathbb{P}$ una medida de
+probabilidad. La única fuente de aleatoriedad del modelo es la sucesión de
+innovaciones $\{\varepsilon_t\}$. La información disponible en la fecha $t$ se
+representa por una \textbf{filtración}: una sucesión creciente de $\sigma$-álgebras
+\begin{equation}
+\mathcal{F}_0\subseteq\mathcal{F}_1\subseteq\cdots\subseteq\mathcal{F}_t\subseteq
+\mathcal{F},\qquad \mathcal{F}_t=\sigma(\varepsilon_0,\varepsilon_1,\dots,
+\varepsilon_t).
+\label{eq:filtration}
+\end{equation}
+$\mathcal{F}_t$ es ``lo que un agente sabe en $t$''. La monotonía
+$\mathcal{F}_{t-1}\subseteq\mathcal{F}_t$ formaliza que la información se
+\emph{acumula}: nada de lo conocido en $t-1$ se pierde en $t$.
+
+\paragraph{Procesos adaptados y la esperanza condicional.} Un proceso $\{x_t\}$ es
+\textbf{adaptado} a $\{\mathcal{F}_t\}$ si cada $x_t$ es $\mathcal{F}_t$-medible:
+conocida la información $\mathcal{F}_t$, el valor de $x_t$ queda determinado. El
+operador de expectativas que usamos en toda la derivación es la \textbf{esperanza
+condicional} $\E_t[\cdot]:=\E[\,\cdot\mid\mathcal{F}_t\,]$, la variable aleatoria
+$\mathcal{F}_t$-medible que mejor predice (en $L^2$) a su argumento dada la
+información en $t$. El supuesto de \emph{expectativas racionales} es, exactamente, que
+los agentes forman sus expectativas con esta esperanza condicional verdadera. Dos de
+sus propiedades sostienen pasos clave del texto:
+\begin{itemize}[leftmargin=1.4em, topsep=2pt, itemsep=3pt]
+\item \textbf{Ley de esperanzas iteradas} (torre): para $s\le t$,
+  $\E_s[\E_t[y]]=\E_s[y]$, porque $\mathcal{F}_s\subseteq\mathcal{F}_t$. Es lo que
+  permite \emph{iterar la Euler hacia adelante} de forma consistente.
+\item \textbf{Sacar lo conocido}: si $x_t$ es $\mathcal{F}_t$-medible, entonces
+  $\E_t[x_t\,y]=x_t\,\E_t[y]$. En la Euler $1/c_t=\beta\,\E_t[(1/c_{t+1})(r_{t+1}+
+  1-\delta)]$, el factor $1/c_t$ sale del operador por ser $\mathcal{F}_t$-medible.
+\end{itemize}
+
+\paragraph{Variables predeterminadas y de salto.} Con este lenguaje, la clasificación
+de la \S\ref{sec:bk} deja de ser una metáfora.
+
+\begin{definition}[Variable predeterminada]
+Una variable $x_t$ es \emph{predeterminada} (un \emph{estado}) si es
+$\mathcal{F}_{t-1}$-medible; equivalentemente, $\E_{t-1}[x_t]=x_t$ casi seguramente.
+Su valor queda fijado por la información de $t-1$: el choque de la fecha $t$ no la
+mueve dentro del período.
+\end{definition}
+
+\noindent El capital es el ejemplo puro. Su ley de movimiento $k_{t+1}=(1-\delta)k_t
++i_t$ tiene el lado derecho medible respecto de $\mathcal{F}_t$, de modo que $k_{t+1}$
+es $\mathcal{F}_t$-medible y, por tanto, $k_t$ es $\mathcal{F}_{t-1}$-medible. Por eso
+el capital \emph{no} puede reaccionar a $\varepsilon_t$ en el impacto ---exactamente
+el timing \code{k(-1)} de Dynare.
+
+\begin{definition}[Variable de salto]
+Una variable $p_t$ es \emph{no predeterminada} (un \emph{salto} o \emph{control}) si
+es $\mathcal{F}_t$-medible pero, en general, no $\mathcal{F}_{t-1}$-medible: puede
+\emph{saltar} ante el choque $\varepsilon_t$. Su error de pronóstico
+$p_t-\E_{t-1}[p_t]$ no es nulo, y lo fija la condición de no explosividad.
+\end{definition}
+
+\noindent El consumo es el ejemplo: ante $\varepsilon_t$, $c_t$ salta al nivel que
+coloca a la economía sobre la variedad estable.
+
+\begin{remark}
+El proceso exógeno $a_t=\phi\,a_{t-1}+\varepsilon_t$ es $\mathcal{F}_t$-medible pero
+\emph{no} $\mathcal{F}_{t-1}$-medible (su innovación $\varepsilon_t$ lo mueve), así
+que en sentido estricto tampoco es predeterminado. Se agrupa con los estados en la
+partición de Blanchard--Kahn porque su ley de movimiento es \emph{autónoma}
+---retrospectiva y exógena---: es una variable de \emph{forzamiento}, no una elección
+que deba saltar para asegurar estabilidad. La dicotomía que importa para el conteo es
+retrospectiva (estados y forzamientos exógenos) frente a prospectiva (controles con
+error de pronóstico libre).
+\end{remark}
+
+\paragraph{Blanchard--Kahn en términos de medibilidad.} La demostración del
+Apéndice~\ref{app:undetermined} exigía anular las coordenadas canónicas inestables,
+$\mathbf{w}^u_t=\mathbf{0}$ para todo $t$. Leída con medibilidad, la condición dice
+algo nítido: los $n_x$ grados de libertad que otorga la $\mathcal{F}_t$-medibilidad de
+las variables de salto se gastan, exactamente, en elegir sus errores de pronóstico de
+modo que la economía caiga sobre la variedad estable. Existe una solución única y
+acotada ---$\mathbf{x}_t=\mathbf{H}\,\mathbf{s}_t$, con cada variable endógena como
+función $\mathcal{F}_t$-medible de los estados--- si y solo si el número de valores
+propios inestables iguala al de saltos (teorema de Blanchard--Kahn,
+Apéndice~\ref{app:undetermined}). Un
+salto de más deja direcciones explosivas sin anular (no hay solución acotada); uno de
+menos deja libertad sobrante (indeterminación). La condición de Blanchard--Kahn es, en
+el fondo, un balance entre direcciones inestables y grados de libertad de
+medibilidad.
+
 % ===================== REFERENCIAS =====================
 \begin{thebibliography}{99}
 \addcontentsline{toc}{chapter}{Referencias}
@@ -2443,6 +2539,10 @@ Hodrick--Prescott Filter. \emph{Review of Economics and Statistics}, 100(5),
 \bibitem{gmo} Galindo, H., Montecinos, A.\ \& Ortiz, M.\ \emph{Dynamic Stochastic
 General Equilibrium Models}. (Modelo RBC con solución analítica y hechos
 estilizados de EE.UU., caps.\ 1--3.)
+
+\bibitem{ls2018} Ljungqvist, L.\ \& Sargent, T.~J.\ (2018). \emph{Recursive
+Macroeconomic Theory} (4.\textsuperscript{a} ed.). MIT Press. (Filtraciones,
+medibilidad y expectativas condicionales en modelos dinámicos.)
 
 \end{thebibliography}
 
