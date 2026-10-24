@@ -51,3 +51,5 @@ examples/**/checksum
 
 # Material de referencia con copyright (NO publicar)
 crash_course/galindo_montecinos_ortiz*.pdf
+
+crash_course/*.pdf

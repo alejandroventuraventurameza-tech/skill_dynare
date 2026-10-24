@@ -1440,8 +1440,72 @@ estocástico. Aquí está el verdadero termómetro de un modelo de ciclos reales
 Capítulo~1, Kydland y Prescott calibraban precisamente para confrontar estos
 momentos con los datos.
 
-\paragraph{Volatilidades.} La columna \code{STD.\ DEV.} da la desviación estándar
-de cada variable (Tabla~\ref{tab:moments}).
+\subsection{Cómo se miden los hechos estilizados}
+
+Un \emph{hecho estilizado} del ciclo es una regularidad empírica que un buen
+modelo debería reproducir. Se describen con tres estadísticos del \emph{componente
+cíclico} de cada variable ---lo que queda tras quitarle la tendencia:
+\begin{itemize}[nosep,leftmargin=1.4em]
+\item \textbf{Volatilidad}: su desviación estándar. Como las variables tienen
+  escalas distintas, se reporta la \emph{volatilidad relativa} $\sigma_x/\sigma_y$,
+  tomando el producto como vara de medir.
+\item \textbf{Comovimiento}: su correlación con el producto. Si
+  $\mathrm{corr}(x,y)>0$ la variable es \emph{procíclica}; si $<0$,
+  \emph{contracíclica}; si $\approx0$, \emph{acíclica}.
+\item \textbf{Persistencia}: su autocorrelación de orden~1 ---qué tan probable es
+  que, estando por encima de su tendencia, siga por encima el período siguiente.
+\end{itemize}
+Para aislar el componente cíclico de los datos se filtra la serie; el estándar en
+la literatura RBC es el filtro de Hodrick--Prescott, que formalizamos enseguida.
+
+\subsection{El filtro de Hodrick--Prescott}
+\label{sec:hp}
+
+Filtrar una serie es descomponerla en una tendencia y un ciclo,
+\begin{equation}
+y_t=\underbrace{\tau_t}_{\text{tendencia}}+\underbrace{c_t}_{\text{ciclo}}.
+\label{eq:hpdecomp}
+\end{equation}
+El filtro de Hodrick--Prescott (1997) elige la tendencia $\{\tau_t\}_{t=1}^{T}$ que
+resuelve el problema de minimización
+\begin{equation}
+\min_{\{\tau_t\}}\ \sum_{t=1}^{T}\big(y_t-\tau_t\big)^2
+\;+\;\lambda\sum_{t=2}^{T-1}\big[(\tau_{t+1}-\tau_t)-(\tau_t-\tau_{t-1})\big]^2,
+\label{eq:hp}
+\end{equation}
+y define el ciclo como el residuo, $c_t=y_t-\tau_t$. Los dos sumandos encarnan un
+\emph{trade-off}. El primero ---la suma de desviaciones al cuadrado respecto a la
+tendencia--- penaliza un ciclo grande: quiere a $\tau_t$ pegada a los datos. El
+segundo penaliza los cambios en la \emph{tasa de crecimiento} de la tendencia
+(la segunda diferencia $\Delta^2\tau_t$): quiere una tendencia suave. El parámetro
+$\lambda\ge0$ gobierna el balance entre ambos objetivos:
+\begin{itemize}[nosep,leftmargin=1.4em]
+\item $\lambda=0$: la tendencia coincide con la serie ($\tau_t=y_t$); no hay
+  suavizado y el ciclo es nulo.
+\item $\lambda\to\infty$: la segunda diferencia se fuerza a cero, la tendencia
+  tiende a una recta y el ciclo recoge toda la desviación respecto a ella.
+\end{itemize}
+Para datos trimestrales se usa $\lambda=1600$ (Hodrick y Prescott, 1997). Para
+otras frecuencias, Ravn y Uhlig (2002) proponen escalar $\lambda=1600\cdot pq^{\,4}$,
+donde $pq$ es el número de períodos por trimestre (anual $\lambda=6.25$; mensual
+$\lambda\approx1.3\times10^{5}$).
+
+\begin{remark}
+El filtro HP no es inocuo. Hamilton (2017) ---en un artículo titulado, sin
+rodeos, ``\emph{Why You Should Never Use the Hodrick--Prescott Filter}''---
+advierte que puede introducir relaciones dinámicas espurias y que sus estimaciones
+son imprecisas en los extremos de la muestra, porque la versión usual mira hacia
+adelante (es un filtro de \emph{dos caras}). La versión de \emph{una cara}
+---puramente hacia atrás, implementada vía filtro de Kalman--- mitiga ese problema
+y es la que el comité de Basilea recomienda para medir brechas de crédito. Aun
+así, por su simplicidad y su uso histórico en la escuela RBC, el HP de dos caras
+con $\lambda=1600$ sigue siendo el estándar para los momentos del ciclo.
+\end{remark}
+
+\subsection{Lo que imprime Dynare por defecto}
+
+Sin opciones adicionales, \lstinline@stoch_simul@ reporta los momentos de las
+variables \emph{en niveles, sin filtrar} (Tabla~\ref{tab:moments}).
 
 \begin{table}[H]
 \centering\small
@@ -1459,7 +1523,7 @@ $k$ (capital)    & $4.5785$ & $0.2757$ & $1.04$ \\
 $a$ (PTF)        & $1.0000$ & $0.0353$ & $0.61$ \\
 \bottomrule
 \end{tabular}
-\caption{Momentos teóricos de primer y segundo orden. La volatilidad relativa es
+\caption{Momentos teóricos sin filtrar. La volatilidad relativa es
 $(\sigma_x/x_{ss})/(\sigma_y/y_{ss})$.}
 \label{tab:moments}
 \end{table}
@@ -1475,45 +1539,120 @@ a $\sigma_y/y_{ss}=5.8\%$: la inversión es $\approx1.9$ veces más volátil que
 producto.
 \end{remark}
 
-\noindent Normalizadas así, las cifras reproducen dos hechos estilizados
-clásicos: la \emph{inversión} es mucho más volátil que el producto ($\approx1.9\times$)
-y el \emph{consumo}, más suave ($0.88\times$). La baja volatilidad de las
-\emph{horas} ($0.22\times$), en cambio, es la conocida debilidad del RBC básico:
-con un solo choque y utilidad logarítmica, el modelo genera menos fluctuación de
-empleo de la que muestran los datos.
+\subsection{El modelo frente a los datos}
 
-\paragraph{Comovimiento.} La matriz de correlaciones dice qué tan procíclica es
-cada variable. La fila del producto da
-$\mathrm{corr}(y,c)=0.96$, $\mathrm{corr}(y,i)=0.87$,
-$\mathrm{corr}(y,h)=0.56$, $\mathrm{corr}(y,w)=0.98$ y
-$\mathrm{corr}(y,a)=0.9984$: consumo, inversión, horas, salarios y PTF son todos
-\emph{procíclicos} ---otro hecho estilizado que el modelo captura.
+Los momentos de la Tabla~\ref{tab:moments} están \emph{sin filtrar}: dominados por
+el componente de baja frecuencia (la PTF es muy persistente), no son comparables
+con los del ciclo. Para confrontarlos con los datos basta añadir
+\lstinline@hp_filter=1600@ a \lstinline@stoch_simul@. Hecho esto, la
+Tabla~\ref{tab:vsdata} pone lado a lado el modelo filtrado y los hechos
+estilizados de EE.UU.
 
-\paragraph{Persistencia.} Los coeficientes de autocorrelación de orden~1 son
-altos ($\rho_y=0.98$, $\rho_c=0.996$, $\rho_i=0.94$, $\rho_k=0.999$,
-$\rho_a=0.98$): el modelo genera ciclos \emph{persistentes}. La persistencia
-viene de dos fuentes ---el choque de PTF ya es persistente ($\phi=0.979$) y la
-acumulación de capital añade propagación propia.
+\begin{table}[H]
+\centering\small
+\begin{tabular}{l cc cc cc}
+\toprule
+ & \multicolumn{2}{c}{\textbf{Vol.\ relativa}} & \multicolumn{2}{c}{\textbf{Corr.\ con $y$}} & \multicolumn{2}{c}{\textbf{Autocorr.}}\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+\textbf{Variable} & Modelo & Datos & Modelo & Datos & Modelo & Datos\\
+\midrule
+$y$ (producto)          & $1.00$ & $1.00$ & $1.00$ & $1.00$  & $0.72$ & $0.85$\\
+$c$ (consumo)           & $0.44$ & $0.53$ & $0.94$ & $0.82$  & $0.79$ & $0.88$\\
+$i$ (inversión)         & $3.38$ & $3.91$ & $0.99$ & $0.93$  & $0.71$ & $0.83$\\
+$k$ (capital)           & $0.30$ & $0.17$ & $0.39$ & $0.08$  & $0.96$ & $0.96$\\
+$h$ (horas)             & $0.49$ & $1.23$ & $0.97$ & $0.87$  & $0.71$ & $0.91$\\
+$w$ (salario)           & $0.54$ & $0.63$ & $0.98$ & $0.22$  & $0.76$ & $0.69$\\
+$y/h$ (prod.\ laboral)  & $0.54$ & $0.62$ & $0.98$ & $-0.10$ & $0.76$ & $0.79$\\
+\bottomrule
+\end{tabular}
+\caption{El modelo frente a los datos. Momentos del componente cíclico (filtro
+HP, $\lambda=1600$). Modelo: RBC con trabajo, $\delta=0.025$, simulado. Datos:
+EE.UU.\ 1954--2015 (Galindo, Montecinos y Ortiz, Cap.~1, Tabla~1.2). Volatilidad
+relativa $=\sigma_x/\sigma_y$.}
+\label{tab:vsdata}
+\end{table}
 
-\begin{remark}
-Estos momentos son de las variables \emph{en niveles, sin filtrar}, de modo que
-están dominados por el componente de baja frecuencia (la PTF es muy persistente).
-Para compararlos con los momentos del \emph{ciclo} que reportan los datos
----como en Kydland--Prescott--- la serie se filtra con Hodrick--Prescott
-($\lambda=1600$ para datos trimestrales), añadiendo \lstinline@hp_filter=1600@ a
-\lstinline@stoch_simul@. Es uno de los experimentos que proponemos más adelante.
-\end{remark}
+El veredicto es matizado, y ahí está la lección:
+\begin{itemize}[leftmargin=1.4em]
+\item \textbf{Lo que el modelo acierta.} La volatilidad del producto es del orden
+  correcto (el modelo filtrado genera $\sigma_y\approx1.4\%$ frente a $1.5\%$ en
+  los datos). El ordenamiento de volatilidades es el de libro de texto: la
+  inversión es mucho más volátil que el producto ($\approx3.4\times$) y el
+  consumo, más suave ($0.44\times$), con el capital como la variable más estable.
+  Consumo, inversión y horas son \emph{procíclicos}, y todas las series son
+  \emph{persistentes}, como en los datos.
+\item \textbf{Dónde falla.} Las \emph{horas} son demasiado suaves: el modelo las
+  hace la mitad de volátiles que el producto ($0.49\times$) cuando en los datos
+  son \emph{más} volátiles que él ($1.23\times$). Con un solo choque y una oferta
+  de trabajo poco elástica, el RBC básico no genera suficiente fluctuación de
+  empleo ---la debilidad clásica que Hansen (1985) ataca con trabajo indivisible.
+  Además, el salario y la productividad laboral resultan casi perfectamente
+  procíclicos ($\mathrm{corr}\approx0.98$) cuando en los datos apenas lo son
+  ($0.22$) o incluso son contracíclicos ($-0.10$): con un único choque de PTF,
+  todo se mueve al unísono con la productividad. De hecho, en este modelo el
+  salario \emph{es} la productividad laboral ($w=\alpha\,y/h$), así que comparten
+  momentos ---algo que los datos desmienten.
+\end{itemize}
 
 \section{El experimento $\delta=1$ vs.\ $\delta<1$}
 \label{sec:experimento}
 
-Llegamos al experimento que da sentido a todo el modelo. Para aislar el
-mecanismo de las horas, re-ejecutamos con
-\lstinline@dynare rbc_analytical -DDELTA1=1@ ($\delta=1$, que recalibra
-$\theta\approx3.968$) y comparamos la respuesta de las horas
-(Figura~\ref{fig:hours}). Con depreciación parcial las horas responden; con
-depreciación total quedan clavadas en cero, tal como probamos en
-\eqref{eq:mu}--\eqref{eq:hzero}. La pizarra y la máquina dicen lo mismo.
+Llegamos al experimento que da sentido a todo el modelo. Re-ejecutar es trivial
+---\lstinline@dynare rbc_analytical -DDELTA1=1@, que además recalibra
+$\theta\approx3.968$--- pero lo valioso es \emph{entender} por qué las horas
+responden al choque cuando $\delta<1$ y quedan clavadas en cero cuando $\delta=1$.
+Es el mecanismo central de la teoría RBC, y aislarlo exige volver a las
+ecuaciones.
+
+\subsection{Qué cambia en las ecuaciones}
+
+La depreciación entra en dos lugares. En la ley de movimiento \eqref{eq:ll_lom},
+$\hat{k}_{t+1}=(1-\delta)\hat{k}_t+\delta\hat{\imath}_t$, que con $\delta=1$
+colapsa a $\hat{k}_{t+1}=\hat{\imath}_t$. Y, sobre todo, en la Euler
+\eqref{eq:ll_euler},
+\[
+  \E_t\hat{c}_{t+1}-\hat{c}_t=\beta r_{ss}\,\E_t\hat{r}_{t+1},
+  \qquad \beta r_{ss}=1-\beta(1-\delta),
+\]
+cuyo coeficiente $\beta r_{ss}$ mide cuánto se transmite el retorno a la pendiente
+del consumo. Aquí está la clave: $\beta r_{ss}<1$ cuando $\delta<1$, pero
+$\beta r_{ss}=1$ \emph{exactamente} cuando $\delta=1$. Ese valor umbral es el que
+hace que, con depreciación total, el retorno bruto $r_{t+1}+1-\delta$ se vuelva
+proporcional a $y_{t+1}/k_t$ y los dos efectos que describimos abajo se cancelen.
+
+\subsection{Sustitución vs.\ riqueza: cómo se aísla el efecto}
+
+Sigamos la cadena en el impacto. El choque eleva la productividad y, con ella, el
+retorno del capital ($\hat{r}_t>0$). Un retorno más alto produce dos efectos
+\emph{opuestos} sobre la decisión del hogar:
+\begin{itemize}[nosep,leftmargin=1.4em]
+\item \textbf{Efecto sustitución}: como el capital rinde más, conviene posponer
+  consumo ---ahorrar e invertir hoy, consumir mañana--- y, dado el salario más
+  alto, trabajar más hoy. Empuja las horas \emph{hacia arriba}.
+\item \textbf{Efecto riqueza (o ingreso)}: el mayor retorno hace al hogar más
+  rico; parte de esa riqueza la gasta en más ocio, es decir, trabaja
+  \emph{menos}. Empuja las horas \emph{hacia abajo}.
+\end{itemize}
+¿Cuál domina? Con utilidad logarítmica la elasticidad de sustitución
+intertemporal es igual a uno, de modo que ambos efectos tienen la misma fuerza.
+Con $\delta=1$ se cancelan \emph{exactamente}: formalmente, imponer $\hat{h}_t=0$
+en el sistema log-lineal es consistente con la Euler solo si
+\begin{equation}
+  (1-\alpha)\,\delta=\beta r_{ss}\,(1-\alpha\delta),
+  \label{eq:deltacond}
+\end{equation}
+condición que ---como probamos en la \S\ref{sec:policy}--- se cumple
+\emph{únicamente} cuando $\delta=1$. Ahí los dos efectos se anulan punto por punto,
+las horas no se mueven ($\hat{h}_t=0$) y el modelo colapsa al caso resoluble a
+mano.
+
+Con $\delta<1$ la igualdad \eqref{eq:deltacond} se rompe ---para la calibración
+base, el lado izquierdo vale $0.008$ y el derecho $0.040$---: la cancelación es
+imperfecta, domina levemente el efecto sustitución, y las \textbf{horas responden}.
+Ese es, exactamente, el mecanismo que permite al RBC generar fluctuaciones de
+empleo; sin él no habría ciclo en el mercado laboral. La Figura~\ref{fig:hours}
+contrasta ambos casos: la pizarra \eqref{eq:mu}--\eqref{eq:hzero} y la máquina
+dicen lo mismo.
 
 \begin{figure}[H]
 \centering
@@ -1902,6 +2041,25 @@ Function. \emph{Journal of Economic Dynamics and Control}, 28(4), 755--775.
 \bibitem{crw2011} Coeurdacier, N., Rey, H.\ \& Winant, P.\ (2011). The Risky
 Steady State. \emph{American Economic Review: Papers \& Proceedings}, 101(3),
 398--401.
+
+\bibitem{hansen1985} Hansen, G.~D.\ (1985). Indivisible Labor and the Business
+Cycle. \emph{Journal of Monetary Economics}, 16(3), 309--327.
+
+\bibitem{hp1997} Hodrick, R.~J.\ \& Prescott, E.~C.\ (1997). Postwar U.S.\
+Business Cycles: An Empirical Investigation. \emph{Journal of Money, Credit and
+Banking}, 29(1), 1--16.
+
+\bibitem{ravnuhlig2002} Ravn, M.~O.\ \& Uhlig, H.\ (2002). On Adjusting the
+Hodrick--Prescott Filter for the Frequency of Observations. \emph{Review of
+Economics and Statistics}, 84(2), 371--376.
+
+\bibitem{hamilton2018} Hamilton, J.~D.\ (2018). Why You Should Never Use the
+Hodrick--Prescott Filter. \emph{Review of Economics and Statistics}, 100(5),
+831--843.
+
+\bibitem{gmo} Galindo, H., Montecinos, A.\ \& Ortiz, M.\ \emph{Dynamic Stochastic
+General Equilibrium Models}. (Modelo RBC con solución analítica y hechos
+estilizados de EE.UU., caps.\ 1--3.)
 
 \end{thebibliography}
 
