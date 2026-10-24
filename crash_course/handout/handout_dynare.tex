@@ -1328,9 +1328,43 @@ eps          0.838053  0.263919  0.574134  0.574134  0.143114  1.000000
 \section{Las funciones de impulso-respuesta}
 \label{sec:irf}
 
-Con la regla de decisión en mano, \lstinline@stoch_simul@ traza las funciones de
-impulso-respuesta (IRFs): la trayectoria de cada variable tras un choque de
-productividad de una desviación estándar (Figura~\ref{fig:irf}).
+El comando \lstinline@stoch_simul@ no solo resuelve el modelo: lo
+\emph{interroga}. Su pregunta favorita es la función de impulso-respuesta.
+
+\subsection{¿Qué es una IRF?}
+
+Intuitivamente, una IRF es un experimento mental: partimos de la economía en su
+estado estacionario, la sorprendemos con un \emph{único} choque de productividad
+---de tamaño una desviación estándar--- y observamos, período a período, cómo
+cada variable se aparta de su valor de largo plazo y regresa a él. Cada punto de
+la trayectoria es, él mismo, un equilibrio: los mercados de bienes y de factores
+se vacían en cada fecha.
+
+Formalmente, la IRF de la variable $x$ al horizonte $j$ es la diferencia entre
+dos trayectorias esperadas ---una con el choque, otra sin él--- condicionadas a
+la misma información inicial $\mathcal{F}_{t-1}$:
+\begin{equation}
+\mathrm{IRF}_x(j)=
+\E\!\big[x_{t+j}\mid \varepsilon_t=\sigma_\varepsilon,\ \varepsilon_{t+s}=0\ \forall s>0,\ \mathcal{F}_{t-1}\big]
+-\E\!\big[x_{t+j}\mid \varepsilon_{t+s}=0\ \forall s\ge 0,\ \mathcal{F}_{t-1}\big],
+\label{eq:irfdef}
+\end{equation}
+ambas partiendo del estado estacionario ($\hat{x}_{t-1}=0$). En un modelo
+linealizado esta diferencia es \emph{determinista}: el futuro estocástico se
+cancela entre las dos esperanzas y lo que queda son los coeficientes de la
+representación de medias móviles (MA) de la solución. Por eso una IRF se lee
+directamente de la regla de decisión.
+
+Para verlo, recordemos que la productividad admite una forma MA($\infty$),
+\begin{equation}
+\hat{a}_t=\frac{\varepsilon_t}{1-\phi L}=\sum_{j=0}^{\infty}\phi^{\,j}\,\varepsilon_{t-j},
+\label{eq:amainf}
+\end{equation}
+donde $L$ es el operador de rezago. Un choque $\varepsilon_t=\sigma_\varepsilon$
+eleva la productividad en $\sigma_\varepsilon$ hoy, en $\phi\sigma_\varepsilon$
+mañana, en $\phi^2\sigma_\varepsilon$ el período siguiente, y así: el impulso se
+\emph{diluye} a la tasa $\phi$. La IRF de cualquier otra variable se obtiene
+propagando este impulso a través de las funciones de política.
 
 \begin{figure}[H]
 \centering
@@ -1341,15 +1375,60 @@ genera Dynare con \lstinline@stoch_simul@.}
 \label{fig:irf}
 \end{figure}
 
-Las IRFs cuentan la historia del ciclo real. En el impacto, la productividad
-sube y con ella el producto; la \emph{inversión} es la que más salta ---el hogar
-aprovecha el mayor retorno del capital para acumular---, mientras que el
-\emph{consumo} responde poco al inicio y alcanza su pico más tarde
-(\emph{hump-shaped}): es la suavización intertemporal en acción. El \emph{capital}
-se acumula despacio y revierte con lentitud (su raíz es $0.936$). Y las
-\emph{horas} suben en el impacto ---el mecanismo que, por la \S\ref{sec:policy},
-solo opera cuando $\delta<1$--- para luego cruzar a terreno negativo cuando el
-capital ya es alto y la productividad revierte.
+\subsection{La historia de transmisión}
+
+La Figura~\ref{fig:irf} no es un conjunto de curvas sueltas: es una cadena causal
+que podemos reconstruir ecuación por ecuación, usando las log-lineales de la
+\S\ref{sec:loglin} y las funciones de política de la \S\ref{sec:bk}.
+
+\paragraph{El impacto ($t=1$).} En el estado estacionario todas las desviaciones
+son nulas; en particular el capital, que se decidió ayer, entra fijo
+($\hat{k}_t=0$). Llega el choque, $\hat{a}_t=\sigma_\varepsilon$, y se desata la
+cadena:
+\begin{enumerate}[label=(\roman*),nosep,leftmargin=2.2em]
+\item \textbf{Producción} \eqref{eq:ll_prod}: con $\hat{k}_t=0$ queda
+  $\hat{y}_t=\hat{a}_t+\alpha\hat{h}_t$. El producto sube directamente con la
+  productividad ---y con lo que respondan las horas.
+\item \textbf{Precios de los factores}: la demanda de capital \eqref{eq:ll_kd}
+  eleva el retorno, $\hat{r}_t=\hat{y}_t-\hat{k}_t$; la demanda de trabajo
+  \eqref{eq:ll_ld} eleva el salario, $\hat{w}_t=\hat{y}_t-\hat{h}_t$.
+\item \textbf{Respuesta del hogar}: el mayor retorno esperado inclina el consumo
+  hacia el futuro vía la Euler \eqref{eq:ll_euler} (sustitución intertemporal), y
+  el mayor salario, junto con esa inclinación, mueve la oferta de trabajo
+  \eqref{eq:ll_ls}. Con $\delta<1$ ---a diferencia del caso $\delta=1$ de la
+  \S\ref{sec:policy}--- los efectos sustitución e ingreso \emph{no} se cancelan,
+  de modo que las \textbf{horas suben} en el impacto. La función de política lo
+  cuantifica: $\partial\hat{h}_t/\partial\varepsilon_t>0$ (en la salida de
+  Dynare, el coeficiente de $h$ ante $eps$ es $0.143$).
+\item \textbf{Inversión}: del vaciado de mercado \eqref{eq:ll_clear}, la
+  inversión es el residuo ---y es la que más salta, porque el hogar aprovecha el
+  retorno extraordinario para acumular capital.
+\end{enumerate}
+
+\paragraph{La propagación.} ¿Por qué las trayectorias son \emph{persistentes} y
+tienen forma de joroba (\emph{hump-shaped}), en vez de saltar y volver de golpe?
+Por dos fuentes de inercia que se combinan:
+\begin{itemize}[nosep,leftmargin=1.4em]
+\item \emph{El choque es persistente}: por \eqref{eq:amainf}, la productividad
+  tarda en volver, a la tasa $\phi=0.979$.
+\item \emph{El capital se acumula}: su ecuación de estado es
+  $\hat{k}_{t+1}=\eta_{kk}\hat{k}_t+(\cdots)\hat{a}_t$, con $\eta_{kk}=0.936$ ---el
+  valor propio estable de la \S\ref{sec:bk}. Combinada con el AR(1) de la
+  productividad \eqref{eq:amainf}, el capital resulta un \textbf{AR(2)},
+  \[
+     \hat{k}_{t+1}=(\eta_{kk}+\phi)\,\hat{k}_t-\eta_{kk}\,\phi\,\hat{k}_{t-1}+(\text{innovación}),
+  \]
+  con las dos raíces $\eta_{kk}=0.936$ y $\phi=0.979$.
+\end{itemize}
+Como todas las variables reales son combinaciones lineales de los dos estados
+$(\hat{k}_t,\hat{a}_t)$, heredan esas dos raíces: cada IRF es una mezcla de dos
+exponenciales que decaen lentamente ($0.936^{\,t}$ y $0.979^{\,t}$). Esa mezcla es
+la que produce la joroba. El \emph{consumo} y el \emph{salario} crecen un tiempo
+antes de revertir ---siguen al capital que se va acumulando---; el \emph{capital}
+hace pico hacia $t\approx25$; y las \emph{horas}, tras subir en el impacto, cruzan
+a terreno negativo cuando el capital ya es alto, el retorno ha caído y domina el
+efecto riqueza. En el límite todas regresan a su estado estacionario, porque las
+dos raíces son menores que uno.
 
 \section{Momentos y hechos estilizados del ciclo}
 \label{sec:momentos}
