@@ -48,6 +48,7 @@
 
 % --- TABLAS Y FIGURAS ---
 \usepackage{booktabs}
+\usepackage{pifont}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{tikz}
@@ -1231,14 +1232,19 @@ el orden en que aparecen.
 \paragraph{1. El estado estacionario.} El primer bloque reporta el EE que entregó
 \lstinline@steady_state_model@, seguido de los residuos de \code{resid}:
 
-\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
-STEADY-STATE RESULTS:
-  y 0.567292   c 0.452831   i 0.114462   k 4.57847
-  h 0.200000   r 0.041260   w 1.89192    a 1.00000
-
-Residuals of the static equations:
-  Equation 1 (Euler) ... Equation 8 (TFP):  0.000000
-\end{lstlisting}
+\begin{table}[H]
+\centering\small
+\begin{tabular}{cccccccc}
+\toprule
+$y$ & $c$ & $i$ & $k$ & $h$ & $r$ & $w$ & $a$\\
+\midrule
+$0.5673$ & $0.4528$ & $0.1145$ & $4.5785$ & $0.2000$ & $0.0413$ & $1.8919$ & $1.0000$\\
+\bottomrule
+\end{tabular}
+\caption{\texttt{STEADY-STATE RESULTS} (reorganizado). Los ocho residuos que
+imprime \code{resid} salen todos en \texttt{0.000000}.}
+\label{tab:ssout}
+\end{table}
 
 \noindent Coincide al dígito con la Tabla~\ref{tab:ss} (Cap.~\ref{ch:modelo}), y los ocho
 residuos son nulos: el estado estacionario satisface exactamente las ecuaciones
@@ -1248,17 +1254,22 @@ en el EE cerrado.
 \paragraph{2. Los valores propios.} \code{check} imprime el espectro del sistema
 linealizado y el veredicto de Blanchard--Kahn:
 
-\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
-EIGENVALUES:
-   Modulus      Real    Imaginary
-     0.936     0.936        0
-     0.979     0.979        0
-     1.086     1.086        0
-  1.145e+18 1.145e+18        0
-There are 2 eigenvalue(s) larger than 1 in modulus
-for 2 forward-looking variable(s).
-The order and rank conditions are verified.
-\end{lstlisting}
+\begin{table}[H]
+\centering\small
+\begin{tabular}{ccc}
+\toprule
+\textbf{Módulo} & \textbf{Parte real} & $\boldsymbol{|\lambda|>1}$\\
+\midrule
+$0.936$              & $0.936$              & \\
+$0.979\ (=\phi)$     & $0.979$              & \\
+$1.086$              & $1.086$              & \ding{52}\\
+$1.145\times10^{18}$ & $1.145\times10^{18}$ & \ding{52} \ (espurio)\\
+\bottomrule
+\end{tabular}
+\caption{\texttt{EIGENVALUES} (reorganizado). Dos módulos mayores que uno para
+dos \emph{jumpers}: Dynare reporta \texttt{The rank condition is verified}.}
+\label{tab:eigout}
+\end{table}
 
 \noindent Reconocemos $0.936$, $0.979\,(=\phi)$ y $1.086$: son \emph{exactamente}
 los valores propios de la \S\ref{sec:bk}. Pero aparecen dos novedades frente al
@@ -1281,13 +1292,22 @@ como hicimos a mano. En ambas lecturas la condición de Blanchard--Kahn se cumpl
 \paragraph{3. El resumen del modelo.} A continuación, Dynare clasifica las
 variables ---la misma taxonomía de la \S\ref{sec:bk}, hecha por la máquina:
 
-\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
-MODEL SUMMARY
-  Number of variables:         8
-  Number of state variables:   2   (k, a)
-  Number of jumpers:           2   (c, r)
-  Number of static variables:  4   (y, i, h, w)
-\end{lstlisting}
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lcl}
+\toprule
+ & \textbf{N\textordmasculine} & \\
+\midrule
+Variables        & $8$ & \\
+Estados          & $2$ & $(k,\,a)$\\
+\emph{Jumpers}   & $2$ & $(c,\,r)$\\
+Estáticas        & $4$ & $(y,\,i,\,h,\,w)$\\
+\bottomrule
+\end{tabular}
+\caption{\texttt{MODEL SUMMARY} (reorganizado): la taxonomía de la \S\ref{sec:bk}
+hecha por la máquina.}
+\label{tab:modsum}
+\end{table}
 
 \noindent Dos estados ($k$ predeterminado, $a$ exógeno), los controles
 \emph{forward-looking}, y cuatro variables estáticas que se determinan
@@ -1297,14 +1317,23 @@ contemporáneamente a partir de las demás.
 \emph{regla de decisión} resuelta, es decir, cada variable en función de los
 estados $k(-1)$, $a(-1)$ y del choque $eps$ (en niveles, como desviación del EE):
 
-\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
-POLICY AND TRANSITION FUNCTIONS
-                   y         c         i         k         h         a
-Constant     0.567292  0.452831  0.114462  4.578467  0.200000  1.000000
-k(-1)        0.013385  0.052384 -0.038999  0.936001 -0.014734  0
-a(-1)        0.820454  0.258377  0.562077  0.562077  0.140109  0.979000
-eps          0.838053  0.263919  0.574134  0.574134  0.143114  1.000000
-\end{lstlisting}
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lrrrrrr}
+\toprule
+ & $y$ & $c$ & $i$ & $k$ & $h$ & $a$\\
+\midrule
+Constante & $0.5673$ & $0.4528$ & $0.1145$ & $4.5785$ & $0.2000$ & $1.0000$\\
+$k(-1)$   & $0.0134$ & $0.0524$ & $-0.0390$ & $\mathbf{0.9360}$ & $-0.0147$ & $0$\\
+$a(-1)$   & $0.8205$ & $0.2584$ & $0.5621$ & $0.5621$ & $0.1401$ & $\mathbf{0.9790}$\\
+$eps$     & $0.8381$ & $0.2639$ & $0.5741$ & $0.5741$ & $0.1431$ & $1.0000$\\
+\bottomrule
+\end{tabular}
+\caption{\texttt{POLICY AND TRANSITION FUNCTIONS} (reorganizado). En negrita, los
+valores propios que la regla de decisión lleva en su diagonal
+($\eta_{kk}=0.936$ para el capital, $\phi=0.979$ para la PTF).}
+\label{tab:polout}
+\end{table}
 
 \noindent Tres lecturas, de la más simple a la más reveladora:
 \begin{enumerate}[label=(\roman*),nosep,leftmargin=2.2em]
