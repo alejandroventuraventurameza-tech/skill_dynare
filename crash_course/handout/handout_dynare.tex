@@ -982,7 +982,17 @@ sistema log-lineal \eqref{eq:ll_prod}--\eqref{eq:ll_tfp}.
 \section{Solución analítica: funciones de política}
 \label{sec:policy}
 
-Resolvamos ahora el modelo \emph{a mano}. Para que ello sea posible imponemos,
+Con el sistema ya log-lineal, resolverlo significa hallar la \emph{función de
+política}: cada variable escrita en función de los estados. Hay dos caminos. El
+\textbf{método analítico} ---esta sección--- busca esa función con coeficientes
+indeterminados y la obtiene en forma cerrada, pero solo en casos especiales como el de
+depreciación total. El \textbf{método de Blanchard--Kahn} (\S\ref{sec:bk}) es general y
+numérico ---es el que usa Dynare---: descompone el sistema por sus valores propios y
+resuelve el bloque inestable. Ambos llegan a la misma función de política; empezamos
+por el analítico porque, al poder anticipar el resultado, sirve de piedra de toque para
+el numérico.
+
+Resolvamos entonces el modelo \emph{a mano}. Para que ello sea posible imponemos,
 por el momento, depreciación total ($\delta=1$); al final de la sección veremos
 por qué es justamente este supuesto el que abre la puerta a la solución cerrada.
 Buscamos funciones de política lineales en los estados,
@@ -1086,7 +1096,41 @@ basta: no hay solución cerrada y entra Dynare.
 
 Volvamos al caso general $\delta\in(0,1]$. El método de Blanchard y Kahn (1980)
 determina cuándo el equilibrio de expectativas racionales existe y es único, a
-partir de la estructura de valores propios del sistema linealizado.
+partir de la estructura de valores propios del sistema linealizado. A diferencia del
+método analítico, no exige $\delta=1$: funciona para cualquier calibración y es el que
+implementa Dynare.
+
+\paragraph{El método en siete pasos.} La idea es descomponer el sistema por sus
+valores propios (descomposición de Jordan), resolver el bloque \emph{inestable} ---de
+donde sale la función de política--- y sustituirla para recuperar la dinámica de los
+estados. La Figura~\ref{fig:bk7} resume el procedimiento; las subsecciones que siguen
+lo ejecutan para nuestro modelo, y el Apéndice~\ref{app:undetermined} demuestra por qué
+funciona.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  >={Stealth[length=2.4mm]},
+  node distance=4.5mm,
+  stp/.style={draw=darkblue, thick, rounded corners=2pt, fill=thmblue,
+    text width=10.6cm, align=left, inner sep=5pt, font=\small},
+  num/.style={circle, draw=darkblue, thick, fill=white, font=\bfseries\footnotesize,
+    inner sep=0pt, minimum size=5.5mm},
+  go/.style={->, thick, darkblue}
+]
+\node[stp] (s1) {\textbf{Forma estado-espacio.} $A\,[\hat{X}_{t+1};\,\E_t \hat{Y}_{t+1}]^{\!\top}=B\,[\hat{X}_t;\,\hat{Y}_t]^{\!\top}+C\,\varepsilon_{t+1}$, con $\hat{X}$ estados y $\hat{Y}$ controles.};
+\node[stp, below=of s1] (s2) {\textbf{Forma alternativa.} Premultiplicar por $A^{-1}$: $[\hat{X}_{t+1};\,\E_t \hat{Y}_{t+1}]^{\!\top}=F\,[\hat{X}_t;\,\hat{Y}_t]^{\!\top}+G\,\varepsilon_{t+1}$, con $F=A^{-1}B$.};
+\node[stp, below=of s2] (s3) {\textbf{Descomposición de Jordan} $F=P\Lambda P^{-1}$: separa a $F$ en sus valores propios.};
+\node[stp, below=of s3] (s4) {\textbf{Partición} en subsistema \emph{estable} ($|\lambda|<1$) e \emph{inestable} ($|\lambda|>1$).};
+\node[stp, below=of s4] (s5) {\textbf{Cambio de variable} a coordenadas canónicas $w_t=P^{-1}z_t$, que desacopla el sistema.};
+\node[stp, below=of s5] (s6) {\textbf{Resolver el bloque inestable} por sustitución iterada $\Rightarrow$ \emph{función de política} $\hat{Y}_t=H\hat{X}_t$.};
+\node[stp, below=of s6] (s7) {\textbf{Recuperar la ecuación de estado}: sustituir $\hat{Y}_t=H\hat{X}_t$ en la forma alternativa.};
+\foreach \a/\b in {s1/s2,s2/s3,s3/s4,s4/s5,s5/s6,s6/s7}{\draw[go] (\a) -- (\b);}
+\foreach \i/\n in {s1/1,s2/2,s3/3,s4/4,s5/5,s6/6,s7/7}{\node[num] at (\i.north west) {\n};}
+\end{tikzpicture}
+\caption{El método de Blanchard--Kahn en siete pasos.}
+\label{fig:bk7}
+\end{figure}
 
 \subsection{Qué variable es de qué tipo}
 
