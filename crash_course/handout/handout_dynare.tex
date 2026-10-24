@@ -1957,35 +1957,129 @@ memoria (\code{oo\_}); solo falla el dibujo. Arreglo: ejecutar una vez
 Hasta aquí \emph{calibramos}: fijamos los parámetros con información de largo
 plazo y estudios micro, y preguntamos cómo responde el modelo. El otro gran modo
 de Dynare es \emph{estimar} esos parámetros a partir de datos reales. La vía
-estándar es la \textbf{estimación bayesiana}: combina distribuciones \emph{a
-priori} del investigador con la verosimilitud de los datos ---calculada con el
-filtro de Kalman--- para obtener la distribución \emph{posterior} de los
-parámetros, que se explora con métodos de Monte Carlo (Metropolis--Hastings).
-Es, en una línea, la respuesta moderna al dilema calibrar--estimar que vimos en
-el Capítulo~1.
+estándar es la \textbf{estimación bayesiana}, que combina cuatro piezas: una forma
+\emph{estado-espacio} del modelo resuelto, el \emph{filtro de Kalman} para evaluar
+la verosimilitud, el \emph{teorema de Bayes} para pasar de priors a posterior, y
+\emph{MCMC} para explorar esa posterior. La dejamos como próximo paso ---exige
+series reales y su propio cuidado econométrico--- pero vale la pena ver su
+andamiaje, porque reutiliza \emph{exactamente} la solución que ya calculamos.
 
-El flujo añade tres bloques al \code{.mod}: \code{varobs} (qué variables del
-modelo se observan en los datos), \lstinline@estimated_params@ (qué parámetros se
-estiman y con qué \emph{priors}) y \code{estimation}:
+\subsection{De la solución a la forma estado-espacio}
+
+La regla de decisión que Dynare imprimió en la \S\ref{sec:salida} (Cuadro~\ref{tab:polout})
+\emph{es} ya la mitad de un sistema estado-espacio lineal y gaussiano. Reúne los
+estados en $s_t=(\hat k_t,\hat a_t)'$. La \textbf{ecuación de transición} es la parte
+de la política que mapea estados y choque a estados:
+\begin{equation}
+s_t = T(\theta)\,s_{t-1} + R(\theta)\,\varepsilon_t,
+\qquad \varepsilon_t\sim\mathcal{N}\!\big(0,\Sigma(\theta)\big),
+\label{eq:transition}
+\end{equation}
+donde $T(\theta)$ recoge los coeficientes de la diagonal que identificamos como
+valores propios ($\eta_{kk}=0.936$, $\phi=0.979$) y $\theta$ es el vector de
+parámetros estructurales. El econometrista no observa $s_t$ directamente, sino unas
+pocas series ---producto, consumo, inversión--- ligadas a los estados por la
+\textbf{ecuación de medición}:
+\begin{equation}
+y^{\text{obs}}_t = \Psi(\theta) + Z(\theta)\,s_t + \eta_t,
+\qquad \eta_t\sim\mathcal{N}\!\big(0,\Omega\big),
+\label{eq:measurement}
+\end{equation}
+con $\Psi$ los niveles de largo plazo, $Z$ una matriz de selección ---lo que elige
+el bloque \code{varobs}--- y $\eta_t$ un posible error de medición. Las ecuaciones
+\eqref{eq:transition}--\eqref{eq:measurement} son un sistema estado-espacio estándar:
+todo lo que sigue es maquinaria de series de tiempo aplicada a él.
+
+\subsection{El filtro de Kalman y la verosimilitud}
+
+Dado un valor de $\theta$, el \textbf{filtro de Kalman} recorre la muestra
+$Y_T=\{y^{\text{obs}}_1,\dots,y^{\text{obs}}_T\}$ y produce, período a período, la
+predicción un paso adelante $\hat s_{t|t-1}$, el \emph{error de predicción} (o
+innovación) $v_t = y^{\text{obs}}_t - \E[y^{\text{obs}}_t\mid Y_{t-1}]$ y su
+covarianza $F_t$. Con residuos gaussianos, estas innovaciones arman la
+log-verosimilitud en forma cerrada:
+\begin{equation}
+\ln \mathcal{L}(Y_T\mid\theta) = -\tfrac12\sum_{t=1}^{T}
+\Big[\, n\ln(2\pi) + \ln\lvert F_t\rvert + v_t'\,F_t^{-1}\,v_t \,\Big],
+\label{eq:loglik}
+\end{equation}
+donde $n$ es el número de observables. Cada evaluación de \eqref{eq:loglik} exige
+\emph{resolver} el modelo en ese $\theta$ (para obtener $T,R$) y luego pasar el
+filtro ---por eso estimar es órdenes de magnitud más costoso que calibrar.
+
+\subsection{Del prior a la posterior: el teorema de Bayes}
+
+El enfoque bayesiano trata a $\theta$ como aleatorio y resume lo que se sabe
+\emph{antes} de ver los datos en una densidad \emph{a priori} $p(\theta)$. El
+teorema de Bayes combina prior y verosimilitud en la densidad \emph{posterior}:
+\begin{equation}
+p(\theta\mid Y_T) = \frac{\mathcal{L}(Y_T\mid\theta)\,p(\theta)}{p(Y_T)}
+\;\propto\; \underbrace{\mathcal{L}(Y_T\mid\theta)}_{\text{datos}}\;
+\underbrace{p(\theta)}_{\text{creencia previa}}.
+\label{eq:bayes}
+\end{equation}
+El denominador $p(Y_T)=\int \mathcal{L}(Y_T\mid\theta)p(\theta)\,d\theta$ (la
+\emph{verosimilitud marginal}) no depende de $\theta$ y sirve para comparar modelos;
+para estimar $\theta$ basta el \emph{núcleo} posterior, el producto del numerador. El
+prior no es un adorno: regulariza un problema a menudo mal identificado e inyecta la
+información de largo plazo y micro que \emph{sí} teníamos al calibrar. Por eso cada
+prior debe respetar el soporte del parámetro ---una $\mathrm{Beta}$ para algo en
+$(0,1)$ como $\phi$; una Inversa-Gamma para una desviación estándar positiva; una
+Normal o Gamma según el caso.
+
+\subsection{Explorar la posterior: MCMC}
+
+La posterior \eqref{eq:bayes} no tiene forma cerrada: es una función no lineal de
+$\theta$ (entra por $T,R$ y por el filtro). Se la explora por simulación. Dynare
+primero localiza numéricamente la \emph{moda} posterior (opción \code{mode\_compute})
+y usa el Hessiano en la moda para calibrar una propuesta; luego corre un
+\textbf{Metropolis--Hastings de paseo aleatorio}. En cada iteración propone
+\begin{equation}
+\theta^{*} = \theta^{(m-1)} + c\,\xi_m, \qquad \xi_m\sim\mathcal{N}(0,\hat V),
+\end{equation}
+y lo acepta con probabilidad
+\begin{equation}
+\alpha = \min\!\left\{1,\;
+\frac{\mathcal{L}(Y_T\mid\theta^{*})\,p(\theta^{*})}
+     {\mathcal{L}(Y_T\mid\theta^{(m-1)})\,p(\theta^{(m-1)})}\right\}.
+\label{eq:mh}
+\end{equation}
+La cadena así construida tiene por distribución estacionaria la posterior: tras
+descartar un \emph{burn-in}, las extracciones restantes \emph{son} una muestra de
+$p(\theta\mid Y_T)$, de la que se leen medias, medianas e intervalos de densidad
+posterior (HPD). Las opciones \code{mh\_replic} (largo de la cadena),
+\code{mh\_nblocks} (cadenas paralelas, para diagnosticar convergencia à la
+Brooks--Gelman), \code{mh\_jscale} (el factor $c$, ajustado para una tasa de
+aceptación cercana a $0.23$--$0.30$) y \code{mh\_drop} (fracción de burn-in)
+gobiernan esta exploración.
+
+\paragraph{El flujo en Dynare.} Tres bloques bastan: \code{varobs} fija $Z$ (qué
+variables del modelo se observan), \lstinline@estimated_params@ declara qué
+parámetros se estiman y con qué prior, y \code{estimation} lanza el filtro y el
+muestreador:
 
 \begin{lstlisting}
-varobs y c i;              // variables observables (modelo <-> datos)
+varobs y c i;              // variables observables (fija Z)
 
 estimated_params;
-  phi,        beta_pdf,       0.95, 0.03;    // persistencia, prior Beta
-  sigma_eps,  inv_gamma_pdf,  0.007, inf;    // desv. del choque, Inv-Gamma
+  phi,        beta_pdf,       0.95, 0.03;    // persistencia: prior Beta en (0,1)
+  sigma_eps,  inv_gamma_pdf,  0.007, inf;    // desv. del choque: Inv-Gamma en R+
 end;
 
-estimation(datafile = datos_trimestral, mh_replic = 100000,
-           mh_nblocks = 2, mode_compute = 6, bayesian_irf);
+estimation(datafile = datos_trimestral, mode_compute = 6,
+           mh_replic = 100000, mh_nblocks = 2, mh_jscale = 0.3,
+           mh_drop = 0.5, bayesian_irf);
 \end{lstlisting}
 
-\noindent La elección del \emph{prior} debe respetar el soporte del parámetro
-(una $\mathrm{Beta}$ para algo en $(0,1)$ como $\phi$; una Inv-Gamma para una
-desviación estándar positiva). Esto exige series de tiempo reales y su propio
-cuidado econométrico ---por eso lo dejamos como \emph{próximo paso}, no como
-parte de esta sesión. Pero el mensaje es que el mismo \code{.mod} que calibramos
-sirve, casi sin cambios, para confrontarse con los datos.
+\begin{remark}
+La estimación reutiliza, sin tocarlo, el mismo \code{.mod} que calibramos: las
+matrices $T,R$ de \eqref{eq:transition} son la regla de decisión del
+Cuadro~\ref{tab:polout}, reevaluada en cada $\theta$ que visita la cadena. Calibrar
+y estimar no son dos modelos, sino dos preguntas sobre el mismo: ``¿cómo responde,
+dados estos parámetros?'' frente a ``¿qué parámetros hacen más probables estos
+datos?''. La identificación ---que los datos realmente distingan unos $\theta$ de
+otros--- es la dificultad central y merece su propio curso.
+\end{remark}
 
 \bigskip
 
