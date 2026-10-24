@@ -54,6 +54,7 @@
 
 % --- TABLAS Y FIGURAS ---
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{pifont}
 \usepackage{graphicx}
 \usepackage{float}
@@ -472,12 +473,52 @@ una solución de estado estacionario en \emph{forma cerrada}: eso nos permitirá
 verificar, línea por línea, que el código reproduce exactamente lo que
 derivamos a mano.
 
-\section{El entorno}
+\section{Construcción del modelo}
+\label{sec:modelconstruct}
 
-La economía está habitada por un hogar representativo y una firma
-representativa, que operan bajo competencia perfecta en los mercados de bienes y
-de factores. La única fuente de incertidumbre es un choque de productividad. La
-Tabla~\ref{tab:vars} resume la notación.
+La economía está habitada por un hogar representativo y una firma representativa,
+que operan bajo competencia perfecta en los mercados de bienes y de factores. La
+única fuente de incertidumbre es un choque de productividad. Antes de las ecuaciones
+conviene el mapa. El \emph{flujo circular} de la Figura~\ref{fig:circular} resume
+quién le da qué a quién: los hogares poseen los factores ---trabajo y capital--- y los
+ofrecen a la firma en el mercado de factores; la firma los emplea para producir el
+único bien y paga por ellos el salario $w_t$ y el alquiler $r_t$; con ese ingreso los
+hogares compran el bien en el mercado de bienes, que destinan a consumo $c_t$ e
+inversión $i_t$; y la inversión repone el capital que volverá al mercado de factores
+el período siguiente. Cerrar el modelo es, precisamente, exigir que esos dos mercados
+se vacíen en cada fecha. La Tabla~\ref{tab:vars} resume la notación; las secciones que
+siguen formalizan cada pieza del diagrama.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  >={Stealth[length=2.2mm]},
+  agent/.style={draw=darkblue, very thick, rounded corners=4pt, fill=darkblue!7,
+    minimum width=3.4cm, minimum height=2.8cm, align=center, font=\bfseries},
+  real/.style={->, thick, darkblue},
+  pay/.style={->, thick, exframe, densely dashed},
+  lbl/.style={font=\scriptsize, align=center, inner sep=1.5pt}
+]
+\node[agent] (hog) at (0,0) {HOGARES};
+\node[agent] (fir) at (9,0) {FIRMAS};
+\draw[real] ($(hog.east)+(0,0.95)$) -- node[lbl,above]{trabajo $h_t$,\ capital $k_t$} ($(fir.west)+(0,0.95)$);
+\draw[pay]  ($(fir.west)+(0,0.5)$)  -- node[lbl,below]{salario $w_t$,\ alquiler $r_t$} ($(hog.east)+(0,0.5)$);
+\draw[real] ($(fir.west)+(0,-0.5)$) -- node[lbl,above]{bien $y_t$} ($(hog.east)+(0,-0.5)$);
+\draw[pay]  ($(hog.east)+(0,-0.95)$)-- node[lbl,below]{gasto $c_t+i_t$} ($(fir.west)+(0,-0.95)$);
+\node[font=\small\itshape, darkblue] at (4.5,1.75) {Mercado de factores};
+\node[font=\small\itshape, darkblue] at (4.5,-1.75) {Mercado de bienes};
+\draw[real, lemmaframe] ($(hog.south west)+(0.25,0.1)$) to[out=-90,in=180] ++(0.95,-0.7)
+   node[lbl, right, text=lemmaframe]{invierte $i_t\Rightarrow k_{t+1}$};
+\begin{scope}[shift={(2.9,-3.1)}]
+  \draw[real] (0,0) -- (0.7,0); \node[lbl,right] at (0.75,0) {flujo real};
+  \draw[pay] (3.0,0) -- (3.7,0); \node[lbl,right] at (3.75,0) {flujo de pagos};
+\end{scope}
+\end{tikzpicture}
+\caption{El flujo circular de la economía. Las flechas sólidas son flujos reales
+(factores y bienes); las punteadas, los pagos que los acompañan. La inversión de los
+hogares repone el capital que se ofrecerá el período siguiente.}
+\label{fig:circular}
+\end{figure}
 
 \begin{table}[H]
 \centering\small
@@ -503,95 +544,228 @@ $\varepsilon_t$ & innovación, $\varepsilon_t\sim N(0,\sigma_\varepsilon^2)$ \\
 \label{tab:vars}
 \end{table}
 
-\paragraph{El hogar.} El hogar representativo maximiza la utilidad esperada
-descontada
+\subsection{La función de utilidad}
+\label{sec:utilidad}
+
+Antes de escribir el problema del hogar conviene detenerse en \emph{por qué} elegimos
+esta utilidad y no otra. King, Plosser y Rebelo (1988) muestran que, para que un
+modelo de crecimiento tenga un estado estacionario compatible con una senda de
+crecimiento equilibrado, las preferencias deben satisfacer dos restricciones:
+\begin{enumerate}[label=(\roman*), leftmargin=2.2em, topsep=2pt, itemsep=2pt]
+\item la elasticidad de sustitución intertemporal del consumo debe ser invariante a
+  la escala del consumo (preferencias homotéticas en $c$);
+\item los efectos ingreso y sustitución del crecimiento de la productividad del
+  trabajo deben cancelarse, de modo que la oferta de trabajo no tienda a cero ni a la
+  dotación total a medida que la economía crece.
+\end{enumerate}
+La familia de funciones que cumple ambas (las preferencias \emph{KPR}) es
+\begin{equation}
+u(c_t,\,1-h_t)=
+\begin{cases}
+\dfrac{c_t^{\,1-\sigma}}{1-\sigma}\,v(1-h_t), & \sigma>0,\ \sigma\neq 1,\\[8pt]
+\ln c_t + v(1-h_t), & \sigma=1,
+\end{cases}
+\label{eq:kpr}
+\end{equation}
+donde $\sigma$ es la inversa de la elasticidad de sustitución intertemporal y
+$v(\cdot)$ una función del ocio $1-h_t$. Nuestro modelo toma el caso logarítmico
+($\sigma=1$) con $v(1-h_t)=\theta\ln(1-h_t)$ ---las preferencias de Long \&
+Plosser (1983)---, de modo que el hogar maximiza la utilidad esperada descontada
 \begin{equation}
 \E_0 \sum_{t=0}^{\infty}\beta^t\big[\ln c_t + \theta\ln(1-h_t)\big],
 \label{eq:utility}
 \end{equation}
-logarítmica tanto en el consumo como en el ocio. Es dueño del capital, que
-alquila a la firma a la tasa $r_t$, y ofrece trabajo al salario $w_t$. Su
-ingreso, $w_t h_t + r_t k_t$, se reparte entre consumo e inversión:
-$c_t + i_t = w_t h_t + r_t k_t$. Combinando esta identidad con la ley de
-movimiento del capital,
+logarítmica tanto en el consumo como en el ocio. Es la especificación más tratable:
+la utilidad log en el consumo hace que el efecto ingreso y el efecto sustitución
+intertemporal se cancelen exactamente, y la utilidad log en el ocio mantiene acotadas
+las horas en $(0,1)$. La literatura usa muchas otras ---Hansen (1985) con trabajo
+indivisible ($u=\ln c_t + B\,h_t$), Greenwood, Hercowitz y Huffman (1988) sin efecto
+ingreso sobre las horas, o las de Campbell (1994)---; cada una fija una elasticidad de
+Frisch y una $\mathrm{ESI}_c$ distintas. Aquí $\theta>0$ es el peso del ocio en la
+utilidad, que calibraremos endógenamente (\S\ref{sec:calib}).
+
+\subsection{El hogar}
+\label{sec:hogar}
+
+\paragraph{El factor de descuento.} El parámetro $\beta\in(0,1)$ pondera la utilidad
+futura frente a la presente y suele escribirse $\beta=1/(1+\rho)$, donde $\rho\ge 0$
+es la \emph{tasa de impaciencia} del hogar. Cuanto más impaciente el agente, mayor
+$\rho$, menor $\beta$, y menos vale el futuro (Cuadro~\ref{tab:impaciencia}).
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{ccl}
+\toprule
+\textbf{Impaciencia} & $\boldsymbol{\beta=1/(1+\rho)}$ & \textbf{Interpretación}\\
+\midrule
+$\rho=0$ & $\beta=1$ & la utilidad de mañana vale igual que la de hoy\\
+$\rho=1$ & $\beta=\tfrac12$ & $t{=}1$ se pondera $0.5$; $t{=}2$, $0.25$;\ldots\\
+$\rho\to\infty$ & $\beta\to 0$ & solo importa el consumo de hoy\\
+\bottomrule
+\end{tabular}
+\caption{El factor de descuento y la impaciencia del hogar. En el valor presente
+$\sum_t\beta^t u(c_t,h_t)$, cada período futuro entra con peso $\beta^t$.}
+\label{tab:impaciencia}
+\end{table}
+
+\paragraph{La restricción presupuestaria.} El hogar es dueño del capital, que alquila
+a la firma a la tasa $r_t$, y ofrece trabajo al salario $w_t$; ambos ingresos se
+observan cada período y suman $r_t k_t + w_t h_t$. Ese ingreso se reparte entre
+consumo $c_t$ y ahorro, que en economía cerrada iguala a la inversión $i_t$:
 \begin{equation}
-k_{t+1} = (1-\delta)\,k_t + i_t,
+c_t + i_t = r_t k_t + w_t h_t.
+\label{eq:budget_raw}
+\end{equation}
+La inversión alimenta el capital a través de la \textbf{ley de movimiento}, que no es
+más que ``inversión neta $=$ inversión bruta $-$ depreciación'' de las cuentas
+nacionales:
+\begin{equation}
+\underbrace{k_{t+1}-k_t}_{\text{inv.\ neta}}=\underbrace{i_t}_{\text{inv.\ bruta}}
+-\underbrace{\delta k_t}_{\text{deprec.}}
+\quad\Longrightarrow\quad
+k_{t+1} = (1-\delta)\,k_t + i_t.
 \label{eq:lom}
 \end{equation}
-y eliminando $i_t$, obtenemos la restricción presupuestaria en la forma que
-usaremos:
+Sustituyendo $i_t=k_{t+1}-(1-\delta)k_t$ de \eqref{eq:lom} en \eqref{eq:budget_raw} y
+despejando, obtenemos la restricción presupuestaria en la forma que usaremos ---con el
+capital de fin de período a un lado y los recursos disponibles al otro:
 \begin{equation}
 c_t + k_{t+1} = w_t h_t + (r_t + 1 - \delta)\,k_t.
 \label{eq:budget}
 \end{equation}
 
-\paragraph{La firma.} La firma produce con una tecnología Cobb--Douglas,
-\begin{equation}
-y_t = a_t\, k_t^{\,1-\alpha}\, h_t^{\,\alpha},
-\label{eq:prod}
-\end{equation}
-donde $\alpha$ es la participación del trabajo (y $1-\alpha$, la del capital). La
-productividad sigue un proceso AR(1) en logaritmos:
-\begin{equation}
-\ln a_t = \phi \ln a_{t-1} + \varepsilon_t,
-\qquad \varepsilon_t\sim N(0,\sigma_\varepsilon^2).
-\label{eq:tfp}
-\end{equation}
-
 \begin{remark}
-Un detalle de notación que conviene fijar desde ya: aquí $\alpha$ es la
-participación \emph{del trabajo}, no del capital (al revés de la convención más
-común). Con la calibración de King--Rebelo, $\alpha=0.667$, de modo que el
-trabajo se lleva dos tercios del producto y el capital, un tercio.
+Long \& Plosser (1983) trabajan el caso de \emph{depreciación total} ($\delta=1$), en
+el que \eqref{eq:lom} colapsa a $k_{t+1}=i_t$: el capital deja de ser un acervo y pasa
+a ser un flujo que se consume por completo cada período. Ese supuesto ---irreal pero
+conveniente--- es el que, junto con la utilidad logarítmica, hace que el modelo tenga
+\emph{solución cerrada} (\S\ref{sec:policy}). Nuestro caso base conserva
+$\delta=0.025$ y recupera el caso de Long--Plosser como el experimento de la
+\S\ref{sec:experimento}.
 \end{remark}
 
-\section{Condiciones de primer orden}
-
-\paragraph{Problema del hogar.} El hogar elige $\{c_t,h_t,k_{t+1}\}$ para
-maximizar \eqref{eq:utility} sujeto a \eqref{eq:budget}. El lagrangiano, con
-multiplicador $\lambda_t$ sobre la restricción de cada período, es
-\[
+\paragraph{El problema y su lagrangiano.} El hogar elige $\{c_t,h_t,k_{t+1}\}_{t\ge0}$
+para maximizar \eqref{eq:utility} sujeto a \eqref{eq:budget} en cada período. Con un
+multiplicador $\lambda_t$ por restricción, el lagrangiano es
+\begin{equation}
 \mathcal{L}=\E_0\sum_{t=0}^\infty \beta^t\Big\{\ln c_t+\theta\ln(1-h_t)
-+\lambda_t\big[w_t h_t+(r_t+1-\delta)k_t-c_t-k_{t+1}\big]\Big\},
++\lambda_t\big[w_t h_t+(r_t+1-\delta)k_t-c_t-k_{t+1}\big]\Big\}.
+\label{eq:lagr}
+\end{equation}
+Conviene escribirlo término a término para ver qué fechas tocan a cada variable:
+\[
+\mathcal{L}=\E_0\Big\{\;\cdots
++\beta^{t}\big[\ln c_t+\theta\ln(1-h_t)+\lambda_t(w_t h_t+(r_t+1-\delta)k_t-c_t
+-\underbrace{k_{t+1}}_{\text{aquí}})\big]
 \]
-y sus condiciones de primer orden son
+\[
++\;\beta^{t+1}\big[\ln c_{t+1}+\theta\ln(1-h_{t+1})+\lambda_{t+1}(w_{t+1}h_{t+1}
++(r_{t+1}+1-\delta)\underbrace{k_{t+1}}_{\text{y aquí}}-c_{t+1}-k_{t+2})\big]
++\cdots\Big\}.
+\]
+La clave está en el capital elegido hoy, $k_{t+1}$: aparece \emph{dos veces}, con signo
+negativo en el período $t$ (lo pago) y positivo en $t+1$ (me renta). Derivando,
 \begin{align}
-\partial c_t:&\quad \tfrac{1}{c_t}=\lambda_t, \label{eq:foc_c}\\[2pt]
-\partial h_t:&\quad \tfrac{\theta}{1-h_t}=\lambda_t w_t, \label{eq:foc_h}\\[2pt]
-\partial k_{t+1}:&\quad \lambda_t=\beta\,\E_t\!\big[\lambda_{t+1}(r_{t+1}+1-\delta)\big]. \label{eq:foc_k}
+\partial c_t:&\quad \beta^t\big(\tfrac{1}{c_t}-\lambda_t\big)=0
+  \;\Rightarrow\; \tfrac{1}{c_t}=\lambda_t, \label{eq:foc_c}\\[2pt]
+\partial h_t:&\quad \beta^t\big(-\tfrac{\theta}{1-h_t}+\lambda_t w_t\big)=0
+  \;\Rightarrow\; \tfrac{\theta}{1-h_t}=\lambda_t w_t, \label{eq:foc_h}\\[2pt]
+\partial k_{t+1}:&\quad -\beta^t\lambda_t+\beta^{t+1}\E_t\!\big[\lambda_{t+1}(r_{t+1}+1-\delta)\big]=0
+  \;\Rightarrow\; \lambda_t=\beta\,\E_t\!\big[\lambda_{t+1}(r_{t+1}+1-\delta)\big]. \label{eq:foc_k}
 \end{align}
-Sustituyendo $\lambda_t=1/c_t$ de \eqref{eq:foc_c} en \eqref{eq:foc_h} y
-\eqref{eq:foc_k} se obtienen las dos ecuaciones del hogar en términos
-observables. La \textbf{oferta de trabajo} iguala la tasa marginal de
-sustitución ocio--consumo con el salario,
+La FOC de $k_{t+1}$ recoge, precisamente, sus dos apariciones: el costo de hoy
+($-\lambda_t$) contra el retorno esperado de mañana. Sustituyendo $\lambda_t=1/c_t$ de
+\eqref{eq:foc_c} en \eqref{eq:foc_h} y \eqref{eq:foc_k} se obtienen las dos ecuaciones
+del hogar en términos observables. La \textbf{oferta de trabajo} iguala la tasa
+marginal de sustitución ocio--consumo con el salario,
 \begin{equation}
 \boxed{\ \theta\,\frac{c_t}{1-h_t}=w_t\ }, \label{eq:laborsupply}
 \end{equation}
-y la \textbf{ecuación de Euler} vincula el consumo de hoy y de mañana a través
-del retorno del capital,
+y la \textbf{ecuación de Euler} vincula el consumo de hoy y de mañana a través del
+retorno del capital,
 \begin{equation}
 \boxed{\ \frac{1}{c_t}=\beta\,\E_t\!\left[\frac{1}{c_{t+1}}\,(r_{t+1}+1-\delta)\right]\ }. \label{eq:euler}
 \end{equation}
 
-\paragraph{Problema de la firma.} La firma es \emph{estática}: en cada período
-elige $k_t$ y $h_t$ para maximizar el beneficio $y_t-r_t k_t-w_t h_t$ sujeto a
-\eqref{eq:prod}. Igualando el producto marginal de cada factor a su precio,
-\begin{align}
-\text{demanda de capital:}&\quad r_t=(1-\alpha)\,\frac{y_t}{k_t}, \label{eq:kdemand}\\[2pt]
-\text{demanda de trabajo:}&\quad w_t=\alpha\,\frac{y_t}{h_t}. \label{eq:ldemand}
-\end{align}
+\subsection{La firma}
+\label{sec:firma}
 
-\paragraph{Cierre del modelo.} El vaciado del mercado de bienes exige
+\paragraph{Tecnología.} Existe un único bien final, producido con una función
+neoclásica $f(a_t,k_t,h_t)$. Adoptamos la Cobb--Douglas,
+\begin{equation}
+y_t = a_t\, k_t^{\,1-\alpha}\, h_t^{\,\alpha},
+\label{eq:prod}
+\end{equation}
+que satisface las propiedades neoclásicas (productos marginales positivos y
+decrecientes, rendimientos constantes a escala) y tiene una virtud contable: bajo
+competencia perfecta, la participación de cada factor en el ingreso es \emph{constante}
+e igual a su exponente. El capital entra con $k_t$ ---el acervo elegido en $t-1$,
+predeterminado--- y $a_t$ es la productividad total de factores.
+
+\paragraph{Demanda de factores.} La firma es \emph{estática}: cada período elige $k_t$
+y $h_t$ para maximizar el beneficio $y_t-r_t k_t-w_t h_t$ sujeto a \eqref{eq:prod}.
+Igualando el producto marginal de cada factor a su precio,
+\begin{align}
+\text{demanda de capital:}&\quad r_t=\frac{\partial y_t}{\partial k_t}=(1-\alpha)\,\frac{y_t}{k_t}, \label{eq:kdemand}\\[2pt]
+\text{demanda de trabajo:}&\quad w_t=\frac{\partial y_t}{\partial h_t}=\alpha\,\frac{y_t}{h_t}. \label{eq:ldemand}
+\end{align}
+De aquí se lee la contabilidad del ingreso: $r_t k_t=(1-\alpha)y_t$ y
+$w_t h_t=\alpha y_t$, que suman exactamente $y_t$ ---el producto se reparte sin
+residuo entre capital y trabajo.
+
+\begin{remark}
+Un detalle de notación que conviene fijar desde ya: aquí $\alpha$ es la participación
+\emph{del trabajo}, no del capital (al revés de la convención más común). Con la
+calibración de King--Rebelo, $\alpha=0.667$, de modo que el trabajo se lleva dos
+tercios del producto y el capital, un tercio.
+\end{remark}
+
+\subsection{Equilibrio de mercado y el choque}
+\label{sec:equilibrio}
+
+El mercado de factores se vacía por construcción (el hogar ofrece exactamente el $k_t$
+y el $h_t$ que la firma demanda). Falta el \textbf{vaciado del mercado de bienes}: todo
+lo producido se consume o se invierte,
 \begin{equation}
 y_t=c_t+i_t. \label{eq:clearing}
 \end{equation}
-
-Reuniendo todo, el equilibrio queda descrito por un sistema de \textbf{ocho
-ecuaciones} ---\eqref{eq:lom}, \eqref{eq:prod}, \eqref{eq:tfp},
-\eqref{eq:laborsupply}, \eqref{eq:euler}, \eqref{eq:kdemand}, \eqref{eq:ldemand}
-y \eqref{eq:clearing}--- en \textbf{ocho incógnitas}:
-$y_t,c_t,i_t,k_t,h_t,r_t,w_t,a_t$. Esta igualdad entre número de ecuaciones y de
+La única fuente de incertidumbre es la productividad, que sigue un proceso AR(1) en
+logaritmos,
+\begin{equation}
+\ln a_t = \phi \ln a_{t-1} + \varepsilon_t,
+\qquad \varepsilon_t\sim N(0,\sigma_\varepsilon^2),
+\label{eq:tfp}
+\end{equation}
+con persistencia $\phi\in(0,1)$ e innovación $\varepsilon_t$. Reuniendo todo, el
+equilibrio competitivo queda descrito por un sistema de \textbf{ocho ecuaciones} en
+\textbf{ocho incógnitas} ($y_t,c_t,i_t,k_t,h_t,r_t,w_t,a_t$), que el
+Cuadro~\ref{tab:system} organiza por agente. Esa igualdad entre número de ecuaciones e
 incógnitas es lo primero que Dynare verificará.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{llc}
+\toprule
+\textbf{Agente} & \textbf{Ecuación} & \textbf{Referencia}\\
+\midrule
+\multirow{2}{*}{Hogar}
+  & Euler: $\ \frac{1}{c_t}=\beta\,\E_t[\frac{1}{c_{t+1}}(r_{t+1}+1-\delta)]$ & \eqref{eq:euler}\\[2pt]
+  & Oferta de trabajo: $\ \theta\,\frac{c_t}{1-h_t}=w_t$ & \eqref{eq:laborsupply}\\
+\midrule
+\multirow{2}{*}{Firma}
+  & Demanda de capital: $\ r_t=(1-\alpha)\,y_t/k_t$ & \eqref{eq:kdemand}\\[2pt]
+  & Demanda de trabajo: $\ w_t=\alpha\,y_t/h_t$ & \eqref{eq:ldemand}\\
+\midrule
+\multirow{4}{*}{Equilibrio}
+  & Producción: $\ y_t=a_t\,k_t^{1-\alpha}h_t^{\alpha}$ & \eqref{eq:prod}\\[2pt]
+  & Vaciado de bienes: $\ y_t=c_t+i_t$ & \eqref{eq:clearing}\\[2pt]
+  & Ley de movimiento: $\ k_{t+1}=(1-\delta)k_t+i_t$ & \eqref{eq:lom}\\[2pt]
+  & Tecnología (PTF): $\ \ln a_t=\phi\ln a_{t-1}+\varepsilon_t$ & \eqref{eq:tfp}\\
+\bottomrule
+\end{tabular}
+\caption{El equilibrio: ocho ecuaciones en ocho incógnitas, por agente.}
+\label{tab:system}
+\end{table}
 
 \section{Estado estacionario}
 
@@ -637,6 +811,7 @@ $\theta$ a partir de un $h_{ss}$ objetivo.
 \end{proposition}
 
 \section{Calibración}
+\label{sec:calib}
 
 Seguimos la calibración de King y Rebelo (1999), estándar para una economía
 trimestral (Tabla~\ref{tab:calib}).
@@ -2507,6 +2682,17 @@ Mutschler, W., Pfeifer, J., Ratto, M., Rion, N.\ \& Villemot, S.\
 \bibitem{kingrebelo1999} King, R.~G.\ \& Rebelo, S.~T.\ (1999). Resuscitating
 Real Business Cycles. En J.~B.\ Taylor \& M.\ Woodford (eds.), \emph{Handbook of
 Macroeconomics}, vol.~1B, cap.~14. Elsevier.
+
+\bibitem{longplosser1983} Long, J.~B.\ \& Plosser, C.~I.\ (1983). Real Business
+Cycles. \emph{Journal of Political Economy}, 91(1), 39--69.
+
+\bibitem{kpr1988} King, R.~G., Plosser, C.~I.\ \& Rebelo, S.~T.\ (1988). Production,
+Growth and Business Cycles: I. The Basic Neoclassical Model. \emph{Journal of Monetary
+Economics}, 21(2--3), 195--232.
+
+\bibitem{ghh1988} Greenwood, J., Hercowitz, Z.\ \& Huffman, G.~W.\ (1988). Investment,
+Capacity Utilization, and the Real Business Cycle. \emph{American Economic Review},
+78(3), 402--417.
 
 \bibitem{uhlig1999} Uhlig, H.\ (1999). A Toolkit for Analysing Nonlinear Dynamic
 Stochastic Models Easily. En R.\ Marimon \& A.\ Scott (eds.), \emph{Computational
