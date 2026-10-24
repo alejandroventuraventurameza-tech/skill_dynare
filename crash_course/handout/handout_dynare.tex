@@ -49,6 +49,8 @@
 \definecolor{errframe}{RGB}{193, 42, 32}
 \definecolor{tipbg}{RGB}{231, 248, 243}
 \definecolor{tipframe}{RGB}{0, 128, 102}
+\definecolor{ejerbg}{RGB}{244, 247, 252}
+\definecolor{ejerframe}{RGB}{15, 35, 85}
 
 % --- TABLAS Y FIGURAS ---
 \usepackage{booktabs}
@@ -110,7 +112,11 @@
   tipstyle/.style={breakable, colback=tipbg, colframe=tipframe,
     colbacktitle=tipframe, coltitle=white, fonttitle=\bfseries\small,
     boxrule=0.5pt, arc=2pt, toptitle=1.5mm, bottomtitle=1.5mm,
-    left=3pt, right=3pt, top=2pt, bottom=2pt}
+    left=3pt, right=3pt, top=2pt, bottom=2pt},
+  ejerstyle/.style={breakable, colback=ejerbg, colframe=ejerframe,
+    colbacktitle=ejerframe, coltitle=white, fonttitle=\bfseries,
+    boxrule=0.6pt, arc=2pt, toptitle=1.8mm, bottomtitle=1.8mm,
+    left=4pt, right=4pt, top=3pt, bottom=3pt}
 }
 
 % --- CONTADORES ---
@@ -157,6 +163,11 @@
 \newenvironment{tipbox}[1][]{%
   \begin{tcolorbox}[tipstyle, title={\tipicon~~Buena práctica%
     \ifx\relax#1\relax\else: #1\fi}]}%
+{\end{tcolorbox}}
+\newcounter{ejer}
+\newenvironment{ejercicio}[1]{%
+  \refstepcounter{ejer}%
+  \begin{tcolorbox}[ejerstyle, title={Ejercicio~\theejer~~\textbullet~~#1}]}%
 {\end{tcolorbox}}
 
 % --- TÍTULOS Y LISTAS ---
@@ -1940,58 +1951,6 @@ memoria (\code{oo\_}); solo falla el dibujo. Arreglo: ejecutar una vez
 \code{.eps} que falla en varias versiones de MATLAB.
 \end{errorbox}
 
-\section{Tu turno: experimentos guiados}
-\label{sec:tuturno}
-
-La mejor forma de entender un modelo es \emph{moverlo}. Cada experimento de abajo
-es un cambio de una línea; córrelo, mira qué pasa y contrástalo con la predicción
-teórica. Los primeros tres cambian un parámetro; los dos últimos, una opción de
-\lstinline@stoch_simul@.
-
-\begin{enumerate}[leftmargin=2em,itemsep=4pt]
-
-\item \textbf{La persistencia del choque ($\phi$).} Cambia
-  \lstinline@phi = 0.979@ por \lstinline@phi = 0.90@.
-  \emph{Qué observar:} las IRFs decaen mucho más rápido y los coeficientes de
-  autocorrelación bajan. \emph{Por qué:} la persistencia del modelo hereda, en
-  primera instancia, la del choque de PTF (\S\ref{sec:momentos}).
-
-\item \textbf{El tamaño del choque ($\sigma_\varepsilon$).} Duplica
-  \lstinline@sigma_eps = 0.0072@ a \lstinline@0.0144@.
-  \emph{Qué observar:} todas las desviaciones estándar y todas las IRFs se
-  \emph{duplican}; las correlaciones y autocorrelaciones no cambian.
-  \emph{Por qué:} a primer orden rige la equivalencia cierta (Apéndice~\ref{app:ss}):
-  la solución es lineal en el choque, así que escalar $\sigma_\varepsilon$ escala
-  las respuestas proporcionalmente, sin tocar la forma del ciclo.
-
-\item \textbf{La participación de los factores ($\alpha$).} Cambia
-  \lstinline@alpha = 0.667@ por \lstinline@alpha = 0.60@.
-  \emph{Qué observar:} se recalcula \emph{todo} el estado estacionario
-  (la relación capital--producto, $\theta$). \emph{Por qué:} la calibración no es
-  neutra; $\alpha$ fija la tecnología y, con ella, los niveles de largo plazo que
-  calculamos en forma cerrada en el estado estacionario (Cap.~\ref{ch:modelo}).
-
-\item \textbf{Los momentos del ciclo (filtro HP).} Añade \lstinline@hp_filter=1600@
-  a la línea de \lstinline@stoch_simul@. \emph{Qué observar:} las desviaciones
-  estándar caen drásticamente y las volatilidades relativas se acercan a las que
-  reportan los datos trimestrales. \emph{Por qué:} el filtro quita el componente
-  de baja frecuencia; recién entonces los momentos son comparables con los del
-  \emph{ciclo} (la observación de la \S\ref{sec:momentos}).
-
-\item \textbf{La corrección por riesgo (segundo orden).} Cambia \lstinline@order=1@
-  por \lstinline@order=2@. \emph{Qué observar:} las medias de las variables dejan
-  de coincidir con el estado estacionario determinista. \emph{Por qué:} a segundo
-  orden aparece el término de corrección por riesgo $\tfrac12 g_{\sigma\sigma}\sigma^2$
-  (Apéndice~\ref{app:ss}): el estado estacionario \emph{estocástico} se separa del
-  determinista.
-
-\end{enumerate}
-
-\noindent Y, por supuesto, el experimento que ya hicimos: la depreciación
-$\delta$ (\S\ref{sec:experimento}), con \lstinline@-DDELTA1=1@. Cinco líneas, cinco
-lecciones ---y la certeza, en cada caso, de poder anticipar el resultado antes de
-correr.
-
 \section{Próximos pasos: estimar en vez de calibrar}
 \label{sec:bayes}
 
@@ -2034,6 +1993,139 @@ Con esto cerramos el recorrido: del papel ---preferencias, FONC, estado
 estacionario, log-linealización, Blanchard--Kahn--- al código, y de vuelta, con
 la certeza de que cada número que imprime Dynare tiene detrás una ecuación que
 sabemos resolver a mano.
+
+% ===================== CAPÍTULO 4: EJERCICIOS =====================
+\chapter{Ejercicios}
+\label{ch:ejercicios}
+
+La mejor forma de entender un modelo es \emph{moverlo}. Los ejercicios de abajo
+parten del archivo \code{rbc\_analytical.mod} tal como quedó en el
+Capítulo~\ref{ch:codigo} y lo perturban en una dimensión a la vez. Cada uno es un
+cambio pequeño en el \code{.mod} ---uno o dos caracteres, una opción de
+\lstinline@stoch_simul@--- pero con una lección detrás que conviene \emph{anticipar}
+antes de correr y \emph{verificar} después. No incluimos soluciones a propósito: el
+valor está en predecir el resultado desde la teoría de los Capítulos~\ref{ch:modelo}
+y~\ref{ch:codigo} y contrastarlo con lo que imprime Dynare.
+
+\begin{center}
+\small\itshape Trabaja siempre sobre una \emph{copia} del \code{.mod} base, una por
+ejercicio (\S\ref{sec:estilo}: un modelo por archivo).
+\end{center}
+
+\begin{ejercicio}{Persistencia del choque: un barrido en $\phi$}
+El parámetro $\phi$ gobierna cuánto dura un choque de productividad: el texto mostró
+que $\hat a_{t+n}=\phi^{\,n}\sigma_\varepsilon$, de modo que el choque se diluye
+geométricamente a tasa $\phi$ (\S\ref{sec:momentos}).
+
+\medskip\noindent\textbf{Tareas.}
+\begin{enumerate}[leftmargin=1.5em, topsep=2pt, itemsep=2pt, label=(\alph*)]
+\item Corre el modelo para $\phi\in\{0.5,\,0.7,\,0.9,\,0.979\}$, cambiando solo
+  \lstinline@phi@ en la calibración. En cada caso anota la autocorrelación de primer
+  orden del producto que reporta \lstinline@stoch_simul@.
+\item Para cada $\phi$, mide la ``vida media'' de la IRF del producto: el número de
+  trimestres hasta que la respuesta cae a la mitad de su valor de impacto.
+\item Superpón en una sola figura las cuatro IRFs del producto.
+\end{enumerate}
+
+\medskip\noindent\textbf{Para el informe.} ¿Cómo mapea $\phi$ a la autocorrelación
+del producto? Contrasta tu tabla con la predicción teórica $\hat a_{t+n}=\phi^{\,n}
+\sigma_\varepsilon$. ¿Por qué la persistencia del \emph{producto} no es exactamente
+$\phi$ ---qué añade el capital a la propagación (\S\ref{sec:momentos})?
+\end{ejercicio}
+
+\begin{ejercicio}{Tamaño del choque y equivalencia cierta}
+A primer orden la solución es lineal en el choque. Este ejercicio lo comprueba.
+
+\medskip\noindent\textbf{Tareas.} Duplica la desviación estándar del choque, de
+\lstinline@sigma_eps = 0.0072@ a \lstinline@0.0144@. Compara, frente al caso base:
+(a) las desviaciones estándar de todas las variables; (b) las correlaciones con el
+producto; (c) las autocorrelaciones; (d) las IRFs.
+
+\medskip\noindent\textbf{Para el informe.} ¿Qué se duplica exactamente y qué
+permanece idéntico? Explica, usando la equivalencia cierta a primer orden
+(Apéndice~\ref{app:ss}), por qué la \emph{forma} del ciclo ---correlaciones,
+volatilidades relativas, autocorrelaciones--- no depende de $\sigma_\varepsilon$.
+¿En qué dejaría de ser cierto esto si resolvieras a segundo orden?
+\end{ejercicio}
+
+\begin{ejercicio}{La participación de los factores: la calibración no es neutra}
+Cambiar un parámetro ``profundo'' como $\alpha$ no mueve solo las dinámicas: recalcula
+todo el estado estacionario.
+
+\medskip\noindent\textbf{Tareas.} Corre el modelo con $\alpha=0.60$ y, por separado,
+con $\alpha=0.70$ (cambiando solo \lstinline@alpha@). En cada caso anota del bloque
+\texttt{STEADY-STATE RESULTS} los valores de $k_{ss}$, $y_{ss}$, $c_{ss}$, la relación
+capital--producto $k_{ss}/y_{ss}$ y el $\theta$ que resulta de la calibración.
+
+\medskip\noindent\textbf{Para el informe.} ¿Cómo cambia $k_{ss}/y_{ss}$ con $\alpha$?
+¿Por qué un cambio en $\alpha$ obliga a \emph{recalibrar} $\theta$ para mantener
+$h_{ss}=0.20$? Deriva a mano la dependencia de $k_{ss}/y_{ss}$ en $\alpha$ a partir
+de las condiciones de estado estacionario (Cap.~\ref{ch:modelo}) y compárala con los
+números de Dynare.
+\end{ejercicio}
+
+\begin{ejercicio}{Medir el ciclo: el filtro de Hodrick--Prescott}
+Los momentos que imprime Dynare por defecto no son comparables con los datos hasta
+filtrarlos (\S\ref{sec:hp}).
+
+\medskip\noindent\textbf{Tareas.} Añade la opción \lstinline@hp_filter=1600@ a la
+línea de \lstinline@stoch_simul@ y vuelve a correr. Construye una tabla con, para
+$y,c,i,k,h$: la volatilidad relativa a la del producto y la correlación con el
+producto, \emph{filtradas}. Ponla al lado del Cuadro~\ref{tab:vsdata} (datos de
+EE.UU.).
+
+\medskip\noindent\textbf{Para el informe.} ¿Qué hechos estilizados reproduce el
+modelo y cuáles no? Comenta en particular (i) el ``exceso de suavidad'' del consumo
+relativo a los datos y (ii) si el modelo genera suficiente volatilidad de la
+inversión. Relaciona cada acierto y cada falla con la estructura del modelo
+(\S\ref{sec:momentos}).
+\end{ejercicio}
+
+\begin{ejercicio}{La corrección por riesgo: primer vs.\ segundo orden}
+A primer orden las medias simuladas coinciden con el estado estacionario
+determinista; a segundo orden, no.
+
+\medskip\noindent\textbf{Tareas.} Cambia \lstinline@order=1@ por \lstinline@order=2@
+en \lstinline@stoch_simul@ y compara la media simulada de cada variable con su valor
+de estado estacionario determinista (\texttt{STEADY-STATE RESULTS}).
+
+\medskip\noindent\textbf{Para el informe.} ¿Qué variables se separan más del estado
+estacionario determinista? Explica el origen de la brecha con el término de corrección
+por riesgo $\tfrac12\,g_{\sigma\sigma}\sigma^2$ (Apéndice~\ref{app:ss}) y por qué a
+este estado estacionario desplazado se le llama \emph{estocástico}.
+\end{ejercicio}
+
+\begin{ejercicio}{Depreciación total: reproducir el resultado analítico}
+En el Capítulo~\ref{ch:codigo} (\S\ref{sec:experimento}) argumentamos que con
+$\delta=1$ las horas no reaccionan al choque. Aquí lo verificas numéricamente.
+
+\medskip\noindent\textbf{Tareas.} Fija $\delta=1$ (recuerda que el estado
+estacionario se recalcula solo, porque lo declaramos en función de $\delta$).
+Corre el modelo y examina la IRF de las horas $h$.
+
+\medskip\noindent\textbf{Para el informe.} ¿Es la IRF de $h$ idénticamente cero (a
+tolerancia numérica)? Verifica la condición de cancelación $(1-\alpha)\,\delta=
+\beta\,r_{ss}(1-\alpha\delta)$ (ecuación~\ref{eq:deltacond}) sustituyendo los valores
+calibrados en ambos casos, $\delta=1$ y $\delta=0.025$. ¿Por qué $\delta=1$ es el
+\emph{único} valor que anula el efecto neto sobre las horas?
+\end{ejercicio}
+
+\begin{ejercicio}{(Reto) Romper y arreglar el \emph{timing}}
+El timing determina qué variable es de estado y, por tanto, el conteo de
+Blanchard--Kahn (\S\ref{sec:bk}). Un error aquí rompe la solución de un modo
+instructivo.
+
+\medskip\noindent\textbf{Tareas.} En una copia del \code{.mod}, escribe
+deliberadamente la ley de movimiento del capital \emph{adelantada},
+\lstinline@k(+1) = (1-delta)*k(-1) + i@, en vez de \lstinline@k = (1-delta)*k(-1) + i@.
+Corre \lstinline@check@ y observa el mensaje. Luego arréglalo y confirma que la
+condición de rango vuelve a verificarse.
+
+\medskip\noindent\textbf{Para el informe.} ¿Qué mensaje exacto da Dynare? ¿Cómo cambió
+el conteo de variables de estado y de control al adelantar $k$? ¿Qué reporta
+\lstinline@model_diagnostics@? Conecta el diagnóstico con la derivación a mano de la
+condición de Blanchard--Kahn (\S\ref{sec:bk}, \S\ref{sec:debug}).
+\end{ejercicio}
 
 % ===================== APÉNDICE =====================
 \appendix
