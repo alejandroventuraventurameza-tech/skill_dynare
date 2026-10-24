@@ -769,31 +769,60 @@ incógnitas es lo primero que Dynare verificará.
 
 \section{Estado estacionario}
 
-En el estado estacionario \emph{determinista} ---es decir, con todos los choques
-apagados, $\varepsilon_t=0$--- las variables son constantes;\footnote{La
-distinción entre el estado estacionario \emph{determinista} (\textit{non-stochastic})
-y el \emph{estocástico} se formaliza en el Apéndice~\ref{app:ss}; a primer orden,
-por equivalencia cierta, ambos coinciden.} entonces $\ln a_{ss}=\phi\ln a_{ss}$
-implica $a_{ss}=1$. Denotamos con el subíndice $ss$ los valores de largo plazo, y
-la estrategia es trabajar con \emph{ratios} antes de despejar niveles.\footnote{%
-¿Por qué ratios? Porque desacoplan el sistema: cocientes como $y_{ss}/k_{ss}$
-quedan fijados solo por parámetros, sin depender de la escala de la economía. Eso
-permite resolver el estado estacionario \emph{en cascada} ---una variable a la
-vez--- en lugar de enfrentar simultáneamente un sistema no lineal en niveles.}
+En el estado estacionario \emph{determinista} ---con todos los choques apagados,
+$\varepsilon_t=0$, y $\Delta x_t=0$ para toda variable--- las variables son
+constantes y las expectativas desaparecen. Seguimos tres criterios (King, Plosser y
+Rebelo, 1988): \emph{primero}, poner cada ecuación en estado estacionario (eliminar el
+tiempo y el operador $\E_t$); \emph{segundo}, despejar primero las variables que
+dependen \emph{solo} de parámetros y usarlas para las demás; \emph{tercero}, resolver
+en \emph{ratios} antes que en niveles.\footnote{¿Por qué ratios? Porque desacoplan el
+sistema: cocientes como $y_{ss}/k_{ss}$ quedan fijados solo por parámetros, sin
+depender de la escala de la economía, y permiten resolver \emph{en cascada} ---una
+variable a la vez--- en lugar de enfrentar un sistema no lineal en niveles.} Denotamos
+con el subíndice $ss$ los valores de largo plazo; la distinción entre el estado
+estacionario determinista y el estocástico se formaliza en el Apéndice~\ref{app:ss}
+(a primer orden, por equivalencia cierta, coinciden).
 
-De la Euler \eqref{eq:euler} en estado estacionario, $1=\beta(r_{ss}+1-\delta)$,
-sale de inmediato la tasa de alquiler:
+\paragraph{Paso 1: cada ecuación en estado estacionario.} Quitando el tiempo y las
+expectativas, las ocho ecuaciones quedan:
+\begin{align}
+\text{Euler:}&\quad 1=\beta\,(r_{ss}+1-\delta), &
+\text{Prod.:}&\quad y_{ss}=a_{ss}\,k_{ss}^{\,1-\alpha}h_{ss}^{\,\alpha}, \notag\\
+\text{Of.\ trabajo:}&\quad \theta\,\tfrac{c_{ss}}{1-h_{ss}}=w_{ss}, &
+\text{Vaciado:}&\quad y_{ss}=c_{ss}+i_{ss}, \notag\\
+\text{Dda.\ capital:}&\quad r_{ss}=(1-\alpha)\tfrac{y_{ss}}{k_{ss}}, &
+\text{LOM:}&\quad i_{ss}=\delta\,k_{ss}, \notag\\
+\text{Dda.\ trabajo:}&\quad w_{ss}=\alpha\,\tfrac{y_{ss}}{h_{ss}}, &
+\text{PTF:}&\quad \ln a_{ss}=\phi\ln a_{ss}. \label{eq:sssystem}
+\end{align}
+
+\paragraph{Paso 2: lo que depende solo de parámetros.} De la Euler sale de inmediato
+la tasa de alquiler,
 \begin{equation}
-r_{ss}=\frac{1}{\beta}-(1-\delta). \label{eq:rss}
+r_{ss}=\frac{1}{\beta}-(1-\delta), \label{eq:rss}
 \end{equation}
-La demanda de capital \eqref{eq:kdemand} fija el ratio producto--capital,
-$y_{ss}/k_{ss}=r_{ss}/(1-\alpha)$. Por otro lado, de la función de producción
-\eqref{eq:prod} con $a_{ss}=1$ se tiene $y_{ss}/k_{ss}=(h_{ss}/k_{ss})^{\alpha}$.
-Igualando ambas expresiones y despejando el capital en función de las horas,
+y de la ecuación de la PTF, $\ln a_{ss}=\phi\ln a_{ss}$, es decir $a_{ss}=a_{ss}^{\phi}$:
+las dos raíces son $a_{ss}\in\{0,1\}$, pero solo $a_{ss}=1$ hace que $\ln a_{ss}$ exista,
+de modo que $a_{ss}=1$.
+
+\paragraph{Paso 3: los ratios.} La demanda de capital fija el ratio
+producto--capital; usando \eqref{eq:rss},
+\begin{equation}
+\frac{y_{ss}}{k_{ss}}=\frac{r_{ss}}{1-\alpha}. \label{eq:yk}
+\end{equation}
+El vaciado de bienes, con $i_{ss}=\delta k_{ss}$ de la LOM, da el ratio
+consumo--capital:
+\begin{equation}
+\frac{c_{ss}}{k_{ss}}=\frac{y_{ss}}{k_{ss}}-\delta. \label{eq:ck}
+\end{equation}
+
+\paragraph{Paso 4: los niveles, en cascada.} De la función de producción con
+$a_{ss}=1$, $y_{ss}/k_{ss}=(h_{ss}/k_{ss})^{\alpha}$; igualando con \eqref{eq:yk} y
+despejando el capital en función de las horas,
 \begin{equation}
 k_{ss}=h_{ss}\left(\frac{1-\alpha}{r_{ss}}\right)^{1/\alpha}. \label{eq:kss}
 \end{equation}
-El resto de los niveles se obtiene en cascada:
+Con $k_{ss}$ a la mano, el resto sale uno tras otro:
 \begin{equation}
 y_{ss}=k_{ss}^{\,1-\alpha}\,h_{ss}^{\,\alpha},\qquad
 i_{ss}=\delta k_{ss},\qquad
@@ -867,20 +896,57 @@ valor & $0.0413$ & $4.5785$ & $0.5673$ & $0.4528$ & $0.1145$ & $1.8919$ \\
 \label{tab:ss}
 \end{table}
 
-\section{Log-linealización}
+\section{Linealización vs.\ log-linealización}
 \label{sec:loglin}
 
-El sistema de equilibrio es no lineal, de modo que para resolverlo y simularlo
-lo aproximamos alrededor del estado estacionario. Seguimos el método de Uhlig
-(1995): reemplazamos cada variable por su desviación logarítmica,
-$x_t=x_{ss}\,e^{\hat{x}_t}$ con $\hat{x}_t=\ln(x_t/x_{ss})$, y usamos las
-aproximaciones para desviaciones pequeñas
+El sistema de equilibrio es no lineal, de modo que para resolverlo y simularlo lo
+aproximamos alrededor del estado estacionario. La \emph{técnica} es única ---una
+expansión de Taylor de primer orden de cada ecuación (DeJong y Dave, 2011)---; lo que
+cambia es la \emph{naturaleza de la variable}: si tomamos su desviación en
+\emph{niveles} ($\tilde{x}_t\equiv x_t-x_{ss}$) hablamos de \emph{linealización}; si
+tomamos su desviación \emph{logarítmica} ($\hat{x}_t\equiv\ln(x_t/x_{ss})$), de
+\emph{log-linealización}. Veamos ambas y por qué preferiremos la segunda.
+
+\subsection{Linealización en niveles}
+\label{sec:linlevels}
+
+El procedimiento tiene dos pasos. \textbf{Paso 1:} ordenar cada ecuación de modo que
+el lado derecho sea cero y bautizar el izquierdo como una función $F(\cdot)$ de las
+variables que aparecen. Por ejemplo, $\alpha x_t y_t=\beta y_t+\theta z_t$ se reescribe
+$F(x_t,y_t,z_t)=\alpha x_t y_t-\beta y_t-\theta z_t=0$. \textbf{Paso 2:} aproximar
+$F$ por su expansión de Taylor de primer orden alrededor del estado estacionario. Como
+$F(\cdot)|_{ss}=0$, los términos constantes se cancelan y queda una ecuación lineal en
+las desviaciones $\tilde{x}_t=x_t-x_{ss}$:
 \[
-e^{\hat{x}_t}\approx 1+\hat{x}_t, \qquad \hat{x}_t\,\hat{y}_t\approx 0.
+0=\frac{\partial F}{\partial x}\Big|_{ss}\tilde{x}_t
++\frac{\partial F}{\partial y}\Big|_{ss}\tilde{y}_t
++\frac{\partial F}{\partial z}\Big|_{ss}\tilde{z}_t
+\;=\;(\alpha y_{ss})\tilde{x}_t-\beta\tilde{y}_t-\theta\tilde{z}_t.
 \]
-Aplicándolas a cada ecuación del sistema se obtiene el sistema log-lineal; las
-variables son ahora \emph{desviaciones porcentuales} respecto al estado
-estacionario:
+Apliquémoslo a la ecuación de Euler. Escrita como
+$F(c_t,c_{t+1},r_{t+1})=\tfrac{1}{c_t}-\beta\E_t\!\big[\tfrac{r_{t+1}+1-\delta}{c_{t+1}}\big]=0$,
+sus derivadas en el estado estacionario son $-1/c_{ss}^2$ (ante $c_t$),
+$\beta(r_{ss}+1-\delta)/c_{ss}^2=1/c_{ss}^2$ (ante $c_{t+1}$, usando $1=\beta(r_{ss}+1-\delta)$)
+y $-\beta/c_{ss}$ (ante $r_{t+1}$). La expansión, multiplicada por $c_{ss}^2$, da
+\begin{equation}
+\tilde{c}_t=\E_t\tilde{c}_{t+1}-\beta\,c_{ss}\,\E_t\tilde{r}_{t+1}. \label{eq:lin_euler_lev}
+\end{equation}
+Haciendo lo mismo con cada ecuación se obtiene el sistema lineal con variables en
+niveles.
+
+\subsection{Log-linealización (en logaritmos)}
+\label{sec:loglinlog}
+
+La log-linealización repite el procedimiento con la desviación logarítmica. El puente
+es inmediato: como $\hat{x}_t=\ln(x_t/x_{ss})\approx (x_t-x_{ss})/x_{ss}$, se cumple
+$\tilde{x}_t=x_{ss}\,\hat{x}_t$. Sustituyendo $\tilde{c}_t=c_{ss}\hat{c}_t$ y
+$\tilde{r}_{t+1}=r_{ss}\hat{r}_{t+1}$ en \eqref{eq:lin_euler_lev} y dividiendo por
+$c_{ss}$, la Euler en niveles se vuelve la Euler log-lineal
+$\E_t\hat{c}_{t+1}-\hat{c}_t=\beta r_{ss}\,\E_t\hat{r}_{t+1}$: la misma ecuación, con
+las variables medidas en \emph{desviaciones porcentuales}. En la práctica es más
+cómodo llegar directo, reemplazando $x_t=x_{ss}\,e^{\hat{x}_t}$ y usando, para
+desviaciones pequeñas, $e^{\hat{x}_t}\approx 1+\hat{x}_t$ y $\hat{x}_t\hat{y}_t\approx 0$.
+Aplicado a todo el sistema, se obtiene:
 \begin{align}
 \text{Producción:}&\quad \hat{y}_t=\hat{a}_t+(1-\alpha)\hat{k}_t+\alpha\hat{h}_t, \label{eq:ll_prod}\\
 \text{Demanda de capital:}&\quad \hat{r}_t=\hat{y}_t-\hat{k}_t, \label{eq:ll_kd}\\
@@ -902,6 +968,16 @@ es $1-h_t$, una subida de las horas reduce el ocio en esa proporción. En la
 Euler \eqref{eq:ll_euler}, $\beta r_{ss}$ mide cuánto se transmite una variación
 del retorno del capital a la pendiente del consumo.
 \end{remark}
+
+\paragraph{¿Por qué logaritmos?} Preferimos la versión log-lineal por tres razones.
+Las variables $\hat{x}_t$ son \emph{adimensionales} ---desviaciones porcentuales---, de
+modo que son comparables entre sí sin importar las unidades. Los coeficientes resultan
+ser \emph{participaciones} ($s_c,s_i$) y \emph{elasticidades}, que se leen e
+interpretan directamente (una IRF de $0.01$ es ``$1\%$ sobre el estado estacionario'').
+Y, para una Cobb--Douglas, el logaritmo linealiza \emph{exactamente} los productos y
+las potencias: $\ln(a_t k_t^{1-\alpha}h_t^{\alpha})=\hat{a}_t+(1-\alpha)\hat{k}_t
++\alpha\hat{h}_t$ sin término de error. Por eso, de aquí en adelante trabajamos con el
+sistema log-lineal \eqref{eq:ll_prod}--\eqref{eq:ll_tfp}.
 
 \section{Solución analítica: funciones de política}
 \label{sec:policy}
@@ -2698,6 +2774,9 @@ Capacity Utilization, and the Real Business Cycle. \emph{American Economic Revie
 Stochastic Models Easily. En R.\ Marimon \& A.\ Scott (eds.), \emph{Computational
 Methods for the Study of Dynamic Economies}. Oxford University Press. (Versión de
 trabajo: 1995.)
+
+\bibitem{dejongdave2011} DeJong, D.~N.\ \& Dave, C.\ (2011). \emph{Structural
+Macroeconometrics} (2.\textsuperscript{a} ed.). Princeton University Press.
 
 \bibitem{sgu2004} Schmitt-Grohé, S.\ \& Uribe, M.\ (2004). Solving Dynamic
 General Equilibrium Models Using a Second-Order Approximation to the Policy
