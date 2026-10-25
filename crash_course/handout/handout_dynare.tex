@@ -1286,10 +1286,109 @@ su coeficiente ante el capital difiere en uno ($\eta_{rk}=\eta_{kk}-1$), lo que 
 vuelve $\hat{r}_t=\hat{k}_{t+1}-\hat{k}_t$ ---una diferencia, no un nivel, de ahí que
 sea mucho menos persistente que las demás.
 
+\section{Las funciones de impulso-respuesta: una derivación analítica}
+\label{sec:irfanalitica}
+
+Una función de impulso-respuesta (IRF) traza la reacción de cada variable a un
+\emph{único} choque, período a período. Conviene recordar que cada punto de una IRF es,
+él mismo, un equilibrio: la IRF del consumo es el equilibrio del mercado de bienes en
+cada fecha; la del salario, el del mercado de trabajo. En el caso analítico ($\delta=1$)
+podemos derivarla \emph{a mano} y ver el mecanismo ---incluido por qué las horas no se
+mueven. Usamos que, con $\delta=1$, $\beta r_{ss}=1-\beta(1-\delta)=1$.
+
+\paragraph{$t=0$: el punto de partida.} La economía está en estado estacionario y
+todas las desviaciones son nulas. Además, el capital de $t=1$ se decidió en $t=0$
+(\emph{timing}): $\hat{k}_1=\hat{\imath}_0=0$. El choque aún no ocurre.
+
+\paragraph{$t=1$: el choque golpea.} La innovación se realiza,
+$\hat{a}_1=\phi\hat{a}_0+\varepsilon_1=\sigma_\varepsilon$.
+
+\emph{Las firmas.} La mayor productividad eleva el producto, y con él los productos
+marginales y la demanda de factores. De la producción \eqref{eq:ll_prod} con
+$\hat{k}_1=0$,
+\[
+\hat{y}_1=\hat{a}_1+(1-\alpha)\hat{k}_1+\alpha\hat{h}_1=\sigma_\varepsilon+\alpha\hat{h}_1,
+\]
+de la demanda de capital \eqref{eq:ll_kd}, $\hat{r}_1=\hat{y}_1-\hat{k}_1=\hat{y}_1$, y
+de la demanda de trabajo \eqref{eq:ll_ld}, $\hat{w}_1=\hat{y}_1-\hat{h}_1$: ambas curvas
+de demanda se desplazan hacia afuera.
+
+\emph{El hogar: dos efectos que se cancelan.} El alza del retorno $\hat{r}_1>0$ produce
+dos efectos opuestos sobre el consumo. El \textbf{efecto sustitución} (vía la Euler)
+incentiva \emph{posponer} consumo ---menos hoy, más mañana, porque ahorrar rinde más.
+El \textbf{efecto ingreso} (vía la restricción presupuestaria) empuja en sentido
+contrario: un retorno más alto enriquece al hogar, que querría consumir \emph{más} hoy.
+Con utilidad logarítmica la elasticidad de sustitución intertemporal es uno, y ambos
+efectos se \emph{cancelan exactamente}. Lo único que mueve el consumo es la Euler
+\eqref{eq:ll_euler} evaluada en $t=0$, $\E_0\hat{c}_1-\hat{c}_0=\beta r_{ss}\,\E_0\hat{r}_1$:
+con $\hat{c}_0=0$ y $\beta r_{ss}=1$,
+\[
+\hat{c}_1=\hat{r}_1=\hat{y}_1.
+\]
+
+\emph{El mercado de trabajo cierra con $\hat{h}_1=0$.} Igualando la oferta
+\eqref{eq:ll_ls} y la demanda \eqref{eq:ll_ld} de trabajo,
+$\hat{c}_1+\tfrac{h_{ss}}{1-h_{ss}}\hat{h}_1=\hat{y}_1-\hat{h}_1$; sustituyendo
+$\hat{c}_1=\hat{y}_1$, el producto se cancela y queda
+\[
+\Big(\tfrac{h_{ss}}{1-h_{ss}}+1\Big)\hat{h}_1=\frac{\hat{h}_1}{1-h_{ss}}=0
+\quad\Longrightarrow\quad \boxed{\ \hat{h}_1=0\ }.
+\]
+Las horas no reaccionan: la demanda de trabajo se expande, pero la oferta se contrae
+justo lo necesario (el efecto riqueza sobre el ocio), y el nuevo salario de equilibrio
+$\hat{w}_1$ sube sin que las horas cambien (Figura~\ref{fig:labormkt}). Es el mismo
+resultado de la \S\ref{sec:policy}, ahora leído como equilibrio período a período.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>={Stealth[length=2mm]}, scale=0.92]
+\draw[->,thick] (0,0) -- (7.6,0) node[right]{horas $h$};
+\draw[->,thick] (0,0) -- (0,6.6) node[above]{salario $w$};
+\draw[thick, darkblue] (0.8,0.24) -- (6.0,4.4) node[right]{$S$};
+\draw[thick, darkblue] (0.8,4.56) -- (6.0,0.4) node[right]{$D$};
+\draw[thick, tipframe, densely dashed] (1.3,2.04) -- (6.0,5.8) node[right]{$S'$};
+\draw[thick, errframe, densely dashed] (1.3,5.56) -- (6.3,1.56) node[right]{$D'$};
+\coordinate (A) at (3.5,2.4);
+\coordinate (B) at (3.5,3.8);
+\fill[darkblue] (A) circle (2.2pt) node[below left=0pt]{$A$};
+\fill[errframe] (B) circle (2.2pt) node[above left=0pt]{$B$};
+\draw[dotted] (3.5,0) node[below]{$h_{ss}$} -- (B);
+\draw[dotted] (A) -- (0,2.4) node[left]{$w_{ss}$};
+\draw[dotted] (B) -- (0,3.8) node[left]{$w_1$};
+\draw[->, errframe, thick] (5.0,2.2) -- (5.55,2.75);
+\draw[->, tipframe, thick] (1.75,2.7) -- (1.4,3.25);
+\end{tikzpicture}
+\caption{El mercado de trabajo en $t=1$. La mayor productividad desplaza la demanda
+hacia afuera ($D\!\to\!D'$); el efecto riqueza contrae la oferta ($S\!\to\!S'$). Con
+utilidad logarítmica los dos desplazamientos se compensan: el equilibrio pasa de $A$ a
+$B$ ---el salario sube de $w_{ss}$ a $w_1$, pero las horas siguen en $h_{ss}$.}
+\label{fig:labormkt}
+\end{figure}
+
+\emph{Resumen de $t=1$.} Con $\hat{h}_1=0$ todas las variables ``reales'' se mueven
+al unísono con la productividad,
+\[
+\hat{a}_1=\hat{y}_1=\hat{w}_1=\hat{c}_1=\hat{r}_1=\sigma_\varepsilon,\qquad \hat{h}_1=0,\qquad \hat{k}_1=0,
+\]
+y del vaciado de bienes \eqref{eq:ll_clear} con $\hat{c}_1=\hat{y}_1$ se sigue
+$\hat{\imath}_1=\hat{y}_1=\sigma_\varepsilon$: la inversión absorbe el impulso, de modo
+que el capital de mañana sube, $\hat{k}_2=\hat{\imath}_1=\sigma_\varepsilon$.
+
+\paragraph{$t=2$ en adelante.} Ahora conviven dos fuerzas: la productividad, ya más
+débil ($\hat{a}_2=\phi\sigma_\varepsilon$), y el capital acumulado
+($\hat{k}_2=\sigma_\varepsilon>0$). El producto responde a ambas; el mismo argumento del
+mercado de trabajo mantiene $\hat{h}_t=0$ en cada período (de ahí que en el caso
+$\delta=1$ las horas sean \emph{planas}), y la economía regresa al estado estacionario a
+medida que $\hat{a}_t$ y $\hat{k}_t$ decaen según el AR(2) de la \S\ref{sec:timeseries}.
+Esta es, exactamente, la forma de las IRF que Dynare dibujará en el
+Capítulo~\ref{ch:codigo}; haber derivado a mano la de $t=1$ nos deja anticipar cada
+trazo y detectar al instante si la máquina se aparta de la teoría.
+
 Con el modelo completamente especificado \emph{y resuelto analíticamente}
 ---ecuaciones, estado estacionario, log-linealización, funciones de política,
-condición de estabilidad y representación de series de tiempo--- estamos listos para
-traducirlo a Dynare y confirmar, con la máquina, lo que ya sabemos con el lápiz.
+condición de estabilidad, representación de series de tiempo e impulso-respuesta---
+estamos listos para traducirlo a Dynare y confirmar, con la máquina, lo que ya sabemos
+con el lápiz.
 
 % ===================== CAPÍTULO 3 =====================
 \chapter{Del papel al código}
