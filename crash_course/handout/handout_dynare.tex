@@ -1244,10 +1244,52 @@ modelo debe pasar en Dynare: un error de \emph{timing} altera el conteo de
 valores propios y hace fallar la condición.
 \end{remark}
 
+\section{Representación de series de tiempo}
+\label{sec:timeseries}
+
+Las funciones de política no solo resuelven el modelo: entregan la
+\emph{representación de series de tiempo} de cada variable ---cómo se escribe en
+función únicamente de la historia del choque $\{\varepsilon_t\}$. El puente es el
+operador de rezago $L$ (con $L\hat{x}_t=\hat{x}_{t-1}$). Empecemos por la
+productividad:
+\begin{equation}
+\hat{a}_t=\phi\hat{a}_{t-1}+\varepsilon_t
+\;\Longrightarrow\;(1-\phi L)\hat{a}_t=\varepsilon_t
+\;\Longrightarrow\;\hat{a}_t=\frac{\varepsilon_t}{1-\phi L}
+=\sum_{j\ge0}\phi^{\,j}\varepsilon_{t-j}, \label{eq:ma_tfp}
+\end{equation}
+un $MA(\infty)$: el choque de hace $j$ períodos pesa $\phi^{\,j}$ y se diluye
+geométricamente. El capital hereda esa dinámica. Su función de política es
+$\hat{k}_{t+1}=\eta_{kk}\hat{k}_t+\eta_{ka}\hat{a}_t$, con $\eta_{kk}$ el valor propio
+estable; escrita con el operador de rezago y sustituyendo \eqref{eq:ma_tfp} (tomando
+$\eta_{ka}=1$ en el caso analítico),
+\begin{equation}
+(1-\eta_{kk}L)\hat{k}_{t+1}=\hat{a}_t=\frac{\varepsilon_t}{1-\phi L}
+\;\Longrightarrow\;
+\hat{k}_{t+1}=\frac{\varepsilon_t}{(1-\eta_{kk}L)(1-\phi L)}. \label{eq:kts}
+\end{equation}
+El denominador es el producto de dos polinomios de primer grado: el capital es, por
+tanto, un \textbf{AR(2)},
+\begin{equation}
+\boxed{\ \hat{k}_{t+1}=(\eta_{kk}+\phi)\,\hat{k}_t-\eta_{kk}\phi\,\hat{k}_{t-1}
++\varepsilon_t\ }, \label{eq:kar2}
+\end{equation}
+cuyas dos raíces son \emph{exactamente} $\eta_{kk}$ y $\phi$ ---el valor propio estable
+del sistema y la persistencia del choque. Es el origen de la dinámica que veremos en
+las IRF (\S\ref{sec:momentos}): la inercia del modelo mezcla dos fuentes, la del
+choque ($\phi$) y la de la acumulación de capital ($\eta_{kk}$).
+
+En el caso analítico ($\delta=1$), el producto, el consumo, la inversión y el salario
+comparten la función de política del capital, de modo que heredan la \emph{misma}
+representación AR(2), con idénticos coeficientes. La tasa de alquiler es la excepción:
+su coeficiente ante el capital difiere en uno ($\eta_{rk}=\eta_{kk}-1$), lo que la
+vuelve $\hat{r}_t=\hat{k}_{t+1}-\hat{k}_t$ ---una diferencia, no un nivel, de ahí que
+sea mucho menos persistente que las demás.
+
 Con el modelo completamente especificado \emph{y resuelto analíticamente}
----ecuaciones, estado estacionario, log-linealización, funciones de política y
-condición de estabilidad--- estamos listos para traducirlo a Dynare y confirmar,
-con la máquina, lo que ya sabemos con el lápiz.
+---ecuaciones, estado estacionario, log-linealización, funciones de política,
+condición de estabilidad y representación de series de tiempo--- estamos listos para
+traducirlo a Dynare y confirmar, con la máquina, lo que ya sabemos con el lápiz.
 
 % ===================== CAPÍTULO 3 =====================
 \chapter{Del papel al código}
