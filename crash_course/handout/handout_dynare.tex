@@ -1694,10 +1694,13 @@ fijados.
 
 \section{Correr en Dynare, comando por comando}
 
-Con el \code{.mod} guardado, correrlo toma tres líneas en la ventana de comandos
-de MATLAB: añadir Dynare al \emph{path} (una vez por sesión), situarse en la
-carpeta del archivo, y llamar a Dynare por su nombre \emph{sin} la extensión
-\code{.mod}:
+Con el \code{.mod} guardado,\footnote{El archivo completo y ejecutable,
+\code{rbc\_analytical.mod}, acompaña a este handout: es exactamente el que se
+describe aquí, bloque por bloque, con etiquetas \lstinline@[name='...']@,
+\lstinline@long_name@ y semilla fija. Córrelo tal cual para reproducir cada tabla y
+figura del Capítulo.} correrlo toma tres líneas en la ventana de comandos de MATLAB:
+añadir Dynare al \emph{path} (una vez por sesión), situarse en la carpeta del
+archivo, y llamar a Dynare por su nombre \emph{sin} la extensión \code{.mod}:
 
 \begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
 >> addpath C:\dynare\7.1\matlab      % la ruta de tu instalacion de Dynare
