@@ -57,3 +57,6 @@ crash_course/**/checksum
 crash_course/galindo_montecinos_ortiz*.pdf
 
 crash_course/*.pdf
+
+# Material complementario del libro de GMO (codigos y datos con derechos): NO publicar
+crash_course/gmo_material/
