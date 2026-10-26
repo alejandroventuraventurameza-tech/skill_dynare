@@ -462,6 +462,151 @@ Esa es, en una frase, la filosofía de diseño de Dynare: escribir el modelo cas
 como se haría en el papel y dejar que la máquina haga el resto.
 \end{remark}
 
+\section{Fundamentos: la anatomía de un modelo RBC}
+\label{sec:fundamentos}
+
+Antes de escribir una sola ecuación conviene saber \emph{qué} es un modelo de ciclos
+reales y \emph{cómo} se construye uno. Esta sección fija ambas cosas: primero los
+supuestos que definen a la familia RBC; luego, la secuencia de once pasos que lleva de
+la idea al contraste con los datos. Esa secuencia es la columna vertebral de todo el
+handout.
+
+\subsection{Los supuestos principales}
+\label{sec:supuestos}
+
+\begin{definition}[Modelo RBC canónico]
+Un \emph{modelo de ciclos reales} (RBC) es un modelo de equilibrio general dinámico y
+estocástico que satisface:
+\begin{enumerate}[label=(\roman*), leftmargin=2em, itemsep=1pt, topsep=2pt]
+\item \textbf{Economía y mercados.} Economía cerrada (ahorro $=$ inversión), con
+  mercados de bienes y de factores en \emph{competencia perfecta}; un único bien que
+  se destina a consumo o a inversión.
+\item \textbf{Agentes representativos.} Un hogar y una firma representan a todos los
+  hogares y firmas idénticos, lo que elimina los problemas de agregación.
+\item \textbf{Optimización.} Ambos maximizan una función objetivo explícita ---el hogar,
+  su utilidad esperada descontada; la firma, su beneficio--- sujetos a sus
+  restricciones de recursos y de tecnología.
+\item \textbf{Expectativas racionales.} Los agentes forman expectativas con la
+  verdadera distribución condicional del modelo (Apéndice~\ref{app:filtration}), lo
+  que responde a la crítica de Lucas.
+\item \textbf{Equilibrio general walrasiano.} Precios flexibles, agentes tomadores de
+  precios, información simétrica, mercados completos y sin fricciones: todos los
+  mercados se vacían en cada fecha.
+\item \textbf{Dinámica e incertidumbre real.} Las decisiones son intertemporales y la
+  única fuente de incertidumbre es un choque de \emph{oferta}: la productividad.
+\end{enumerate}
+\end{definition}
+
+\noindent Cada supuesto es también una puerta para extender el modelo: la economía
+abierta (Mendoza, 1991), la competencia monopolística (Rotemberg y Woodford, 1993) o
+el gobierno y la autoridad monetaria, que entran a través de su restricción
+presupuestaria y de una regla de política.
+
+\paragraph{Impulso y propagación.} Siguiendo a Frisch (1933) y Slutsky (1937), los
+modelos RBC separan dos mecanismos (Figura~\ref{fig:impulso}). El \emph{impulso} es lo
+que saca a la economía de su estado estacionario ---aquí, el choque de productividad
+$\varepsilon_t$---. La \emph{propagación} es lo que convierte ese impulso pasajero en
+fluctuaciones persistentes y amplificadas de todas las variables endógenas.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  >={Stealth[length=2.2mm]},
+  bx/.style={draw=darkblue, thick, rounded corners=3pt, fill=thmblue, align=center,
+    font=\footnotesize, inner sep=4pt},
+  pr/.style={draw=tipframe, thick, rounded corners=2pt, fill=tipbg, align=left,
+    font=\scriptsize, text width=5.1cm, inner sep=3pt},
+  go/.style={->, thick, darkblue}
+]
+\node[bx, text width=2.0cm] (imp) at (0,0) {\textbf{Impulso}\\[2pt] choque de PTF\\ $\varepsilon_t$};
+\node[pr] (p1) at (5.0,1.95) {\textbf{Sustitución intertemporal del trabajo:} un salario alto hoy lleva a trabajar más hoy (el más usado).};
+\node[pr] (p2) at (5.0,0.65) {\textbf{Suavizamiento del consumo:} el ingreso extra se ahorra; más inversión, más capital mañana (débil).};
+\node[pr] (p3) at (5.0,-0.65) {\textbf{Rezagos de inversión} (\emph{time to build}): el choque de hoy eleva el producto futuro (Kydland y Prescott, 1982).};
+\node[pr] (p4) at (5.0,-1.95) {\textbf{Inventarios:} amortiguan la demanda inesperada (poco respaldo empírico).};
+\node[font=\footnotesize\bfseries, text=tipframe] at (5.0,2.85) {Propagación};
+\node[bx, text width=2.2cm] (out) at (10.1,0) {\textbf{Ciclo}\\[2pt] fluctuaciones persistentes de $y,c,i,h$};
+\foreach \p in {p1,p2,p3,p4}{\draw[go] (imp.east) -- (\p.west); \draw[go] (\p.east) -- (out.west);}
+\end{tikzpicture}
+\caption{Impulso y propagación en los modelos RBC (Frisch, 1933; Slutsky, 1937). Nuestro
+modelo contiene los dos primeros mecanismos de propagación.}
+\label{fig:impulso}
+\end{figure}
+
+\subsection{Los once pasos para construir un modelo RBC}
+\label{sec:pasos}
+
+Construir, resolver y evaluar un modelo RBC ---en rigor, cualquier DSGE--- sigue una
+secuencia estable de once pasos (Figura~\ref{fig:pasos}). Conviene tenerla a la vista:
+cada sección de este handout ejecuta uno de ellos, y el Cuadro~\ref{tab:pasos} indica
+dónde.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  >={Stealth[length=2.3mm]},
+  st/.style={draw=darkblue, thick, rounded corners=2pt, fill=thmblue, align=center,
+    font=\scriptsize, text width=2.45cm, minimum height=1.15cm, inner sep=2pt},
+  nm/.style={circle, draw=darkblue, thick, fill=white, font=\bfseries\scriptsize,
+    inner sep=0pt, minimum size=4.6mm},
+  go/.style={->, very thick, darkblue}
+]
+\foreach \n/\x/\y/\t in {
+  1/0/0/{Construir\\el modelo},
+  2/3.3/0/{CPO, equilibrio\\y choque},
+  3/6.6/0/{Calibración},
+  4/9.9/0/{Estado\\estacionario},
+  5/9.9/-1.85/{Log-linealizar\\el modelo},
+  6/6.6/-1.85/{Resolver el\\sistema lineal},
+  7/3.3/-1.85/{Funciones de\\impulso-respuesta},
+  8/0/-1.85/{Simular\\las variables},
+  9/0/-3.7/{Componente\\cíclico (HP)},
+  10/3.3/-3.7/{Momentos\\teóricos},
+  11/6.6/-3.7/{Comparar con\\los datos}}{
+  \node[st] (q\n) at (\x,\y) {\t};
+  \node[nm] at (q\n.north west) {\n};
+}
+\draw[go] (q1)--(q2); \draw[go] (q2)--(q3); \draw[go] (q3)--(q4);
+\draw[go] (q4)--(q5);
+\draw[go] (q5)--(q6); \draw[go] (q6)--(q7); \draw[go] (q7)--(q8);
+\draw[go] (q8)--(q9);
+\draw[go] (q9)--(q10); \draw[go] (q10)--(q11);
+\end{tikzpicture}
+\caption{Los once pasos para desarrollar un modelo RBC (inspirada en Galindo,
+Montecinos y Ortiz, Fig.~1.16).}
+\label{fig:pasos}
+\end{figure}
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{clp{6.3cm}l}
+\toprule
+\textbf{Paso} & \textbf{Etapa} & \textbf{Qué se hace} & \textbf{Dónde}\\
+\midrule
+1  & Construir el modelo & Tipo de economía, agentes, reglas de comportamiento, mercados, choques & \S\ref{sec:modelconstruct}\\
+2  & CPO, equilibrio, choque & Optimización de cada agente, vaciado de mercados, proceso del choque; tantas ecuaciones como incógnitas & \S\ref{sec:hogar}--\S\ref{sec:equilibrio}\\
+3  & Calibración & Valores de los parámetros a partir de estudios previos y de razones de largo plazo & \S\ref{sec:calib}\\
+4  & Estado estacionario & Eliminar tiempo y expectativas; resolver en ratios & \S\ref{sec:ss}\\
+5  & Log-linealizar & Taylor de primer orden en desviaciones logarítmicas & \S\ref{sec:loglin}\\
+6  & Resolver el sistema lineal & Método analítico o de Blanchard--Kahn; funciones de política y de estado & \S\ref{sec:policy}--\S\ref{sec:bk}\\
+7  & Impulso-respuesta & Respuesta de cada variable a un único choque, vía su forma ARMA & \S\ref{sec:timeseries}--\S\ref{sec:irfanalitica}, \S\ref{sec:irf}\\
+8  & Simular & Series artificiales con choques normales, tantos períodos como datos & \S\ref{sec:momentos}\\
+9  & Componente cíclico & Separar tendencia y ciclo con el filtro HP & \S\ref{sec:hp}\\
+10 & Momentos teóricos & Desviación estándar, autocorrelación, correlación con el producto & \S\ref{sec:dynaremoments}\\
+11 & Comparar con los datos & ¿Reproduce el modelo los hechos estilizados? & \S\ref{sec:modelvsdata}\\
+\bottomrule
+\end{tabular}
+\caption{Hoja de ruta: cada paso y la sección del handout que lo ejecuta.}
+\label{tab:pasos}
+\end{table}
+
+\begin{remark}
+Los pasos 1--7 son \emph{teoría}: se hacen con lápiz y, en nuestro caso, admiten
+solución cerrada (Capítulo~\ref{ch:modelo}). Desde el paso 4, Dynare los automatiza
+uno a uno (Capítulo~\ref{ch:codigo}): \code{steady} es el paso 4,
+\lstinline@stoch_simul@ con \lstinline@order=1@ los pasos 5--7 (y el 8 si se le pide \lstinline@periods>0@), y la opción
+\lstinline@hp_filter@ los pasos 9--10. El paso 11 sigue siendo trabajo del economista.
+\end{remark}
+
 % ===================== CAPÍTULO 2 =====================
 \chapter{El modelo RBC con solución analítica}
 \label{ch:modelo}
@@ -768,6 +913,7 @@ incógnitas es lo primero que Dynare verificará.
 \end{table}
 
 \section{Estado estacionario}
+\label{sec:ss}
 
 En el estado estacionario \emph{determinista} ---con todos los choques apagados,
 $\varepsilon_t=0$, y $\Delta x_t=0$ para toda variable--- las variables son
@@ -1103,34 +1249,61 @@ implementa Dynare.
 \paragraph{El método en siete pasos.} La idea es descomponer el sistema por sus
 valores propios (descomposición de Jordan), resolver el bloque \emph{inestable} ---de
 donde sale la función de política--- y sustituirla para recuperar la dinámica de los
-estados. La Figura~\ref{fig:bk7} resume el procedimiento; las subsecciones que siguen
-lo ejecutan para nuestro modelo, y el Apéndice~\ref{app:undetermined} demuestra por qué
-funciona.
+estados. La Figura~\ref{fig:bk7} muestra el recorrido; la lista que la sigue detalla
+qué se hace en cada paso, las subsecciones siguientes lo ejecutan para nuestro modelo y
+el Apéndice~\ref{app:undetermined} demuestra por qué funciona.
 
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
   >={Stealth[length=2.4mm]},
-  node distance=4.5mm,
   stp/.style={draw=darkblue, thick, rounded corners=2pt, fill=thmblue,
-    text width=10.6cm, align=left, inner sep=5pt, font=\small},
-  num/.style={circle, draw=darkblue, thick, fill=white, font=\bfseries\footnotesize,
-    inner sep=0pt, minimum size=5.5mm},
-  go/.style={->, thick, darkblue}
+    text width=2.55cm, minimum height=1.25cm, align=center, inner sep=3pt,
+    font=\footnotesize},
+  lab/.style={font=\footnotesize\bfseries, text=errframe},
+  go/.style={->, very thick, errframe}
 ]
-\node[stp] (s1) {\textbf{Forma estado-espacio.} $A\,[\hat{X}_{t+1};\,\E_t \hat{Y}_{t+1}]^{\!\top}=B\,[\hat{X}_t;\,\hat{Y}_t]^{\!\top}+C\,\varepsilon_{t+1}$, con $\hat{X}$ estados y $\hat{Y}$ controles.};
-\node[stp, below=of s1] (s2) {\textbf{Forma alternativa.} Premultiplicar por $A^{-1}$: $[\hat{X}_{t+1};\,\E_t \hat{Y}_{t+1}]^{\!\top}=F\,[\hat{X}_t;\,\hat{Y}_t]^{\!\top}+G\,\varepsilon_{t+1}$, con $F=A^{-1}B$.};
-\node[stp, below=of s2] (s3) {\textbf{Descomposición de Jordan} $F=P\Lambda P^{-1}$: separa a $F$ en sus valores propios.};
-\node[stp, below=of s3] (s4) {\textbf{Partición} en subsistema \emph{estable} ($|\lambda|<1$) e \emph{inestable} ($|\lambda|>1$).};
-\node[stp, below=of s4] (s5) {\textbf{Cambio de variable} a coordenadas canónicas $w_t=P^{-1}z_t$, que desacopla el sistema.};
-\node[stp, below=of s5] (s6) {\textbf{Resolver el bloque inestable} por sustitución iterada $\Rightarrow$ \emph{función de política} $\hat{Y}_t=H\hat{X}_t$.};
-\node[stp, below=of s6] (s7) {\textbf{Recuperar la ecuación de estado}: sustituir $\hat{Y}_t=H\hat{X}_t$ en la forma alternativa.};
-\foreach \a/\b in {s1/s2,s2/s3,s3/s4,s4/s5,s5/s6,s6/s7}{\draw[go] (\a) -- (\b);}
-\foreach \i/\n in {s1/1,s2/2,s3/3,s4/4,s5/5,s6/6,s7/7}{\node[num] at (\i.north west) {\n};}
+\foreach \n/\x/\y/\t in {
+  1/0/0/{Forma\\estado-espacio},
+  2/3.55/0/{Forma estado-espacio\\alternativa},
+  3/7.1/0/{Descomposición\\de Jordan},
+  4/10.65/0/{Partición\\del modelo},
+  5/10.65/-2.45/{Cambio de\\variable},
+  6/7.1/-2.45/{Solución del bloque\\inestable},
+  7/3.55/-2.45/{Recuperar la\\ecuación de estado}}{
+  \node[stp] (s\n) at (\x,\y) {\t};
+}
+\foreach \n in {1,2,3,4}{\node[lab, above=1pt of s\n] {Paso \n};}
+\foreach \n in {5,6,7}{\node[lab, below=1pt of s\n] {Paso \n};}
+\draw[go] (s1) -- (s2); \draw[go] (s2) -- (s3); \draw[go] (s3) -- (s4);
+\draw[go] (s4) -- (s5);
+\draw[go] (s5) -- (s6); \draw[go] (s6) -- (s7);
 \end{tikzpicture}
-\caption{El método de Blanchard--Kahn en siete pasos.}
+\caption{El método de Blanchard--Kahn en siete pasos (inspirada en Galindo,
+Montecinos y Ortiz, Fig.~3.2).}
 \label{fig:bk7}
 \end{figure}
+
+\begin{enumerate}[label=\textbf{Paso \arabic*.}, leftmargin=*, itemsep=2pt]
+\item \textbf{Forma estado-espacio.} Ordenar el sistema como
+  $A\,[\hat{X}_{t+1};\,\E_t\hat{Y}_{t+1}]^{\!\top}=B\,[\hat{X}_t;\,\hat{Y}_t]^{\!\top}
+  +C\,\varepsilon_{t+1}$, con $\hat{X}$ los estados (predeterminados o exógenos) y
+  $\hat{Y}$ los controles.
+\item \textbf{Forma alternativa.} Premultiplicar por $A^{-1}$:
+  $[\hat{X}_{t+1};\,\E_t\hat{Y}_{t+1}]^{\!\top}=F\,[\hat{X}_t;\,\hat{Y}_t]^{\!\top}
+  +G\,\varepsilon_{t+1}$, con $F=A^{-1}B$ y $G=A^{-1}C$.
+\item \textbf{Descomposición de Jordan} $F=P\Lambda P^{-1}$, que expone los valores
+  propios de $F$.
+\item \textbf{Partición} de $\Lambda$ (y de $P^{-1}$) en un bloque \emph{estable}
+  ($|\lambda|<1$) y uno \emph{inestable} ($|\lambda|>1$).
+\item \textbf{Cambio de variable} a coordenadas canónicas $w_t=P^{-1}z_t$, que
+  desacopla el sistema en $\E_t w_{t+1}=\Lambda w_t$.
+\item \textbf{Solución del bloque inestable} por sustitución iterada: la única
+  trayectoria acotada exige $w^u_t=0$, de donde sale la \emph{función de política}
+  $\hat{Y}_t=H\hat{X}_t$.
+\item \textbf{Recuperar la ecuación de estado} sustituyendo $\hat{Y}_t=H\hat{X}_t$ en
+  la forma alternativa: $\hat{X}_{t+1}=(F_{XX}+F_{XY}H)\hat{X}_t+G_X\varepsilon_{t+1}$.
+\end{enumerate}
 
 \subsection{Qué variable es de qué tipo}
 
@@ -2074,6 +2247,7 @@ con $\lambda=1600$ sigue siendo el estándar para los momentos del ciclo.
 \end{remark}
 
 \subsection{Lo que imprime Dynare por defecto}
+\label{sec:dynaremoments}
 
 Sin opciones adicionales, \lstinline@stoch_simul@ reporta los momentos de las
 variables \emph{en niveles, sin filtrar} (Tabla~\ref{tab:moments}).
@@ -2111,6 +2285,7 @@ producto.
 \end{remark}
 
 \subsection{El modelo frente a los datos}
+\label{sec:modelvsdata}
 
 Los momentos de la Tabla~\ref{tab:moments} están \emph{sin filtrar}: dominados por
 el componente de baja frecuencia (la PTF es muy persistente), no son comparables
