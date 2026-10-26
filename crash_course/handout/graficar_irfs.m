@@ -33,15 +33,16 @@ end
 % Orden economico: el choque, luego el producto y sus usos, los factores y
 % sus precios.  Cada titulo nombra la variable y su simbolo en el handout.
 o_ac = char(243);                 % o con tilde
+sep  = [',' char(160) ' '];       % coma + espacio fijo: la cursiva no se pega
 vars    = {'a', 'y', 'c', 'i', 'k', 'h', 'w', 'r'};
-titulos = {'Productividad, {\ita}_t', ...
-           'Producto, {\ity}_t', ...
-           'Consumo, {\itc}_t', ...
-           ['Inversi' o_ac 'n, {\iti}_t'], ...
-           'Capital, {\itk}_t', ...
-           'Horas, {\ith}_t', ...
-           'Salario real, {\itw}_t', ...
-           'Tasa de alquiler, {\itr}_t'};
+titulos = {['Productividad'      sep '{\ita}_t'], ...
+           ['Producto'           sep '{\ity}_t'], ...
+           ['Consumo'            sep '{\itc}_t'], ...
+           ['Inversi' o_ac 'n'   sep '{\iti}_t'], ...
+           ['Capital'            sep '{\itk}_t'], ...
+           ['Horas'              sep '{\ith}_t'], ...
+           ['Salario real'       sep '{\itw}_t'], ...
+           ['Tasa de alquiler'   sep '{\itr}_t']};
 choque = 'eps';
 
 % ---- 2. Estilo (coherente con el handout) ------------------------------------
@@ -80,7 +81,12 @@ for j = 1:numel(vars)
     end
 
     ax = nexttile(tl);
-    plot(ax, [1 T], [0 0], ':', 'Color', gris, 'LineWidth', 0.8); hold(ax, 'on');
+    % La linea de cero solo se dibuja si aporta: cuando la IRF la cruza o es
+    % nula.  Si la serie es siempre positiva, la base del eje ya cumple ese rol.
+    nula = max(abs(irf)) < 1e-10;
+    if nula || min(irf) < 0
+        plot(ax, [1 T], [0 0], ':', 'Color', gris, 'LineWidth', 0.8); hold(ax, 'on');
+    end
     plot(ax, t, irf, '-', 'Color', azul, 'LineWidth', 1.3);
     hold(ax, 'off');
 
@@ -93,15 +99,17 @@ for j = 1:numel(vars)
     ax.Title.FontName = fuente;
 
     % Si la respuesta es nula, un eje simetrico pequeno lo hace evidente.
-    if max(abs(irf)) < 1e-10, ylim(ax, [-0.1 0.1]); end
+    if nula, ylim(ax, [-0.1 0.1]); end
 
     if mod(j-1, 4) == 0, ylabel(ax, '% desv. del EE', 'Color', tinta); end
     if j > 4,            xlabel(ax, 'Trimestres',      'Color', tinta); end
 end
 
+% sigma, epsilon y delta como glifos de la fuente (char) y no como \sigma del
+% interprete TeX: asi el epsilon es el mismo del handout y no la variante lunada.
 titulo = sprintf(['Respuesta a un choque de productividad de una desviaci' o_ac ...
-                  'n est' char(225) 'ndar  (\\sigma_\\epsilon = %.2f%%,  \\delta = %g)'], ...
-                  100*sigma, delta);
+                  'n est' char(225) 'ndar  (' char(963) '_{' char(949) '} = %.2f%%,  ' ...
+                  char(948) ' = %g)'], 100*sigma, delta);
 title(tl, titulo, 'FontName', fuente, 'FontSize', 9.5, 'Color', tinta);
 
 % ---- 5. Exportar --------------------------------------------------------------
