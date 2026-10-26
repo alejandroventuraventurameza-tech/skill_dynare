@@ -99,7 +99,14 @@ for j = 1:numel(vars)
     ax.Title.FontName = fuente;
 
     % Si la respuesta es nula, un eje simetrico pequeno lo hace evidente.
-    if nula, ylim(ax, [-0.1 0.1]); end
+    if nula
+        ylim(ax, [-0.1 0.1]);
+    else
+        % El eje siempre incluye el 0 (el estado estacionario): sin el, MATLAB
+        % recorta el rango y una respuesta pequena parece enorme.
+        yl = ylim(ax);
+        ylim(ax, [min(0, yl(1)), max(0, yl(2))]);
+    end
 
     if mod(j-1, 4) == 0, ylabel(ax, '% desv. del EE', 'Color', tinta); end
     if j > 4,            xlabel(ax, 'Trimestres',      'Color', tinta); end
