@@ -2175,6 +2175,20 @@ responden al choque cuando $\delta<1$ y quedan clavadas en cero cuando $\delta=1
 Es el mecanismo central de la teoría RBC, y aislarlo exige volver a las
 ecuaciones.
 
+\begin{errorbox}[el interruptor que no cambia nada]
+Si al correr con \lstinline@-DDELTA1=1@ la salida es idéntica al caso base
+($r_{ss}=0.0413$, valores propios $0.936$, $0.979$, $1.086$), revisa dos cosas.
+\emph{Primero}, la línea \texttt{Calling Dynare with arguments:} del log debe mostrar
+\texttt{-DDELTA1=1}; si dice \texttt{none}, el argumento no llegó. \emph{Segundo}, el
+\code{.mod} no puede fijar el valor por defecto con un \lstinline|@#define DELTA1 = 0|
+incondicional: la línea de comandos se procesa \emph{antes} que el archivo, y ese
+\lstinline|@#define| la pisa. El valor por defecto va dentro de
+\lstinline|@#ifndef DELTA1| \ldots\ \lstinline|@#endif|, que solo lo asigna si no vino
+uno de afuera. Con $\delta=1$ correcto deberías ver $r_{ss}=1.0163$, $k_{ss}=0.0375$,
+$c_{ss}=0.0770$ y valores propios no triviales $1-\alpha=0.333$ y $1/[\beta(1-\alpha)]
+\approx3.05$, con la fila de $h$ en la regla de decisión prácticamente nula.
+\end{errorbox}
+
 \subsection{Qué cambia en las ecuaciones}
 
 La depreciación entra en dos lugares. En la ley de movimiento \eqref{eq:ll_lom},

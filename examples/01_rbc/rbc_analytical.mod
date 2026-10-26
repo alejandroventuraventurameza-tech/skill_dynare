@@ -25,7 +25,12 @@
 // ---- Interruptor de depreciación (para el ejercicio δ=1) -------------------
 //   DELTA1 = 0  → δ = 0.025  (caso base)
 //   DELTA1 = 1  → δ = 1      (depreciación total; θ se recalibra solo)
+//   Desde MATLAB:   dynare rbc_analytical -DDELTA1=1
+//   @#ifndef asigna el valor por defecto SOLO si no vino uno desde la línea de
+//   comandos. Un @#define incondicional aquí pisaría el -DDELTA1=1.
+@#ifndef DELTA1
 @#define DELTA1 = 0
+@#endif
 
 // ---- Variables endógenas (8) ----------------------------------------------
 var
