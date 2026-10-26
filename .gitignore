@@ -45,6 +45,10 @@ examples/**/Output/
 examples/**/model/
 examples/**/graphs/
 examples/**/checksum
+crash_course/**/Output/
+crash_course/**/model/
+crash_course/**/graphs/
+crash_course/**/checksum
 
 # Estado local de herramientas de IA (no versionar)
 .claude/
