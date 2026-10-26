@@ -1851,15 +1851,16 @@ contemporáneamente a partir de las demás.
 estados $k(-1)$, $a(-1)$ y del choque $eps$ (en niveles, como desviación del EE):
 
 \begin{table}[H]
-\centering\small
-\begin{tabular}{lrrrrrr}
+\centering\footnotesize
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{lrrrrrrrr}
 \toprule
- & $y$ & $c$ & $i$ & $k$ & $h$ & $a$\\
+ & $y$ & $c$ & $i$ & $k$ & $h$ & $r$ & $w$ & $a$\\
 \midrule
-Constante & $0.5673$ & $0.4528$ & $0.1145$ & $4.5785$ & $0.2000$ & $1.0000$\\
-$k(-1)$   & $0.0134$ & $0.0524$ & $-0.0390$ & $\mathbf{0.9360}$ & $-0.0147$ & $0$\\
-$a(-1)$   & $0.8205$ & $0.2584$ & $0.5621$ & $0.5621$ & $0.1401$ & $\mathbf{0.9790}$\\
-$eps$     & $0.8381$ & $0.2639$ & $0.5741$ & $0.5741$ & $0.1431$ & $1.0000$\\
+Constante & $0.5673$ & $0.4528$ & $0.1145$ & $4.5785$ & $0.2000$ & $0.0413$ & $1.8919$ & $1.0000$\\
+$k(-1)$   & $0.0134$ & $0.0524$ & $-0.0390$ & $\mathbf{0.9360}$ & $-0.0147$ & $-0.0080$ & $0.1840$ & $0$\\
+$a(-1)$   & $0.8205$ & $0.2584$ & $0.5621$ & $0.5621$ & $0.1401$ & $0.0597$ & $1.4108$ & $\mathbf{0.9790}$\\
+$eps$     & $0.0060$ & $0.0019$ & $0.0041$ & $0.0041$ & $0.0010$ & $0.0004$ & $0.0104$ & $0.0072$\\
 \bottomrule
 \end{tabular}
 \caption{\texttt{POLICY AND TRANSITION FUNCTIONS} (reorganizado). En negrita, los
@@ -1868,7 +1869,7 @@ valores propios que la regla de decisión lleva en su diagonal
 \label{tab:polout}
 \end{table}
 
-\noindent Tres lecturas, de la más simple a la más reveladora:
+\noindent Cuatro lecturas, de la más simple a la más reveladora:
 \begin{enumerate}[label=(\roman*),nosep,leftmargin=2.2em]
 \item La fila \code{Constant} es el estado estacionario.
 \item \textbf{La diagonal lleva los valores propios.} El coeficiente de $k$ ante
@@ -1885,6 +1886,14 @@ valores propios que la regla de decisión lleva en su diagonal
   \]
   \emph{exactamente} la entrada de $\mathbf{H}$ que obtuvimos en la
   \S\ref{sec:bk}. La máquina y la pizarra coinciden una vez más.
+\item \textbf{La fila \code{eps} es la fila $a(-1)$ reescalada.} Como $\ln a_t=
+  \phi\ln a_{t-1}+\sigma_\varepsilon\,eps_t$, un choque de una desviación estándar
+  ($eps=1$) mueve a $a$ exactamente lo que movería un aumento de $\sigma_\varepsilon/\phi$
+  en $a(-1)$. Por eso cada entrada de la fila \code{eps} es la de $a(-1)$
+  multiplicada por $\sigma_\varepsilon/\phi$; para el producto,
+  $0.820454\times 0.0072/0.979=0.006034$. Y en la columna de $a$ aparece
+  $0.0072=\sigma_\varepsilon$: el impacto del choque sobre la propia PTF. Esta fila es
+  el \emph{primer punto} de cada IRF.
 \end{enumerate}
 
 \section{Las funciones de impulso-respuesta}
