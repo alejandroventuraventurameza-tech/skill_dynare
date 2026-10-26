@@ -60,7 +60,10 @@ T       = options_.irf;           % horizonte de la IRF (irf = 40)
 t       = 1:T;                    % en Dynare, el periodo 1 es el impacto
 
 % ---- 4. Figura ------------------------------------------------------------------
-fig = figure('Color', 'w', 'Units', 'centimeters', 'Position', [2 2 24 11.5]);
+% Tamano = ancho de texto del handout (15.5 cm), para insertarlo sin escalar:
+% asi los 8 pt de los ejes se imprimen como 8 pt.
+ancho = 15.5;  alto = 8.6;     % cm
+fig = figure('Color', 'w', 'Units', 'centimeters', 'Position', [2 2 ancho alto]);
 tl  = tiledlayout(fig, 2, 4, 'TileSpacing', 'compact', 'Padding', 'compact');
 
 for j = 1:numel(vars)
@@ -78,13 +81,14 @@ for j = 1:numel(vars)
 
     ax = nexttile(tl);
     plot(ax, [1 T], [0 0], ':', 'Color', gris, 'LineWidth', 0.8); hold(ax, 'on');
-    plot(ax, t, irf, '-', 'Color', azul, 'LineWidth', 1.6);
+    plot(ax, t, irf, '-', 'Color', azul, 'LineWidth', 1.3);
     hold(ax, 'off');
 
-    title(ax, titulos{j}, 'FontWeight', 'normal', 'FontSize', 10, 'Color', tinta);
-    set(ax, 'FontName', fuente, 'FontSize', 8.5, 'Box', 'off', 'TickDir', 'out', ...
+    title(ax, titulos{j}, 'FontWeight', 'normal', 'FontSize', 9, 'Color', tinta);
+    set(ax, 'FontName', fuente, 'FontSize', 7.5, 'Box', 'off', 'TickDir', 'out', ...
             'XColor', tinta, 'YColor', tinta, 'XGrid', 'on', 'YGrid', 'on', ...
-            'GridAlpha', 0.12, 'XLim', [1 T], 'XTick', [1 10 20 30 40]);
+            'GridAlpha', 0.12, 'XLim', [1 T], 'XTick', [1 10 20 30 40], ...
+            'TickLength', [0.02 0.02]);
     ax.YAxis.Exponent = 0;                      % sin factores x10^-3
     ax.Title.FontName = fuente;
 
@@ -98,7 +102,7 @@ end
 titulo = sprintf(['Respuesta a un choque de productividad de una desviaci' o_ac ...
                   'n est' char(225) 'ndar  (\\sigma_\\epsilon = %.2f%%,  \\delta = %g)'], ...
                   100*sigma, delta);
-title(tl, titulo, 'FontName', fuente, 'FontSize', 11.5, 'Color', tinta);
+title(tl, titulo, 'FontName', fuente, 'FontSize', 9.5, 'Color', tinta);
 
 % ---- 5. Exportar --------------------------------------------------------------
 if abs(delta - 1) < 1e-12, archivo = 'irf_matlab_delta1'; else, archivo = 'irf_matlab_base'; end
@@ -107,8 +111,8 @@ destino = fullfile('assets', [archivo '.pdf']);
 if exist('exportgraphics', 'file')
     exportgraphics(fig, destino, 'ContentType', 'vector');
 else
-    set(fig, 'PaperUnits', 'centimeters', 'PaperSize', [24 11.5], ...
-             'PaperPosition', [0 0 24 11.5]);
+    set(fig, 'PaperUnits', 'centimeters', 'PaperSize', [ancho alto], ...
+             'PaperPosition', [0 0 ancho alto]);
     print(fig, destino, '-dpdf');
 end
 fprintf('Figura guardada en %s\n', destino);
