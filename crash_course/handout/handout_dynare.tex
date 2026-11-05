@@ -59,7 +59,7 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{tikz}
-\usetikzlibrary{positioning, calc, arrows.meta, fit, backgrounds}
+\usetikzlibrary{positioning, calc, arrows.meta, fit, backgrounds, babel}  % babel: los atajos del español (<, >, ") no rompen TikZ
 \usepackage[labelfont=bf, font=small]{caption}
 
 % --- CÓDIGO (listings; para los capítulos de código, ya preparado) ---
@@ -1463,17 +1463,20 @@ Blanchard--Kahn,
 donde, escribiendo $g\equiv r_{ss}/(1-\alpha)=\delta/s_i$ y recordando
 $\beta r_{ss}=1-\beta(1-\delta)$,
 \begin{equation}
+\begin{gathered}
 \mathbf{A}=\begin{pmatrix}
 1 & 0 & 0\\[2pt]
 0 & 1 & 0\\[2pt]
 -\beta r_{ss}(n_k-1) & -\beta r_{ss}\,n_y & 1-\beta r_{ss}\,n_c
-\end{pmatrix},\quad
+\end{pmatrix},\\[4pt]
 \mathbf{B}=\begin{pmatrix}
 1-\delta+g\,n_k & g\,n_y & g\,(n_c-s_c)\\[2pt]
 0 & \phi & 0\\[2pt]
 0 & 0 & 1
 \end{pmatrix},\quad
-\mathbf{C}=\begin{pmatrix}0\\1\\0\end{pmatrix}. \label{eq:ABCmat}
+\mathbf{C}=\begin{pmatrix}0\\1\\0\end{pmatrix}.
+\end{gathered}
+\label{eq:ABCmat}
 \end{equation}
 La primera fila es la ley de movimiento del capital (tras sustituir
 $\hat{\imath}_t$); la segunda, el AR(1) de la productividad; la tercera, la Euler
@@ -2146,7 +2149,7 @@ Cuadro~\ref{tab:stochsimul}. Qué imprime cada comando y cómo leerlo es el tema
 
 \begin{table}[H]
 \centering\small
-\begin{tabular}{lp{9.4cm}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{4.3cm}p{10.2cm}}
 \toprule
 \textbf{Opción} & \textbf{Efecto (valor por defecto)}\\
 \midrule
@@ -2160,8 +2163,8 @@ Cuadro~\ref{tab:stochsimul}. Qué imprime cada comando y cómo leerlo es el tema
 \code{ar = N} & Órdenes de autocorrelación que se reportan (5).\\
 \code{irf\_shocks = (e\_1, ...)} & Choques para los que se calculan IRF (todos).\\
 \code{nograph} & No dibuja gráficos.\\
-\code{graph\_format = (pdf, eps, fig, none)} & Formato en que se exportan los gráficos
-  (\code{eps}).\\
+\code{graph\_format = pdf} & Formato en que se exportan los gráficos: \code{pdf},
+  \code{eps}, \code{fig} o \code{none} (\code{eps}).\\
 \code{nomoments} & No calcula ni imprime los momentos.\\
 \bottomrule
 \end{tabular}
@@ -3696,11 +3699,13 @@ herramientas que no son decorativas:
   la \emph{fuente} de cada valor calibrado (\code{// beta: King-Rebelo 1999}).
 \end{itemize}
 
-\paragraph{4. Organización del archivo.} Respeta el orden canónico ---\code{var}
-$\to$ \code{varexo} $\to$ \code{parameters} $\to$ calibración $\to$ \code{model}
-$\to$ \lstinline@steady_state_model@ $\to$ \code{shocks} $\to$ \code{steady},
-\code{resid}, \code{check} $\to$ \lstinline@stoch_simul@--- porque es el orden en
-que Dynare \emph{necesita} la información. Y \textbf{un modelo por archivo}: no
+\paragraph{4. Organización del archivo.} Respeta el orden canónico,
+\begin{center}\small
+\code{var} $\to$ \code{varexo} $\to$ \code{parameters} $\to$ calibración $\to$
+\code{model} $\to$ \lstinline@steady_state_model@ $\to$ \code{shocks} $\to$
+\code{steady}, \code{resid}, \code{check} $\to$ \lstinline@stoch_simul@,
+\end{center}
+porque es el orden en que Dynare \emph{necesita} la información. Y \textbf{un modelo por archivo}: no
 acumules variantes (distintos $\delta$, distintos $\rho$) en un mismo \code{.mod} a
 golpe de comentar y descomentar líneas; usa archivos separados o un \emph{script}
 que los invoque. Declarar los valores de estado estacionario como parámetros y
