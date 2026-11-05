@@ -1791,7 +1791,8 @@ end;
 \end{enumerate}
 Si el modelo ya está escrito en forma lineal (por ejemplo, el sistema log-lineal de la
 \S\ref{sec:loglin}), se declara con \lstinline@model(linear);@ y Dynare no lo vuelve a
-linealizar. Volveremos sobre esto al comparar las formas de escribir un mismo modelo.
+linealizar. Volveremos sobre esto al comparar las cuatro formas de escribir un mismo
+modelo (\S\ref{sec:cuatroformas}).
 
 \paragraph{La convención de timing.} El punto que más confunde al principiante
 es el \emph{timing}. Dynare fecha cada variable por \emph{cuándo se decide}, no
@@ -2501,7 +2502,8 @@ cadena:
   \S\ref{sec:policy}--- los efectos sustitución e ingreso \emph{no} se cancelan,
   de modo que las \textbf{horas suben} en el impacto. La función de política lo
   cuantifica: $\partial\hat{h}_t/\partial\varepsilon_t>0$ (en la salida de
-  Dynare, el coeficiente de $h$ ante $eps$ es $0.143$).
+  Dynare, el coeficiente de $h$ ante $eps$ es $0.0010$, es decir,
+  $0.0010/h_{ss}\approx0.5\%$ de las horas de estado estacionario).
 \item \textbf{Inversión}: del vaciado de mercado \eqref{eq:ll_clear}, la
   inversión es el residuo ---y es la que más salta, porque el hogar aprovecha el
   retorno extraordinario para acumular capital.
@@ -2531,6 +2533,358 @@ hace pico hacia $t\approx25$; y las \emph{horas}, tras subir en el impacto, cruz
 a terreno negativo cuando el capital ya es alto, el retorno ha caído y domina el
 efecto riqueza. En el límite todas regresan a su estado estacionario, porque las
 dos raíces son menores que uno.
+
+\section{Cuatro maneras de escribir el mismo modelo}
+\label{sec:cuatroformas}
+
+Hasta aquí escribimos el modelo de una sola manera: con las ecuaciones no lineales
+del equilibrio y las variables en niveles, y dejamos que Dynare lo linealizara. No es
+la única. Como destacan Galindo, Montecinos y Ortiz (2024, \S2.3.11), al escribir un
+\code{.mod} se toman dos decisiones independientes:
+\begin{enumerate}[label=(\roman*),nosep,leftmargin=2.2em]
+\item \textbf{¿Quién linealiza?} Se puede escribir el sistema \emph{no lineal} y
+  dejar que Dynare lo aproxime, o escribir el sistema \emph{lineal} obtenido a mano
+  (\S\ref{sec:loglin}), declarado con \mbox{\lstinline@model(linear)@} para que Dynare
+  lo use tal cual.
+\item \textbf{¿En qué unidades?} Las variables pueden entrar en \emph{niveles}
+  ($x_t$) o en \emph{logaritmos} ($\ln x_t$).
+\end{enumerate}
+Las dos decisiones se combinan en cuatro archivos \code{.mod} que describen
+\emph{la misma economía} (Figura~\ref{fig:cuatroformas}). Lo único que cambia entre
+ellos es la unidad en que se miden las variables y, por lo tanto, la unidad en que
+Dynare reporta la solución. Los cuatro acompañan a este handout en la carpeta
+\code{cuatro\_formas/}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  fm/.style={draw=darkblue, thick, rounded corners=3pt, fill=thmblue, text width=5.75cm,
+    align=left, inner sep=5pt, font=\scriptsize, minimum height=2.45cm},
+  hd/.style={font=\bfseries\small, text=upblue, align=center},
+  rl/.style={font=\bfseries\small, text=upblue, align=center, rotate=90},
+  ar/.style={-{Stealth[length=2.2mm]}, thick, errframe},
+  lb/.style={font=\scriptsize\itshape, text=errframe, align=center, fill=white, inner sep=1.5pt}
+]
+\node[fm] (f1) at (0,0) {%
+  \textbf{Forma 1} \hfill \cd{rbc_nolineal_niv.mod}\\[2pt]
+  Se escribe:\\[1pt] \hspace*{0.6em}$y_t=a_t k_{t-1}^{1-\alpha}h_t^{\alpha}$\\
+  Variable: $x_t$\quad EE: $x_{ss}$\\
+  Solución e IRF en: $x_t-x_{ss}$ (unidades de $x$)};
+\node[fm] (f3) at (7.75,0) {%
+  \textbf{Forma 3} \hfill \cd{rbc_lineal_niv.mod}\\[2pt]
+  Se escribe:\\[1pt] \hspace*{0.6em}$\tilde{y}_t=y_{ss}\tilde{a}_t+(1-\alpha)\tfrac{y_{ss}}{k_{ss}}\tilde{k}_{t-1}+\alpha\tfrac{y_{ss}}{h_{ss}}\tilde{h}_t$\\
+  Variable: $\tilde{x}_t$\quad EE: $0$\\
+  Solución e IRF en: $\tilde{x}_t$ (unidades de $x$)};
+\node[fm] (f2) at (0,-3.6) {%
+  \textbf{Forma 2} \hfill \cd{rbc_nolineal_log.mod}\\[2pt]
+  Se escribe:\\[1pt] \hspace*{0.6em}$e^{\ell y_t}=e^{\ell a_t}\big(e^{\ell k_{t-1}}\big)^{1-\alpha}\big(e^{\ell h_t}\big)^{\alpha}$\\
+  Variable: $\ell x_t\equiv\ln x_t$\quad EE: $\ln x_{ss}$\\
+  Solución e IRF en: $\ln x_t-\ln x_{ss}$ (proporción)};
+\node[fm] (f4) at (7.75,-3.6) {%
+  \textbf{Forma 4} \hfill \cd{rbc_lineal_log.mod}\\[2pt]
+  Se escribe:\\[1pt] \hspace*{0.6em}$\hat{y}_t=\hat{a}_t+(1-\alpha)\hat{k}_{t-1}+\alpha\hat{h}_t$\\
+  Variable: $\hat{x}_t$\quad EE: $0$\\
+  Solución e IRF en: $\hat{x}_t$ (proporción)};
+\node[hd, above=3pt of f1] {No lineal\\[-1pt]{\normalfont\scriptsize(Dynare linealiza: \lstinline@model;@)}};
+\node[hd, above=3pt of f3] {Lineal\\[-1pt]{\normalfont\scriptsize(tú linealizas: \lstinline@model(linear);@)}};
+\node[rl, anchor=south] at ($(f1.west)+(-0.1,0)$) {Niveles};
+\node[rl, anchor=south] at ($(f2.west)+(-0.1,0)$) {Logaritmos};
+\draw[ar] (f1.east) -- node[lb, above=1pt] {Taylor\\1.\textsuperscript{er} orden} (f3.west);
+\draw[ar] (f2.east) -- node[lb, above=1pt] {Taylor\\1.\textsuperscript{er} orden} (f4.west);
+\draw[ar, <->] (f1.south) -- node[lb, right=2pt] {$x_t=e^{\ell x_t}$\\(exacto)} (f2.north);
+\draw[ar, <->] (f3.south) -- node[lb, right=2pt] {$\tilde{x}_t=x_{ss}\hat{x}_t$\\(a 1.\textsuperscript{er} orden)} (f4.north);
+\end{tikzpicture}
+\caption{Las cuatro formas de escribir el modelo RBC en Dynare, ilustradas con la
+función de producción. Las flechas horizontales son la linealización de la
+\S\ref{sec:loglin}; las verticales, el cambio de unidades (inspirada en Galindo,
+Montecinos y Ortiz, Tabla~2.11).}
+\label{fig:cuatroformas}
+\end{figure}
+
+\noindent El Cuadro~\ref{tab:cuatroformas} resume qué declara cada archivo, cuál es
+su estado estacionario y cómo llevar su salida a la unidad común de este handout:
+desviación porcentual respecto al estado estacionario.
+
+\begin{table}[H]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{clcccc}
+\toprule
+\textbf{Forma} & \textbf{Archivo} & \textbf{Variable} & \textbf{EE} & \textbf{IRF de Dynare} & \textbf{En \% del EE}\\
+\midrule
+1 & \code{rbc\_nolineal\_niv} & $x_t$ \ (\code{c})        & $x_{ss}$     & $x_t-x_{ss}$ & $100\cdot\mathrm{IRF}/x_{ss}$\\
+2 & \code{rbc\_nolineal\_log} & $\ln x_t$ \ (\code{lc})   & $\ln x_{ss}$ & $\ln x_t-\ln x_{ss}$ & $100\cdot\mathrm{IRF}$\\
+3 & \code{rbc\_lineal\_niv}   & $\tilde{x}_t$ \ (\code{c\_d}) & $0$      & $\tilde{x}_t$ & $100\cdot\mathrm{IRF}/x_{ss}$\\
+4 & \code{rbc\_lineal\_log}   & $\hat{x}_t$ \ (\code{c\_h})   & $0$      & $\hat{x}_t$   & $100\cdot\mathrm{IRF}$\\
+\bottomrule
+\end{tabular}
+\caption{Las cuatro formas, con el consumo como ejemplo de nombre en el código
+(sufijo \code{\_d} por \emph{desviación} en niveles, \code{\_h} por \emph{hat}).
+Las formas en niveles reportan unidades de la variable; las formas en logaritmos,
+proporciones.}
+\label{tab:cuatroformas}
+\end{table}
+
+\subsection{Una calibración, cuatro modelos}
+
+Los cuatro archivos comparten parámetros y estado estacionario. Si cada uno tuviera
+su propia calibración, un error de tipeo en uno de ellos aparecería como una
+``diferencia entre formas'' que no lo es. Por eso la calibración vive en un único
+archivo, \code{calibracion.inc}, que cada \code{.mod} incorpora con el
+macroprocesador:
+
+\begin{sintaxis}{incluir un archivo}
+@#include "nombre_del_archivo.inc"
+\end{sintaxis}
+
+\noindent Antes de leer el modelo, el macroprocesador reemplaza esa línea por el
+contenido íntegro del archivo, como si lo hubiéramos copiado a mano. Nuestro
+\code{calibracion.inc} contiene el interruptor \code{DELTA1}
+(\S\ref{sec:experimento}), la declaración \code{parameters}, los valores de King y
+Rebelo (1999) y el estado estacionario cerrado de la \S\ref{sec:ss}, que las formas
+1 y 2 usan en su \lstinline@steady_state_model@ y las formas 3 y 4 como
+\emph{coeficientes} de sus ecuaciones. Cada \code{.mod} queda así reducido a lo que
+lo distingue: \code{var}, \code{model} y el estado estacionario en sus unidades.
+
+\subsection{La misma ecuación, cuatro veces}
+
+El Cuadro~\ref{tab:unaecuacion} muestra dos ecuaciones del sistema en las cuatro
+formas: la función de producción, estática, y la ecuación de Euler, la única con
+expectativas. Conviene leerlo de arriba abajo: cada fila es la misma ecuación
+económica, con otra incógnita.
+
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.2}
+\newcommand{\cl}[1]{\mbox{\cd{#1}}}
+\begin{tabular}{cl}
+\toprule
+\textbf{Forma} & \textbf{Función de producción}\\
+\midrule
+1 & \cl{y = a*k(-1)^(1-alpha)*h^alpha;}\\
+2 & \cl{exp(ly) = exp(la)*exp(lk(-1))^(1-alpha)*exp(lh)^alpha;}\\
+3 & \cl{y_d = y_ss*a_d + (1-alpha)*(y_ss/k_ss)*k_d(-1) + alpha*(y_ss/hss)*h_d;}\\
+4 & \cl{y_h = a_h + (1-alpha)*k_h(-1) + alpha*h_h;}\\
+\midrule
+\textbf{Forma} & \textbf{Ecuación de Euler}\\
+\midrule
+1 & \cl{1/c = beta*(1/c(+1))*(r(+1) + 1 - delta);}\\
+2 & \cl{1/exp(lc) = beta*(1/exp(lc(+1)))*(exp(lr(+1)) + 1 - delta);}\\
+3 & \cl{c_d = c_d(+1) - beta*c_ss*r_d(+1);}\\
+4 & \cl{c_h(+1) - c_h = beta*r_ss*r_h(+1);}\\
+\bottomrule
+\end{tabular}
+\caption{Dos ecuaciones del modelo en las cuatro formas. La forma 3 transcribe
+\eqref{eq:lin_euler_lev}; la forma 4, \eqref{eq:ll_prod} y \eqref{eq:ll_euler}.}
+\label{tab:unaecuacion}
+\end{table}
+
+\paragraph{Forma 2: el cambio de variable $x_t=e^{\ell x_t}$.} Se declara una variable
+\code{lx} por cada \code{x} y, en cada ecuación, se reemplaza \code{x} por
+\lstinline@exp(lx)@. La sustitución es \emph{exacta}: no aproxima nada, solo
+renombra. El modelo sigue siendo el mismo modelo no lineal, escrito ahora en la
+incógnita $\ell x_t=\ln x_t$. Dynare lo linealiza respecto a $\ell x_t$, de modo que su
+solución sale en desviaciones logarítmicas y sus coeficientes son
+\emph{elasticidades}, como las de la \S\ref{sec:policy}. Dos detalles. La PTF ya
+estaba en logaritmos, así que su ecuación no lleva \lstinline@exp()@. Y el estado
+estacionario es el logaritmo del de niveles; en particular, el de la PTF es $0$, no $1$:
+\begin{lstlisting}[numbers=none]
+la = phi*la(-1) + sigma_eps*eps;        // la PTF, igual que antes
+...
+steady_state_model;
+  la = 0;  lc = log(c_ss);  lh = log(hss);   // etc.
+end;
+\end{lstlisting}
+
+\paragraph{Forma 3: la linealización en niveles.} Es el sistema de la
+\S\ref{sec:linlevels}. Sus coeficientes contienen valores de estado estacionario
+---$c_{ss}$, $y_{ss}/k_{ss}$, $y_{ss}/h_{ss}$---, que deben estar calculados
+\emph{antes} de resolver: es otra razón para tenerlos como parámetros en
+\code{calibracion.inc}. La PTF entra como $\tilde{a}_t=\phi\,\tilde{a}_{t-1}+
+\sigma_\varepsilon\,\varepsilon_t$, lo que es correcto solo porque $a_{ss}=1$
+(entonces $\tilde{a}_t=a_{ss}\hat{a}_t=\hat{a}_t$).
+
+\paragraph{Forma 4: la página hecha código.} Es, ecuación por ecuación, el sistema
+log-lineal \eqref{eq:ll_prod}--\eqref{eq:ll_tfp}. La única traducción que exige es la
+del \emph{timing} (\S\ref{sec:bloquemodel}): la ley de movimiento
+$\hat{k}_{t+1}=(1-\delta)\hat{k}_t+\delta\hat{\imath}_t$ del papel se escribe con la
+convención de fin de período de Dynare,
+\begin{lstlisting}[numbers=none]
+k_h = (1 - delta)*k_h(-1) + delta*i_h;   // k_h = capital elegido en t
+\end{lstlisting}
+y las participaciones $s_c$ y $s_i$ se declaran como dos parámetros más, calculados a
+partir del estado estacionario.
+
+\subsection{Por qué las cuatro dan lo mismo}
+
+Que las cuatro formas coincidan no es una casualidad numérica: es un teorema.
+
+\begin{proposition}[Equivalencia a primer orden]
+\label{prop:cuatroformas}
+Sean $s_t=(k_t,a_t)'$ los estados y $x_t$ cualquier variable endógena, y sea la
+solución de primer orden de la forma~1
+\[
+\tilde{x}_t=g_x'\,\tilde{s}_{t-1}+g_\varepsilon\,\varepsilon_t,\qquad
+\tilde{s}_t=G\,\tilde{s}_{t-1}+h\,\varepsilon_t .
+\]
+Con $D\equiv\mathrm{diag}(k_{ss},a_{ss})$, la solución de primer orden de la forma~2 es
+\[
+\hat{x}_t=\frac{1}{x_{ss}}\,g_x'D\,\hat{s}_{t-1}+\frac{g_\varepsilon}{x_{ss}}\,\varepsilon_t,
+\qquad
+\hat{s}_t=D^{-1}GD\,\hat{s}_{t-1}+D^{-1}h\,\varepsilon_t .
+\]
+En consecuencia, para todo horizonte $j$,
+\begin{equation}
+\mathrm{IRF}^{(2)}_x(j)=\frac{\mathrm{IRF}^{(1)}_x(j)}{x_{ss}},
+\label{eq:irf12}
+\end{equation}
+y las matrices de transición $G$ y $D^{-1}GD$ tienen los mismos valores propios. Las
+formas~3 y~4, si la linealización a mano es correcta, reproducen exactamente las
+soluciones de las formas~1 y~2, respectivamente.
+\end{proposition}
+
+\noindent\textit{Demostración.} Sea $x_t=g(s_{t-1},\varepsilon_t)$ la función de
+política exacta. En la forma~2 la incógnita es $\ln x_t$, y la misma economía
+impone $\ln x_t=\ln g\big(e^{\ell s_{t-1}},\varepsilon_t\big)$, donde
+$e^{\ell s}$ se aplica componente a componente. Dynare aproxima esa composición por
+Taylor de primer orden en el estado estacionario. Por la regla de la cadena,
+\[
+\frac{\partial \ln x_t}{\partial \ln s_{j,t-1}}\bigg|_{ss}
+=\frac{s_{j,ss}}{x_{ss}}\,\frac{\partial g}{\partial s_{j}}\bigg|_{ss},
+\qquad
+\frac{\partial \ln x_t}{\partial \varepsilon_t}\bigg|_{ss}
+=\frac{1}{x_{ss}}\,\frac{\partial g}{\partial \varepsilon}\bigg|_{ss},
+\]
+que en forma matricial es la primera expresión del enunciado; aplicada a los estados
+($x=k,a$) da la segunda. Sea $\bar{\varepsilon}$ el tamaño del choque (una
+desviación estándar). En el impacto ($j=1$) las IRF son $g_\varepsilon\bar{\varepsilon}$
+y $g_\varepsilon\bar{\varepsilon}/x_{ss}$; para $j\ge2$, la de la forma~2 es
+\[
+\mathrm{IRF}^{(2)}_x(j)=\frac{1}{x_{ss}}\,g_x'D\,\big(D^{-1}GD\big)^{j-2}D^{-1}h\,\bar{\varepsilon}
+=\frac{1}{x_{ss}}\,g_x'G^{\,j-2}h\,\bar{\varepsilon}=\frac{\mathrm{IRF}^{(1)}_x(j)}{x_{ss}},
+\]
+porque las $D$ interiores se cancelan. Esto prueba \eqref{eq:irf12}. Como $D^{-1}GD$ es semejante a $G$, comparten
+el polinomio característico y, por tanto, los valores propios. Finalmente, la forma~3
+es, salvo por reescalar cada ecuación, el sistema lineal que Dynare obtiene al
+derivar la forma~1; ambas conducen, por tanto, a la misma solución.
+Lo mismo vale para las formas~4 y~2. \hfill$\square$
+
+\medskip
+\noindent La proposición tiene tres lecturas prácticas:
+\begin{enumerate}[label=(\roman*),nosep,leftmargin=2.2em]
+\item \textbf{Las IRF coinciden tras dividir por $x_{ss}$.} Es exactamente la
+  conversión de la última columna del Cuadro~\ref{tab:cuatroformas}.
+\item \textbf{Los coeficientes de las formas en logaritmos son elasticidades.} Se
+  obtienen de los de niveles multiplicando por $s_{j,ss}/x_{ss}$: es la regla que
+  usamos en la lectura (iii) del Cuadro~\ref{tab:polout}.
+\item \textbf{\code{check} imprime los mismos valores propios en las cuatro formas}
+  ($0.936$, $0.979$, $1.086$ e $\infty$): la estabilidad no depende de las unidades.
+\end{enumerate}
+
+\noindent El Cuadro~\ref{tab:cuatropol} verifica las dos primeras lecturas con la
+regla de decisión del consumo, el análogo de la Tabla~2.28 de Galindo, Montecinos y
+Ortiz.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{clrrrr}
+\toprule
+\textbf{Forma} & \textbf{Variable} & \textbf{Constante} & \textbf{Ante $k(-1)$} & \textbf{Ante $a(-1)$} & \textbf{Ante $eps$}\\
+\midrule
+1 & \code{c}   & $0.4528$  & $0.0524$ & $0.2584$ & $0.0019$\\
+2 & \code{lc}  & $-0.7922$ & $0.5296$ & $0.5706$ & $0.0042$\\
+3 & \code{c\_d} & $0$      & $0.0524$ & $0.2584$ & $0.0019$\\
+4 & \code{c\_h} & $0$      & $0.5296$ & $0.5706$ & $0.0042$\\
+\bottomrule
+\end{tabular}
+\caption{Regla de decisión del consumo en las cuatro formas. En las formas 2 y 4, los
+estados son \code{lk(-1)}, \code{la(-1)} y \code{k\_h(-1)}, \code{a\_h(-1)}. La fila 2
+se obtiene de la 1 multiplicando por $k_{ss}/c_{ss}=10.11$, $a_{ss}/c_{ss}=2.208$ y
+$1/c_{ss}=2.208$; la constante es $\ln c_{ss}=\ln 0.4528$.}
+\label{tab:cuatropol}
+\end{table}
+
+\noindent La elasticidad del consumo al capital, $0.530$, es la entrada de
+$\mathbf{H}$ que obtuvimos a mano en la \S\ref{sec:bk}. Las formas 2 y 4 la entregan
+directamente; las formas 1 y 3 la esconden detrás de las unidades.
+
+\subsection{La prueba: correr las cuatro}
+
+El script \code{comparar\_formas.m}, en la misma carpeta, corre los cuatro archivos,
+lleva sus IRF a porcentaje del estado estacionario con la regla del
+Cuadro~\ref{tab:cuatroformas} y las imprime lado a lado:
+
+\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
+>> cd <carpeta del handout>\cuatro_formas
+>> comparar_formas                       % caso base
+>> cf_flag = '-DDELTA1=1'; comparar_formas   % depreciacion total
+\end{lstlisting}
+
+\noindent El script llama a Dynare con las opciones \code{noclearall} (para que no
+borre las variables del propio script entre corrida y corrida, que por eso empiezan
+con \code{cf\_}) y \code{nograph}. El Cuadro~\ref{tab:cuatroirf} reporta el resultado.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{6}{c}{\textbf{Trimestre}}\\
+\cmidrule(lr){2-7}
+\textbf{Variable} & $1$ & $2$ & $5$ & $10$ & $20$ & $40$\\
+\midrule
+Consumo, $c$ & $0.41963$ & $0.45864$ & $0.55347$ & $0.65216$ & $0.70691$ & $0.58512$\\
+Horas, $h$   & $0.51521$ & $0.47394$ & $0.36629$ & $0.23108$ & $0.07261$ & $-0.03066$\\
+\bottomrule
+\end{tabular}
+\caption{IRF del consumo y de las horas (en \% del estado estacionario) a un choque
+de productividad de una desviación estándar, $\delta=0.025$, según
+\code{comparar\_formas.m} con Dynare~7.1. Las cuatro formas entregan estas mismas
+cifras: en los 40 trimestres, la máxima diferencia frente a la forma~1 es de
+$1.7\times10^{-14}$ puntos porcentuales, del orden de la precisión de máquina.}
+\label{tab:cuatroirf}
+\end{table}
+
+\begin{remark}
+¿Cuál conviene usar? A primer orden las cuatro son equivalentes
+(Proposición~\ref{prop:cuatroformas}) y la elección es de comodidad. Fuera de ese
+caso, no lo son:
+\begin{itemize}[nosep,leftmargin=1.4em]
+\item \emph{No lineal antes que lineal.} Dynare deriva de forma simbólica y exacta;
+  la linealización a mano es una fuente más de errores. Además, solo el modelo no
+  lineal admite aproximaciones de orden superior (\lstinline@order = 2@ o \code{3})
+  y simulaciones deterministas: un modelo declarado con \lstinline@model(linear)@ ya
+  es su propia aproximación de primer orden, y no hay información de segundo orden
+  que recuperar.
+\item \emph{Logaritmos o niveles}, según la lectura que se busque. Los logaritmos
+  dan IRF en porcentaje y coeficientes que son elasticidades, pero exigen variables
+  estrictamente positivas: una variable que puede ser cero o negativa (las
+  exportaciones netas, la inflación) se deja en niveles, y nada impide mezclar ambas
+  en un mismo \code{.mod}. A segundo orden la elección deja de ser neutral, porque la
+  aproximación cuadrática de $x_t$ y la de $\ln x_t$ son funciones distintas.
+\end{itemize}
+\end{remark}
+
+\begin{tipbox}[las cuatro formas como prueba del álgebra]
+Si linealizaste un modelo a mano, escríbelo como forma~4 y compáralo con la forma~2:
+cualquier diferencia en las IRF delata un error en tus ecuaciones. Así verificamos el
+sistema \eqref{eq:ll_prod}--\eqref{eq:ll_tfp} de este handout.
+\end{tipbox}
+
+\begin{errorbox}[los tropiezos de cada forma]
+\begin{itemize}[leftmargin=1.2em, topsep=2pt, itemsep=2pt]
+\item \textbf{Forma 2}: olvidar un \lstinline@exp()@ en una sola aparición cambia el
+  modelo; \code{resid} lo detecta con un residuo distinto de cero. Y el estado
+  estacionario de la PTF es \lstinline@la = 0@, no \code{1}.
+\item \textbf{Forma 3}: leer la IRF como porcentaje. Un $0.03$ en \code{k\_d} son
+  $0.03$ unidades de capital, es decir, $0.03/k_{ss}\approx0.66\%$.
+\item \textbf{Forma 4}: copiar el timing del papel,
+  \lstinline@k_h(+1) = (1-delta)*k_h + delta*i_h@. En la convención de Dynare ese
+  adelanto convierte al capital en \emph{jumper}: ya no es el mismo modelo y el conteo de
+  Blanchard--Kahn deja de cuadrar (\S\ref{sec:debug}).
+\end{itemize}
+\end{errorbox}
+
+\noindent El Ejercicio~\ref{ej:cuatroformas} repite la comparación con $\delta=1$.
 
 \section{Momentos y hechos estilizados del ciclo}
 \label{sec:momentos}
@@ -3215,6 +3569,21 @@ condición de rango vuelve a verificarse.
 el conteo de variables de estado y de control al adelantar $k$? ¿Qué reporta
 \lstinline@model_diagnostics@? Conecta el diagnóstico con la derivación a mano de la
 condición de Blanchard--Kahn (\S\ref{sec:bk}, \S\ref{sec:debug}).
+\end{ejercicio}
+
+\begin{ejercicio}{Cuatro formas con $\delta=1$}
+\label{ej:cuatroformas}
+Las cuatro formas de la \S\ref{sec:cuatroformas} comparten la calibración a través de
+\code{calibracion.inc}, que contiene el interruptor \code{DELTA1}.
+
+\medskip\noindent\textbf{Tareas.} En la carpeta \code{cuatro\_formas/}, corre
+\lstinline@cf_flag = '-DDELTA1=1'; comparar_formas@.
+
+\medskip\noindent\textbf{Para el informe.} (a)~¿Siguen coincidiendo las cuatro formas?
+¿Es nula la IRF de las horas en todas? (b)~¿Por qué basta con definir \code{DELTA1} al
+llamar a Dynare para que cambien los cuatro modelos? (c)~Con la
+Proposición~\ref{prop:cuatroformas}, obtén la regla de decisión del consumo de la
+forma~1 a partir de la de la forma~2, sin correr Dynare, y compárala con la que imprime.
 \end{ejercicio}
 
 % ===================== APÉNDICE =====================
