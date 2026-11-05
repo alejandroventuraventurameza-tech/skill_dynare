@@ -59,7 +59,7 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{tikz}
-\usetikzlibrary{positioning, calc, arrows.meta}
+\usetikzlibrary{positioning, calc, arrows.meta, fit, backgrounds}
 \usepackage[labelfont=bf, font=small]{caption}
 
 % --- CÓDIGO (listings; para los capítulos de código, ya preparado) ---
@@ -165,6 +165,13 @@
   \begin{tcolorbox}[tipstyle, title={\tipicon~~Buena práctica%
     \ifx\relax#1\relax\else: #1\fi}]}%
 {\end{tcolorbox}}
+\tcbuselibrary{listings}
+\newtcblisting{sintaxis}[1]{listing only, breakable, colback=corolgray, colframe=corolframe,
+  colbacktitle=corolgray, coltitle=black, fonttitle=\bfseries\itshape\small,
+  title={Sintaxis: #1}, boxrule=0pt, toprule=0.8pt, bottomrule=0.8pt, arc=0pt,
+  titlerule=0.4pt, left=6pt, right=6pt, top=3pt, bottom=3pt,
+  listing options={style=dynare, numbers=none, frame=none, xleftmargin=0pt,
+    basicstyle=\ttfamily\small}}
 \newcounter{ejer}
 \newenvironment{ejercicio}[1]{%
   \refstepcounter{ejer}%
@@ -202,6 +209,7 @@
 
 % --- MACROS ---
 \newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\cd}[1]{\texttt{\detokenize{#1}}}  % código literal dentro de TikZ
 \newcommand{\Real}{\mathbb{R}}
 \newcommand{\E}{\mathbb{E}}
 
@@ -1569,15 +1577,221 @@ con el lápiz.
 
 La promesa de Dynare es escribir las ecuaciones casi como en el papel; la
 recompensa, confirmar con la máquina ---al dígito--- el estado estacionario, la
-condición de Blanchard--Kahn y las funciones de política que ya derivamos.
+condición de Blanchard--Kahn y las funciones de política que ya derivamos. El
+capítulo avanza en el orden en que se aprende una herramienta: primero \emph{qué es}
+Dynare y qué hace con nuestro archivo (\S\ref{sec:quedynare}); luego la
+\emph{gramática} de un \code{.mod}, bloque por bloque (\S\ref{sec:estructura}); y
+recién entonces el modelo, la corrida y la lectura de los resultados.
 
-\section{Anatomía de un archivo \code{.mod}}
+\section{¿Qué es Dynare?}
+\label{sec:quedynare}
 
-Un archivo \code{.mod} se organiza en bloques que aparecen siempre en el mismo
-orden: (1)~\emph{declaraciones} (\code{var}, \code{varexo}, \code{parameters});
-(2)~\emph{calibración}; (3)~el bloque \code{model}; (4)~el estado estacionario
-(\lstinline@steady_state_model@); (5)~los \code{shocks}; y (6)~los comandos de
-resolución y simulación.
+Dynare es un \emph{preprocesador} acompañado de una biblioteca de rutinas para MATLAB
+(u Octave) que resuelve, simula y estima modelos DSGE (Adjemian et al.). La palabra
+clave es \emph{preprocesador}: Dynare no ejecuta nuestro archivo; lo \emph{traduce}.
+El usuario describe el modelo en un archivo de texto con extensión \code{.mod}, en un
+lenguaje propio que se parece mucho a la notación matemática. Al escribir
+\lstinline@dynare rbc_analytical@ en MATLAB ocurren dos cosas en secuencia
+(Figura~\ref{fig:preproc}):
+\begin{enumerate}[leftmargin=1.6em, itemsep=2pt, topsep=2pt]
+\item \textbf{Preprocesamiento.} Un programa escrito en C++ lee el \code{.mod},
+  comprueba su sintaxis y el conteo de ecuaciones, calcula \emph{analíticamente} las
+  derivadas del modelo ---no por diferencias finitas: por eso la linealización de
+  Dynare es exacta--- y escribe un conjunto de archivos \code{.m} de MATLAB.
+\item \textbf{Ejecución.} MATLAB corre esos archivos. Los resultados quedan en tres
+  estructuras del espacio de trabajo: \lstinline@M_@ (la descripción del modelo),
+  \lstinline@options_@ (las opciones usadas) y \lstinline@oo_@ (los resultados).
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  >={Stealth[length=2.3mm]},
+  doc/.style={draw=darkblue, thick, fill=white, minimum width=1.9cm, minimum height=2.3cm,
+    align=center, font=\scriptsize},
+  fil/.style={draw=errframe!70, fill=errbg, rounded corners=1pt, font=\ttfamily\scriptsize,
+    text width=4.35cm, inner sep=2.5pt, align=center},
+  res/.style={draw=darkblue, fill=thmblue, rounded corners=2pt, font=\ttfamily\small,
+    minimum width=1.75cm, inner sep=3pt},
+  go/.style={->, very thick, darkblue}
+]
+% archivo .mod
+\node[doc] (mod) at (-0.9,0) {\rule{1.1cm}{0.4pt}\\[-1pt]\rule{1.1cm}{0.4pt}\\[-1pt]
+  \rule{0.8cm}{0.4pt}\\[2pt]\ttfamily rbc\_\\ \ttfamily analytical\\ \ttfamily .mod};
+% archivos generados
+\node[fil] (f1) at (5.05, 1.05) {+rbc\_analytical/driver.m};
+\node[fil] (f2) at (5.05, 0.35) {static\_resid.m, static\_g1.m};
+\node[fil] (f3) at (5.05,-0.35) {dynamic\_resid.m, dynamic\_g1.m};
+\node[fil] (f4) at (5.05,-1.05) {steadystate.m};
+% resultados
+\node[res] (M)  at (10.05, 0.85) {M\_};
+\node[res] (op) at (10.05, 0.0)  {options\_};
+\node[res] (oo) at (10.05,-0.85) {oo\_};
+% entorno MATLAB
+\begin{scope}[on background layer]
+\node[draw=darkblue, very thick, rounded corners=6pt, fill=thmblue!35,
+      fit=(f1)(f4)(M)(oo), inner xsep=10pt, inner ysep=12pt] (mat) {};
+\end{scope}
+\node[font=\bfseries\small, text=darkblue, anchor=south] at (mat.north) {Entorno MATLAB};
+% flechas
+\draw[go] (mod.east) -- node[above, font=\scriptsize, align=center]{preprocesador\\(C++)} (mod.east -| mat.west);
+\draw[go] ($(f2.east)!0.5!(f3.east)+(0.12,0)$) -- node[above, font=\scriptsize, align=center]{MATLAB\\ejecuta} ($(op.west)+(-0.12,0)$);
+% rotulos inferiores
+\node[font=\scriptsize\itshape, text=darkblue] at (-0.9,-1.75) {lo que escribimos};
+\node[font=\scriptsize\itshape, text=darkblue] at (5.05,-1.95) {lo que genera Dynare};
+\node[font=\scriptsize\itshape, text=darkblue] at (10.05,-1.95) {resultados};
+\end{tikzpicture}
+\caption{Dynare como preprocesador de MATLAB (inspirada en Galindo, Montecinos y Ortiz,
+Fig.~2.1). Los nombres de archivo son los que genera Dynare~7.1 para
+\code{rbc\_analytical.mod}.}
+\label{fig:preproc}
+\end{figure}
+
+\noindent El Cuadro~\ref{tab:archivos} dice qué hace cada pieza. No hace falta abrir
+ninguno de estos archivos, pero saber que existen explica dos hechos que sorprenden al
+principiante. El primero: un \code{.mod} no es un \code{.m}, así que \emph{no se puede
+ejecutar por partes} seleccionando unas líneas, como un script de MATLAB; siempre se
+corre entero con \code{dynare}. El segundo: los mensajes de error pueden venir del
+preprocesador (errores de sintaxis, que citan la línea del \code{.mod}) o de MATLAB
+(errores numéricos, que citan archivos como \code{static\_resid.m}).
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lp{9.2cm}}
+\toprule
+\textbf{Archivo o carpeta} & \textbf{Qué contiene o hace}\\
+\midrule
+\code{+rbc\_analytical/driver.m} & El guion principal: ejecuta, en orden, los comandos que
+  escribimos al final del \code{.mod} (\code{steady}, \code{check}, \ldots).\\
+\code{static\_resid.m}, \code{static\_g1.m} & El modelo \emph{estático} (sin rezagos ni
+  adelantos): residuos y jacobiano. Lo usan \code{steady} y \code{resid}.\\
+\code{dynamic\_resid.m}, \code{dynamic\_g1.m} & El modelo \emph{dinámico}: residuos y
+  jacobiano respecto de las variables en $t-1$, $t$ y $t+1$. De ahí salen la
+  linealización, \code{check} y \lstinline@stoch_simul@.\\
+\code{steadystate.m} & La traducción del bloque \lstinline@steady_state_model@.\\
+\code{rbc\_analytical/Output/} & \code{rbc\_analytical\_results.mat}: copia en disco de
+  \lstinline@M_@, \lstinline@oo_@ y \lstinline@options_@.\\
+\code{rbc\_analytical/graphs/} & Los gráficos de las IRF (p.~ej.,
+  \code{rbc\_analytical\_IRF\_eps.pdf}).\\
+\code{rbc\_analytical.log} & Copia de todo lo que Dynare imprimió en la consola.\\
+\bottomrule
+\end{tabular}
+\caption{Lo que genera \code{dynare rbc\_analytical} (Dynare~7.1). Todo se regenera en cada
+corrida, por eso no se versiona.}
+\label{tab:archivos}
+\end{table}
+
+\section{La estructura de un archivo \code{.mod}}
+\label{sec:estructura}
+
+Todo \code{.mod} tiene cinco bloques, siempre en el mismo orden, porque es el orden en
+que Dynare necesita la información (Figura~\ref{fig:bloques}). Cada uno corresponde a
+uno o más de los once pasos de la \S\ref{sec:pasos}: escribir el \code{.mod} es
+recorrer esa hoja de ruta.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  bl/.style={draw=darkblue, thick, rounded corners=2pt, fill=thmblue, text width=8.6cm,
+    align=left, inner sep=4pt, font=\scriptsize, minimum height=0.95cm},
+  ti/.style={font=\bfseries\small, text=errframe},
+  pa/.style={draw=darkblue, rounded corners=2pt, fill=white, font=\scriptsize,
+    inner sep=2.5pt, align=center, text width=1.55cm}
+]
+\foreach \n/\y/\t/\d/\p in {
+  1/0/{Preámbulo}/{Se declaran las variables endógenas (\texttt{var}), las exógenas
+    (\texttt{varexo}) y los parámetros (\texttt{parameters}), y se les asigna valor.}/{Pasos 1 y 3},
+  2/-1.75/{Modelo}/{Las ecuaciones del equilibrio, no lineales o lineales. Tantas
+    ecuaciones como variables endógenas.}/{Paso 2},
+  3/-3.5/{Valores iniciales y estado estacionario}/{Valores de partida
+    (\texttt{initval}) o el estado estacionario en forma cerrada
+    (\texttt{steady\_state\_model}).}/{Paso 4},
+  4/-5.25/{Choques}/{La desviación estándar (o la varianza) de cada choque.}/{Paso 1},
+  5/-7.0/{Cálculo y simulación}/{\texttt{steady}, \texttt{check}, \texttt{stoch\_simul}:
+    estado estacionario, Blanchard--Kahn, solución, IRF y momentos.}/{Pasos 4--10}}{
+  \node[ti, anchor=south west] (t\n) at (0,\y) {\t};
+  \node[bl, anchor=north west] (b\n) at (0,\y) {\d};
+  \node[pa, anchor=west] at ($(b\n.east)+(0.3,0)$) {\p};
+}
+\end{tikzpicture}
+\caption{Los cinco bloques de un archivo \code{.mod} y el paso de la hoja de ruta
+(Figura~\ref{fig:pasos}) que cubre cada uno (inspirada en Galindo, Montecinos y Ortiz,
+Fig.~2.2).}
+\label{fig:bloques}
+\end{figure}
+
+\noindent Las subsecciones siguientes presentan la gramática de cada bloque: un recuadro
+con la \emph{sintaxis genérica} y, enseguida, cómo se ve en nuestro modelo. La versión
+completa y ejecutable está en \code{rbc\_analytical.mod} y la recorremos línea por línea
+en la \S\ref{sec:rbctrabajo}.
+
+\subsection{El preámbulo: variables y parámetros}
+\label{sec:preambulo}
+
+Tres comandos le dicen a Dynare qué es cada símbolo. Las variables endógenas se declaran
+con \code{var}:
+
+\begin{sintaxis}{declaración de variables endógenas}
+var nombre_1 $nombre_latex_1$ (long_name='descripción 1')
+    nombre_2 $nombre_latex_2$ (long_name='descripción 2');
+\end{sintaxis}
+
+\noindent Cada variable tiene hasta tres componentes. El \emph{nombre}, obligatorio, es
+el que se usa en todo el archivo. El \emph{nombre en \LaTeX}, entre signos \texttt{\$},
+es opcional y se usa al exportar las ecuaciones a \LaTeX\ (ver la observación
+\emph{Dynare y \LaTeX} más abajo). El \emph{nombre largo}, también opcional, aparece en
+las tablas y los gráficos. Las tres declaraciones siguientes son equivalentes para
+Dynare; la tercera es la que usamos, porque hace legible la salida:
+\begin{lstlisting}[numbers=none]
+var y c;                                                // solo nombres
+var y $y_t$ c $c_t$;                                    // con nombre en LaTeX
+var y (long_name='producto') c (long_name='consumo');   // con nombre largo
+\end{lstlisting}
+
+\noindent Las variables exógenas ---los choques--- se declaran con \code{varexo}, con la
+misma sintaxis. Los parámetros se declaran con \code{parameters} y, a continuación, se
+les asigna un valor; esa asignación \emph{es} la calibración (paso~3):
+
+\begin{sintaxis}{declaración y calibración de parámetros}
+parameters p_1 p_2 p_3;
+p_1 = valor;
+p_2 = valor;
+p_3 = expresión en p_1 y p_2;   // p. ej., un valor de EE
+\end{sintaxis}
+
+\noindent La última línea es la que más rinde: un parámetro puede definirse a partir de
+otros ya asignados. Así calculamos en el preámbulo el estado estacionario cerrado y
+calibramos $\theta$ desde $h_{ss}$ (\S\ref{sec:calib}), sin resolver nada numéricamente.
+
+\subsection{El bloque \code{model}}
+\label{sec:bloquemodel}
+
+\begin{sintaxis}{el bloque del modelo}
+model;
+  [name = 'etiqueta de la ecuación 1']
+  expresión_izquierda_1 = expresión_derecha_1;
+  [name = 'etiqueta de la ecuación 2']
+  expresión_izquierda_2 = expresión_derecha_2;
+end;
+\end{sintaxis}
+
+\noindent Seis reglas bastan para escribirlo bien:
+\begin{enumerate}[label=(\roman*), leftmargin=2em, itemsep=2pt, topsep=2pt]
+\item Cada ecuación termina en punto y coma; puede ocupar varias líneas.
+\item Debe haber exactamente tantas ecuaciones como variables declaradas en \code{var}.
+\item Una variable sin paréntesis está fechada en $t$; \code{x(-1)} es su valor en
+  $t-1$ y \code{x(+1)} en $t+1$.
+\item Las expectativas son implícitas: \code{c(+1)} dentro del bloque significa
+  $\E_t c_{t+1}$. No se escribe ningún operador de esperanza.
+\item Las etiquetas \lstinline@[name='...']@ son opcionales pero muy útiles: Dynare las
+  usa en los mensajes de error y en los residuos de \code{resid}.
+\item Para no repetir expresiones largas se pueden definir variables locales con
+  \code{\#}, por ejemplo \lstinline|# R = r(+1) + 1 - delta;|. Viven solo dentro del
+  bloque y no cuentan como ecuación ni como variable.
+\end{enumerate}
+Si el modelo ya está escrito en forma lineal (por ejemplo, el sistema log-lineal de la
+\S\ref{sec:loglin}), se declara con \lstinline@model(linear);@ y Dynare no lo vuelve a
+linealizar. Volveremos sobre esto al comparar las formas de escribir un mismo modelo.
 
 \paragraph{La convención de timing.} El punto que más confunde al principiante
 es el \emph{timing}. Dynare fecha cada variable por \emph{cuándo se decide}, no
@@ -1624,11 +1838,111 @@ expectativas formadas en $t$.}
 \label{fig:timing}
 \end{figure}
 
+\subsection{Valores iniciales y estado estacionario}
+\label{sec:bloquess}
+
+Dynare necesita el estado estacionario: alrededor de él linealiza. Hay dos maneras de
+dárselo. La \emph{numérica} entrega valores de partida y le pide a Dynare que resuelva el
+sistema estático con el método de Newton:
+
+\begin{sintaxis}{valores iniciales (estado estacionario numérico)}
+initval;
+  nombre_1 = valor_inicial_1;
+  nombre_2 = valor_inicial_2;
+end;
+steady;
+\end{sintaxis}
+
+\noindent La \emph{analítica} entrega directamente el estado estacionario en forma
+cerrada, como función de los parámetros; Dynare no resuelve nada, solo lo evalúa y
+verifica:
+
+\begin{sintaxis}{estado estacionario en forma cerrada}
+steady_state_model;
+  nombre_1 = expresión en parámetros;
+  nombre_2 = expresión en parámetros y en variables ya asignadas;
+end;
+\end{sintaxis}
+
+\noindent Usamos la segunda porque el Capítulo~\ref{ch:modelo} nos dio el estado
+estacionario cerrado: es exacta, no depende de un buen punto de partida y no puede
+``no converger''. La primera es la única opción cuando el estado estacionario no tiene
+forma cerrada; entonces conviene dar valores iniciales cercanos a la solución, porque
+Newton puede fallar lejos de ella. Si el modelo se escribe en desviaciones logarítmicas,
+el estado estacionario de todas las variables es cero, y los valores iniciales también.
+
+\subsection{Los choques}
+\label{sec:bloqueshocks}
+
+\begin{sintaxis}{definición de los choques}
+shocks;
+  var nombre_choque; stderr desviación_estándar;
+  // o, equivalentemente:  var nombre_choque = varianza;
+end;
+\end{sintaxis}
+
+\noindent En nuestro \code{.mod} el choque \code{eps} tiene desviación estándar uno y el
+tamaño $\sigma_\varepsilon$ se aplica dentro de la ecuación de la productividad
+(\lstinline@log(a) = phi*log(a(-1)) + sigma_eps*eps@). Es equivalente a declarar
+\lstinline@stderr sigma_eps@, con una ventaja: \code{sigma\_eps} aparece en el bloque
+\code{model}, y por eso un análisis de sensibilidad o una estimación pueden tratarlo como
+un parámetro más.
+
+\subsection{Cálculo y simulación}
+\label{sec:bloquecalc}
+
+\begin{sintaxis}{comandos de cálculo}
+steady;    // calcula (o evalúa) el estado estacionario
+resid;     // residuos de cada ecuación en el EE
+check;     // valores propios y Blanchard-Kahn
+stoch_simul(opción = valor, ...) var_1 var_2 ...;
+\end{sintaxis}
+
+\noindent \lstinline@stoch_simul@ es el comando central: linealiza (o aproxima a mayor
+orden), resuelve, calcula las IRF y los momentos, y dibuja. La lista final de variables
+elige cuáles reportar; si se omite, reporta todas. Sus opciones principales están en el
+Cuadro~\ref{tab:stochsimul}. Qué imprime cada comando y cómo leerlo es el tema de la
+\S\ref{sec:salida}.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lp{9.4cm}}
+\toprule
+\textbf{Opción} & \textbf{Efecto (valor por defecto)}\\
+\midrule
+\code{order = 1, 2, 3} & Orden de la aproximación de Taylor. \textbf{Por defecto es 2}:
+  para una solución lineal hay que escribir \code{order = 1}.\\
+\code{irf = N} & Horizonte de las IRF, en períodos (40). Con \code{irf = 0} no se calculan.\\
+\code{periods = N} & 0 (por defecto): momentos \emph{teóricos}, calculados de la
+  solución. Con $N>0$: simula $N$ períodos y reporta los momentos de la simulación.\\
+\code{drop = N} & Períodos iniciales de la simulación que se descartan (100).\\
+\code{hp\_filter = }$\lambda$ & Momentos del componente cíclico del filtro HP (sin filtro).\\
+\code{ar = N} & Órdenes de autocorrelación que se reportan (5).\\
+\code{irf\_shocks = (e\_1, ...)} & Choques para los que se calculan IRF (todos).\\
+\code{nograph} & No dibuja gráficos.\\
+\code{graph\_format = (pdf, eps, fig, none)} & Formato en que se exportan los gráficos
+  (\code{eps}).\\
+\code{nomoments} & No calcula ni imprime los momentos.\\
+\bottomrule
+\end{tabular}
+\caption{Opciones principales de \lstinline@stoch_simul@ (Dynare~7.1).}
+\label{tab:stochsimul}
+\end{table}
+
+\begin{remark}
+\textbf{Dynare y \LaTeX.} El comando \lstinline@write_latex_dynamic_model;@, puesto
+después del bloque \code{model}, escribe las ecuaciones del modelo en un archivo
+\code{.tex} usando los nombres \LaTeX\ declarados con \code{\$...\$}. Es la mejor prueba
+de que la transcripción es correcta: se compila y se compara, ecuación por ecuación, con
+el Capítulo~\ref{ch:modelo}.
+\end{remark}
+
+
 \section{Calentando motores}
 \label{sec:calentamiento}
 
 Antes de atacar el RBC con trabajo ---ocho ecuaciones--- conviene montar el
-\code{.mod} más simple posible y ver los seis bloques ``en vivo'' sin la
+\code{.mod} más simple posible y ver los cinco bloques de la Figura~\ref{fig:bloques} ``en vivo'' sin la
 complejidad. El candidato natural es un RBC \emph{sin trabajo}: cinco ecuaciones,
 la misma anatomía.
 
@@ -1710,7 +2024,7 @@ $y=ak^\alpha$). En el RBC con trabajo, en cambio, $\alpha$ es la participación 
 al leer un \code{.mod} ajeno, lo primero es fijar qué denota cada parámetro.
 \end{remark}
 
-\noindent Son \emph{los mismos seis bloques} que usaremos en el RBC con trabajo,
+\noindent Son \emph{los mismos cinco bloques} que usaremos en el RBC con trabajo,
 con tres variables menos y sin la FOC de trabajo. La Euler aquí lleva $c^{-\sigma}$
 (CRRA general) en lugar de $1/c$ (log); con \lstinline@sig = 1@ ambas coinciden.
 Entendido este esqueleto, el RBC con trabajo es el mismo patrón, ampliado con la
@@ -1803,6 +2117,55 @@ Dos tropiezos aparecen casi siempre al escribir estas ecuaciones en vivo:
 El catálogo completo de errores está en la \S\ref{sec:debug}.
 \end{errorbox}
 
+La Figura~\ref{fig:anotado} lee el archivo como lo leería Dynare: cada línea dice
+\emph{qué} es cada símbolo y \emph{cuándo} está fechado.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  cl/.style={anchor=west, font=\footnotesize, inner sep=1pt},
+  lb/.style={anchor=west, font=\scriptsize, text=errframe},
+  ar/.style={-{Stealth[length=1.8mm]}, errframe, densely dashed, thin}
+]
+\def\dy{0.5}
+\foreach \i/\t in {1/{\cd{var y c i k h r w a;}},
+                   2/{\cd{varexo eps;}},
+                   3/{\cd{parameters alpha beta delta phi ...;}},
+                   5/{\cd{model;}},
+                   6/{\quad\cd{1/c = beta*(1/c(+1))*(r(+1) + 1 - delta);}},
+                   7/{\quad\cd{theta*c/(1 - h) = w;}},
+                   8/{\quad\cd{y = a*k(-1)^(1 - alpha)*h^alpha;}},
+                   9/{\quad\cd{k = (1 - delta)*k(-1) + i;}},
+                   10/{\quad\cd{...}},
+                   11/{\cd{end;}}}{
+  \node[cl] (c\i) at (0,-\i*\dy) {\t};
+}
+\coordinate (R) at (8.25,0);
+\begin{scope}[on background layer]
+  \node[fill=corolgray, fit=(c1)(c3)(R|-c1), inner sep=3pt] (pre) {};
+  \node[fill=corolgray, fit=(c5)(c11)(R|-c11), inner sep=3pt] (mod) {};
+  \node[fill=darkblue, fit=(pre.north west)(pre.south west), inner xsep=0.2cm, inner ysep=0pt, xshift=-0.2cm] (pb) {};
+  \node[fill=darkblue, fit=(mod.north west)(mod.south west), inner xsep=0.2cm, inner ysep=0pt, xshift=-0.2cm] (mb) {};
+\end{scope}
+\node[text=white, font=\bfseries\scriptsize, rotate=90] at (pb) {Preámbulo};
+\node[text=white, font=\bfseries\scriptsize, rotate=90] at (mb) {Modelo};
+\def\lx{8.75}
+\foreach \i/\l in {1/{Endógenas: 8, tantas como ecuaciones},
+                   2/{Choque exógeno},
+                   3/{Parámetros (se calibran a continuación)},
+                   6/{Euler: \texttt{c(+1)}, \texttt{r(+1)} son expectativas $\E_t$},
+                   7/{Oferta de trabajo: todo fechado en $t$},
+                   8/{Producción: \texttt{k(-1)} es el $k_t$ predeterminado},
+                   9/{Ley de movimiento: \texttt{k} es $k_{t+1}$, elegido hoy}}{
+  \node[lb] (l\i) at (\lx,-\i*\dy) {\l};
+  \draw[ar] (c\i.east) -- (l\i.west);
+}
+\end{tikzpicture}
+\caption{El \code{.mod} anotado: qué declara cada línea del preámbulo y qué fechas usa
+cada ecuación del modelo (inspirada en Galindo, Montecinos y Ortiz, Fig.~2.3).}
+\label{fig:anotado}
+\end{figure}
+
 El mapeo es casi literal (Tabla~\ref{tab:map}). Obsérvese el timing: la Euler
 usa \code{c(+1)} y \code{r(+1)} (expectativas); producción y demanda de capital
 usan \code{k(-1)} (capital al inicio); y el proceso de la TFP se escribe con
@@ -1828,15 +2191,10 @@ TFP \eqref{eq:tfp} & \lstinline@log(a) = phi*log(a(-1)) + sigma_eps*eps@ & \code
 \label{tab:map}
 \end{table}
 
-\paragraph{Estado estacionario y shocks.} Aquí conviene detenerse en una pregunta
-natural: ¿cómo conoce Dynare el estado estacionario? Tiene \emph{dos} caminos. El
-primero es \textbf{numérico}: uno le entrega valores iniciales (en un bloque
-\code{initval}) y Dynare resuelve el sistema estático ---el modelo sin rezagos ni
-adelantos--- con el método de Newton. El segundo ---el que usamos aquí--- es
-\textbf{analítico}: como ya derivamos el estado estacionario en forma cerrada
-(Cap.~\ref{ch:modelo}), se lo entregamos nosotros en el bloque
-\lstinline@steady_state_model@ y Dynare no resuelve nada numéricamente. Es más
-exacto y más robusto.
+\paragraph{Estado estacionario y shocks.} De los dos caminos de la
+\S\ref{sec:bloquess} tomamos el \textbf{analítico}: como ya derivamos el estado
+estacionario en forma cerrada (Cap.~\ref{ch:modelo}), se lo entregamos a Dynare en el
+bloque \lstinline@steady_state_model@ y Dynare solo lo evalúa.
 
 ¿Y qué son los \code{r\_ss}, \code{k\_ss}, \dots? Son los \emph{parámetros} que
 declaramos arriba y a los que, en la calibración, asignamos las fórmulas cerradas
