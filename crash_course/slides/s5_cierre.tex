@@ -1,0 +1,135 @@
+% ============================================================================
+%  5. DATOS Y CIERRE  (165--180 min)
+% ============================================================================
+\section{Cierre}
+
+% S51
+\begin{frame}[label=vs-datos]{El modelo frente a los datos}
+  \centering\small
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{Vol.\ relativa a $y$}} & \multicolumn{2}{c}{\textbf{Corr.\ con $y$}}\\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+    & Modelo & Datos & Modelo & Datos\\
+    \midrule
+    Consumo & 0.44 & 0.53 & 0.94 & 0.82\\
+    Inversión & 3.38 & 3.91 & 0.99 & 0.93\\
+    Horas & \num{0.49} & \num{1.23} & 0.97 & 0.87\\
+    Salario & 0.54 & 0.63 & \num{0.98} & \num{0.22}\\
+    \bottomrule
+  \end{tabular}
+  \par\vspace{0.3cm}\raggedright\normalsize
+  Componente cíclico, filtro HP con $\lambda=1600$: en Dynare basta añadir
+  \texttt{hp\_filter = 1600} a \texttt{stoch\_simul}.\par
+  \vspace{0.2cm}
+  Acierta el orden de volatilidades: la inversión es mucho más volátil que el producto
+  y el consumo, más suave.
+  \fuente{Filtro de \textcite{hp1997}. Datos: EE.UU.\ 1954--2015, \textcite[Tabla~1.2]{gmo}. Modelo: momentos teóricos
+  de Dynare. Handout, Cuadro~3.15.}
+  \note{$\sigma_y$ del modelo filtrado: 1.4\%, frente a 1.5\% en los datos.}
+\end{frame}
+
+% S52
+\begin{frame}[label=limites]{Dos cosas que este RBC no logra explicar}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.48\textwidth}
+      \textbf{1. Poca propagación propia}\par
+      \vspace{0.2cm}
+      $\hat y/\hat a$: $1.48$ en $t=1$; $1.74$ en $t=40$.\par
+      \vspace{0.2cm}
+      La forma de $\hat y$ copia la de $\hat a$: casi toda la persistencia viene de
+      $\phi=0.979$, no del modelo.
+      \fuente{\textcite{cogleynason1995}.}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{2. Horas poco volátiles}\par
+      \vspace{0.2cm}
+      Modelo: $0.49$ veces el producto. Datos: $1.23$.\par
+      \vspace{0.2cm}
+      Aun con sustitución intertemporal, las horas se mueven poco. Motiva el trabajo
+      indivisible y otras extensiones.
+      \fuente{\textcite{hansen1985}.}
+    \end{column}
+  \end{columns}
+  \par\vspace{0.5cm}
+  ¿Y el salario? En el modelo es la productividad laboral, $w=\alpha y/h$: con un solo
+  choque, todo se mueve al unísono.
+  \note{Vuelve la pregunta de la slide impulso: la persistencia viene del choque, no de la
+  propagación.}
+\end{frame}
+
+% S53
+\begin{frame}[label=resumen]{La historia en una tabla}
+  \centering\scriptsize
+  \renewcommand{\arraystretch}{1.3}
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}llll@{}}
+    \toprule
+    \textbf{Momento} & \textbf{Ecuación} & \textbf{Número} & \textbf{Mecanismo}\\
+    \midrule
+    Impacto: horas & $\hat h=1.715(\hat a-\hat c)$ & 0.515 & sustitución\\
+    Impacto: producto & $\hat y=\hat a+\alpha\hat h$ & 1.064 & amplificación\\
+    Impacto: reparto & $\hat y=0.798\hat c+0.202\hat\imath$ & 69\% invertido & suavizamiento\\
+    Capital & $\Delta\hat k=\delta(\hat\imath-\hat k)$ & máx.\ en $t=26$ & acumulación lenta\\
+    Consumo & $\Delta\hat c=\beta r_{ss}\hat r$ & máx.\ en $t=19$ & Euler\\
+    Regreso & $\hat h<0$ desde $t=30$ & $-0.031$ en $t=40$ & efecto riqueza\\
+    Contraste $\delta=1$ & $\hat y-\hat c=1.25\hat h$ & $\hat h=0$ & $c/y$ constante\\
+    \bottomrule
+  \end{tabular}
+  \par\vspace{0.35cm}\raggedright\normalsize
+  Todos los números: la receta o \texttt{oo\_.irfs} en Dynare.
+\end{frame}
+
+% S54
+\begin{frame}[fragile,label=estimacion]{Siguiente paso: estimar en vez de calibrar}
+  Hoy fijamos los parámetros. Dynare también puede \textbf{estimarlos} con datos:\par
+  \vspace{0.25cm}
+  \begin{enumerate}
+    \item La solución se escribe en forma estado-espacio.\par\vspace{0.1cm}
+    \item El filtro de Kalman da la verosimilitud de los datos.\par\vspace{0.1cm}
+    \item Bayes: posterior $\propto$ verosimilitud $\times$ prior.\par\vspace{0.1cm}
+    \item MCMC recorre la posterior.
+  \end{enumerate}
+  \vspace{0.2cm}
+  \begin{lstlisting}
+varobs y;
+estimated_params; phi, beta_pdf, 0.9, 0.05; end;
+estimation(datafile = datos, mh_replic = 20000);
+\end{lstlisting}
+  \fuente{Esquema ilustrativo. Handout, §3.14.}
+  \note{Solo un adelanto: no correr en clase. La sintaxis completa y sus supuestos están en
+  el handout.}
+\end{frame}
+
+% S55
+\begin{frame}[label=material]{Para seguir practicando}
+  \textbf{En el repositorio}\par
+  \vspace{0.15cm}
+  \small
+  \begin{tabular}{@{}ll@{}}
+    \texttt{handout/handout\_dynare.tex} & el handout completo\\
+    \texttt{handout/rbc\_analytical.mod} & el modelo de referencia\\
+    \texttt{handout/graficar\_irfs.m} & IRF con estilo\\
+    \texttt{handout/reconstruir\_irf.m} & IRF a mano desde \texttt{oo\_.dr}\\
+    \texttt{handout/cuatro\_formas/} & el mismo modelo, cuatro escrituras\\
+    \texttt{taller/rbc\_taller.mod} & el taller de hoy
+  \end{tabular}
+  \par\vspace{0.4cm}\normalsize
+  \textbf{Ejercicios del handout}\par
+  \vspace{0.15cm}
+  Barrido en $\phi$, segundo orden, filtro HP, romper el timing y las cuatro formas con
+  $\delta=1$.
+\end{frame}
+
+% S56
+\begin{frame}[label=referencias]{Referencias: método y herramientas}
+  \renewcommand*{\bibfont}{\footnotesize}
+  \printbibliography[heading=none,keyword=metodo]
+\end{frame}
+
+% S57
+\begin{frame}[label=referencias-modelo]{Referencias: el modelo}
+  \renewcommand*{\bibfont}{\footnotesize}
+  \printbibliography[heading=none,keyword=modelo]
+\end{frame}

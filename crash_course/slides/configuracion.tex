@@ -1,0 +1,30 @@
+% EDITA AQUÍ LA TIPOGRAFÍA Y LOS TAMAÑOS DE PORTADA.
+% La misma familia se usa en texto, títulos y citas.
+\newcommand{\FuenteTexto}{Latin Modern Sans}
+\newcommand{\TamTituloPortada}{22}
+\newcommand{\InterlineadoTituloPortada}{25}
+\newcommand{\TamNombrePortada}{14}
+\newcommand{\TamSubtituloPortada}{12}
+\newcommand{\TamCursoPortada}{11}
+\newcommand{\TamSemestrePortada}{10}
+\newcommand{\NotaExpositor}{Todo lo dicho en esta sesión es responsabilidad del expositor.}
+\newcommand{\SubtituloPortada}{Del papel al código: el modelo RBC}
+
+\setmainfont{\FuenteTexto}
+\setsansfont{\FuenteTexto}
+\renewcommand{\familydefault}{\sfdefault}
+\usefonttheme{professionalfonts}
+\setbeamerfont{normal text}{family=\sffamily,size=\normalsize}
+\setbeamerfont{frametitle}{family=\sffamily,series=\bfseries}
+\setbeamerfont{quote}{family=\sffamily,shape=\upshape,size=\normalsize}
+\setbeamerfont{quotation}{family=\sffamily,shape=\upshape,size=\normalsize}
+
+% Iconos de una biblioteca existente; no representan hechos históricos.
+\usepackage{fontawesome5}
+
+% Todos los rótulos son visibles: no heredan el color negro de los enlaces.
+\setbeamertemplate{headline}{%
+  \begin{beamercolorbox}[wd=\paperwidth,ht=3ex,dp=1ex]{section in head/foot}
+    \sffamily\bfseries\hbox to\paperwidth{\hfil Motivación\hfil Modelo\hfil Dynare\hfil Resultados\hfil Cierre\hfil}
+  \end{beamercolorbox}
+}

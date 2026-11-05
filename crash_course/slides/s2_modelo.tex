@@ -1,0 +1,248 @@
+% ============================================================================
+%  2. EL MODELO  (20--50 min)
+% ============================================================================
+\section{Modelo}
+
+% S08
+\begin{frame}[label=impulso]{Impulso y propagación}
+  \centering
+  \begin{tikzpicture}[
+    bx/.style={draw=darkblue, thick, rounded corners=3pt, fill=thmblue, align=center,
+      text width=2.55cm, minimum height=1.35cm, font=\small},
+    go/.style={-{Stealth[length=2.2mm]}, very thick, darkblue}]
+    \node[bx] (a) at (0,0) {\textbf{Impulso}\\[2pt]\footnotesize choque de PTF, $\varepsilon_t$};
+    \node[bx] (b) at (3.65,0) {\textbf{Propagación}\\[2pt]\footnotesize capital y decisiones del hogar};
+    \node[bx] (c) at (7.3,0) {\textbf{Fluctuaciones}\\[2pt]\footnotesize $y,c,i,h$ persistentes};
+    \draw[go] (a) -- (b); \draw[go] (b) -- (c);
+  \end{tikzpicture}
+  \par\vspace{0.6cm}\raggedright
+  Un choque que dura \textbf{un trimestre} genera respuestas que duran
+  \textbf{años}.\par
+  \vspace{0.3cm}
+  ¿De dónde sale esa persistencia? Dos candidatos:\par
+  \vspace{0.15cm}
+  \hspace*{0.4cm}la propia persistencia del choque, $\phi=0.979$;\par
+  \hspace*{0.4cm}la acumulación de capital.\par
+  \vspace{0.3cm}
+  Al final veremos cuál de los dos hace casi todo el trabajo.
+  \note{La distinción impulso--propagación es de Frisch (1933). La respuesta (slide
+  limites) es incómoda para el RBC: casi toda la persistencia viene del choque.}
+\end{frame}
+
+% S09
+\begin{frame}[label=mercados]{Dos agentes, tres mercados}
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[
+    ag/.style={draw=darkblue, very thick, rounded corners=4pt, fill=thmblue, align=center,
+      text width=2.4cm, minimum height=5.3cm, font=\small},
+    mk/.style={draw=upblue, thick, rounded corners=2pt, fill=white, align=center,
+      text width=2.3cm, minimum height=1.1cm, font=\small},
+    fl/.style={-{Stealth[length=2mm]}, thick, darkblue},
+    lab/.style={font=\footnotesize, align=center, text width=3cm, inner sep=1.5pt}]
+    \node[ag] (H) at (0,0) {\textbf{HOGAR}\\[6pt]\footnotesize elige $c_t$, $h_t$, $i_t$\\[4pt]
+      \footnotesize posee el capital};
+    \node[ag] (F) at (11,0) {\textbf{FIRMA}\\[6pt]\footnotesize elige $h_t$, $k_{t-1}$\\[4pt]
+      \footnotesize maximiza beneficios};
+    \node[mk] (L) at (5.5,1.9) {\textbf{Trabajo}\\ $h_t$, $w_t$};
+    \node[mk] (K) at (5.5,0) {\textbf{Capital}\\ $k_{t-1}$, $r_t$};
+    \node[mk] (B) at (5.5,-1.9) {\textbf{Bienes}\\ $y_t$, precio 1};
+    \draw[fl] (H.east|-L) -- node[lab, above]{oferta} node[lab, below]{$\theta\frac{c_t}{1-h_t}=w_t$} (L.west);
+    \draw[fl] (F.west|-L) -- node[lab, above]{demanda} node[lab, below]{$w_t=\alpha\frac{y_t}{h_t}$} (L.east);
+    \draw[fl] (H.east|-K) -- node[lab, above]{oferta: elegida} node[lab, below]{ayer, con la Euler} (K.west);
+    \draw[fl] (F.west|-K) -- node[lab, above]{demanda} node[lab, below]{$r_t=(1-\alpha)\frac{y_t}{k_{t-1}}$} (K.east);
+    \draw[fl] (H.east|-B) -- node[lab, above]{demanda} node[lab, below]{$c_t+i_t$} (B.west);
+    \draw[fl] (F.west|-B) -- node[lab, above]{oferta} node[lab, below]{$y_t$} (B.east);
+    \node[font=\footnotesize, text=errframe, align=center] (S) at (11,3.6) {choque: $\ln a_t=\phi\ln a_{t-1}+\varepsilon_t$};
+    \draw[-{Stealth[length=2mm]}, thick, errframe] (S.south) -- (F.north);
+  \end{tikzpicture}}
+  \par\vspace{0.3cm}\raggedright
+  Cada flecha es una ecuación. El choque entra por la firma; el hogar lo siente a
+  través de los precios $w_t$ y $r_t$.
+  \fuente{Notación de Dynare: $k_{t-1}$ es el capital que se usa en $t$. Inspirada en
+  \textcite[Fig.~3.1]{gmo}.}
+  \note{Usar esta lámina como mapa: en el Acto 1 volveremos a ella mercado por mercado.}
+\end{frame}
+
+% S10
+\begin{frame}[label=hogar]{El hogar}
+  \begin{gather*}
+  \max_{\{c_t,h_t,k_t\}}\ \mathbb{E}_0\sum_{t=0}^{\infty}\beta^t\big[\ln c_t+\theta\ln(1-h_t)\big]\\
+  \text{s.a.}\quad c_t+k_t=w_th_t+(r_t+1-\delta)\,k_{t-1}
+  \end{gather*}
+  \par\vspace{0.2cm}
+  \textbf{Euler} (ahorrar hoy, consumir mañana)
+  \[
+  \frac{1}{c_t}=\beta\,\mathbb{E}_t\!\left[\frac{1}{c_{t+1}}\,(r_{t+1}+1-\delta)\right]
+  \]
+  \textbf{Oferta de trabajo} (ocio contra consumo)
+  \[
+  \theta\,\frac{c_t}{1-h_t}=w_t
+  \]
+  \par\vspace{0.1cm}
+  ¿Qué retorno decide el ahorro de hoy: el de hoy o el de mañana?
+  \note{La pregunta prepara el hueco H8: en Dynare, \texttt{r(+1)} y \texttt{c(+1)}.
+  La restricción usa $k_t=(1-\delta)k_{t-1}+i_t$ ya sustituida.}
+\end{frame}
+
+% S11
+\begin{frame}[label=firma]{La firma y el choque}
+  \[
+  \max_{h_t,\,k_{t-1}}\ y_t-w_th_t-r_tk_{t-1},\qquad y_t=a_t\,k_{t-1}^{1-\alpha}h_t^{\alpha}
+  \]
+  \par\vspace{0.15cm}
+  \textbf{Demandas de factores}
+  \[
+  w_t=\alpha\,\frac{y_t}{h_t},\qquad r_t=(1-\alpha)\,\frac{y_t}{k_{t-1}}
+  \]
+  \textbf{Productividad}
+  \[
+  \ln a_t=\phi\ln a_{t-1}+\sigma_\varepsilon\,\varepsilon_t,\qquad \varepsilon_t\sim N(0,1)
+  \]
+  \par\vspace{0.1cm}
+  Atención: aquí $\alpha$ es la participación del \textbf{trabajo}, no la del capital.
+  \note{King y Rebelo (1999) usan esta convención. Es una fuente frecuente de errores al
+  copiar fórmulas de otros textos.}
+\end{frame}
+
+% S12
+\begin{frame}[label=equilibrio]{Ocho ecuaciones, ocho incógnitas}
+  \centering\small
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    & \textbf{Ecuación} & \\
+    \midrule
+    1 & $1/c_t=\beta\,\mathbb{E}_t[(r_{t+1}+1-\delta)/c_{t+1}]$ & Euler\\
+    2 & $\theta\,c_t/(1-h_t)=w_t$ & oferta de trabajo\\
+    3 & $r_t=(1-\alpha)\,y_t/k_{t-1}$ & demanda de capital\\
+    4 & $w_t=\alpha\,y_t/h_t$ & demanda de trabajo\\
+    5 & $y_t=a_t\,k_{t-1}^{1-\alpha}h_t^{\alpha}$ & producción\\
+    6 & $k_t=(1-\delta)\,k_{t-1}+i_t$ & ley de movimiento\\
+    7 & $y_t=c_t+i_t$ & vaciado de bienes\\
+    8 & $\ln a_t=\phi\ln a_{t-1}+\sigma_\varepsilon\varepsilon_t$ & productividad\\
+    \bottomrule
+  \end{tabular}
+  \par\vspace{0.35cm}\raggedright
+  Incógnitas: $y_t,c_t,i_t,k_t,h_t,r_t,w_t,a_t$. Esta lista \emph{es} el bloque
+  \cod{model} de Dynare.
+  \note{Lo primero que hace Dynare es contar: ecuaciones = variables endógenas.}
+\end{frame}
+
+% S13
+\begin{frame}[label=ee]{El estado estacionario, en cascada}
+  Sin choques y sin tiempo. Cada paso usa solo lo anterior:
+  \vspace{0.15cm}
+  \begin{align*}
+    r_{ss}&=\tfrac{1}{\beta}-(1-\delta) &&= 0.0413 \\
+    k_{ss}&=h_{ss}\big[(1-\alpha)/r_{ss}\big]^{1/\alpha} &&= 4.5785\\
+    y_{ss}&=k_{ss}^{1-\alpha}h_{ss}^{\alpha} &&= 0.5673\\
+    i_{ss}&=\delta\,k_{ss},\qquad c_{ss}=y_{ss}-i_{ss} &&= 0.1145,\ 0.4528\\
+    w_{ss}&=\alpha\,y_{ss}/h_{ss} &&= 1.8919\\
+    \theta&=w_{ss}(1-h_{ss})/c_{ss} &&= \num{3.3424}
+  \end{align*}
+  \par\vspace{0.1cm}
+  $\theta$ no se elige: se \textbf{calibra} para que las horas de estado estacionario
+  sean $h_{ss}=0.20$.
+  \note{Son los huecos H3 a H7 del taller. El orden importa: $\theta$ va al final porque
+  los niveles de estado estacionario no dependen de él.}
+\end{frame}
+
+% S14
+\begin{frame}[label=calibracion]{Calibración trimestral}
+  \centering\small
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabular}{@{}llr@{}}
+    \toprule
+    \textbf{Parámetro} & \textbf{Significado} & \textbf{Valor}\\
+    \midrule
+    $\alpha$ & participación del trabajo & $0.667$\\
+    $\beta$ & factor de descuento & $0.984$\\
+    $\delta$ & depreciación & $0.025$\\
+    $\phi$ & persistencia de la PTF & $0.979$\\
+    $\sigma_\varepsilon$ & desviación estándar del choque & $0.0072$\\
+    $h_{ss}$ & horas de estado estacionario (objetivo) & $0.20$\\
+    \midrule
+    $\theta$ & peso del ocio (calibrado) & $3.3424$\\
+    \bottomrule
+  \end{tabular}
+  \fuente{\textcite{kingrebelo1999}.}
+  \par\vspace{0.2cm}\raggedright\normalsize
+  Calibrar: fijar los parámetros con información de largo plazo y luego preguntarle al
+  modelo lo que no sabemos.
+  \note{Recordar la frase de Kydland: los modelos son instrumentos de medición que hay
+  que calibrar.}
+\end{frame}
+
+% S15
+\begin{frame}[label=loglineal]{El sistema log-lineal}
+  Con $\hat x_t=\ln(x_t/x_{ss})$, en desviaciones porcentuales:
+  \small
+  \begin{align*}
+    \hat y_t&=\hat a_t+(1-\alpha)\hat k_t+\alpha\hat h_t &
+    \hat r_t&=\hat y_t-\hat k_t\\
+    \hat w_t&=\hat y_t-\hat h_t &
+    \hat c_t+\tfrac{h_{ss}}{1-h_{ss}}\hat h_t&=\hat w_t\\
+    \mathbb{E}_t\hat c_{t+1}-\hat c_t&=\beta r_{ss}\,\mathbb{E}_t\hat r_{t+1} &
+    \hat k_{t+1}&=(1-\delta)\hat k_t+\delta\hat\imath_t\\
+    \hat y_t&=s_c\hat c_t+s_i\hat\imath_t &
+    \hat a_t&=\phi\hat a_{t-1}+\varepsilon_t
+  \end{align*}
+  \normalsize
+  \vspace{0.1cm}
+  Notación de la pizarra: $\hat k_t$ es el capital en uso en $t$.\par
+  \vspace{0.2cm}
+  $s_c=0.798$, $s_i=0.202$, $\beta r_{ss}=0.0406$, $\tfrac{h_{ss}}{1-h_{ss}}=0.25$.\par
+  \vspace{0.25cm}
+  Dynare hará esta linealización por nosotros, con derivadas exactas.
+  \note{No es necesario escribir este sistema en Dynare. Lo usaremos para leer las IRF en
+  la sección de resultados.}
+\end{frame}
+
+% S16
+\begin{frame}[label=bk]{Blanchard--Kahn en una lámina}
+  Reducido a $(\hat k_t,\hat a_t,\hat c_t)$, el sistema tiene tres valores propios:
+  \vspace{0.25cm}
+  \begin{center}
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{@{}lccc@{}}
+      \toprule
+      Valor propio & $0.936$ & $0.979=\phi$ & $1.086$\\
+      ¿Estable? & sí & sí & \textbf{no}\\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  \vspace{0.2cm}
+  Una raíz inestable para una variable que salta ($\hat c_t$): \textbf{solución única}.\par
+  \vspace{0.3cm}
+  El consumo elige, en cada trimestre, el único valor que no lleva a una trayectoria
+  explosiva: el \textbf{brazo estable del punto de silla}.\par
+  \vspace{0.3cm}
+  Dynare verificará esto con el comando \cod{check}.
+  \fuente{\textcite{bk1980}; PD06, partes F.3 y F.4.}
+  \note{Si sobran raíces inestables, no hay solución acotada; si faltan, hay infinitas
+  (indeterminación). Ambos mensajes los veremos en Dynare.}
+\end{frame}
+
+% S17
+\begin{frame}[label=reparto]{Quién hace qué}
+  \centering
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabular}{@{}lcc@{}}
+    \toprule
+    \textbf{Paso} & \textbf{Tú} & \textbf{Dynare}\\
+    \midrule
+    Condiciones de primer orden & \faCheck & \\
+    Estado estacionario cerrado & \faCheck & lo verifica\\
+    Calibración & \faCheck & \\
+    Linealización & & \faCheck\\
+    Blanchard--Kahn & & \faCheck\\
+    Regla de decisión & & \faCheck\\
+    IRF y momentos & & \faCheck\\
+    \textbf{Interpretación} & \faCheck & \\
+    \bottomrule
+  \end{tabular}
+  \par\vspace{0.4cm}\raggedright
+  La economía la pones tú, al principio y al final. Dynare hace el álgebra del medio.
+  \note{Transición a la parte práctica. Abrir MATLAB.}
+\end{frame}

@@ -1,0 +1,143 @@
+% ============================================================================
+%  1. MOTIVACIÓN  (0--20 min)
+% ============================================================================
+\section{Motivación}
+
+% S02
+\begin{frame}[label=pregunta]{La productividad sube 0.72\% por un trimestre}
+  \textbf{¿Qué hace la economía?}\par
+  \vspace{0.45cm}
+  ¿Trabajan más o menos los hogares?\par
+  \vspace{0.15cm}
+  ¿Consumen la ganancia o la ahorran?\par
+  \vspace{0.15cm}
+  ¿Cuánto dura el efecto?\par
+  \vspace{0.6cm}
+  Al final de la sesión, cada respuesta será un número, y cada número saldrá de una
+  ecuación que ya conocen y de un archivo que habrán escrito ustedes.
+  \note{Pedir predicciones a mano alzada: ¿las horas suben o bajan? Anotar la votación
+  en la pizarra y volver a ella en el Acto 1 (slide acto1-horas). El 0.72\% es una
+  desviación estándar del choque de PTF en la calibración de King y Rebelo (1999).}
+\end{frame}
+
+% S03
+\begin{frame}[label=pizarra]{Hasta dónde llega la pizarra}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}
+      \textbf{Depreciación total, $\delta=1$}\par
+      \vspace{0.25cm}
+      Solución cerrada (PD06, parte E).\par
+      \vspace{0.2cm}
+      $\hat h_t=0$: las horas no se mueven.\par
+      \vspace{0.2cm}
+      $\hat c_t=\hat y_t$: el hogar consume siempre la misma fracción.
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \textbf{Caso realista, $\delta=0.025$}\par
+      \vspace{0.25cm}
+      No hay solución cerrada (PD06, E.3).\par
+      \vspace{0.2cm}
+      Las horas \emph{sí} responden.\par
+      \vspace{0.2cm}
+      Hay que resolver numéricamente.
+    \end{column}
+  \end{columns}
+  \vspace{0.6cm}
+  \begin{block}{La paradoja}
+    El mecanismo que hace interesante al RBC aparece justo donde la pizarra deja de
+    alcanzar.
+  \end{block}
+  \note{Conectar con la recitación: los alumnos ya probaron en E.3 que con $\delta<1$ el
+  supuesto $\hat h_t=0$ es incompatible con la Euler. La sesión de hoy es la parte G:
+  ``beyond the blackboard''.}
+\end{frame}
+
+% S04
+\begin{frame}[label=laboratorio]{El modelo como laboratorio}
+  \begin{quote}
+    \enquote{Our task, as I see it \ldots\ is to write a FORTRAN program that will accept
+    specific economic policy rules as `input' and will generate as `output' statistics
+    describing the operating characteristics of time series we care about.}
+  \end{quote}
+  \begin{flushright}\small\parencite[pp.~709--710]{lucas1980}\end{flushright}
+  \vspace{0.1cm}
+  \begin{quote}
+    \enquote{The key tool macroeconomists use is the computational experiment.}
+  \end{quote}
+  \begin{flushright}\small\parencite[p.~341]{kydland2004}\end{flushright}
+  \vspace{0.1cm}
+
+  En 1980 el programa de investigación ya se pensaba como código.
+  \note{Subrayar la fecha. Kydland y Prescott (1982) convirtieron la visión de Lucas en
+  método: calibrar el modelo como un instrumento de medición y luego interrogarlo.}
+\end{frame}
+
+% S05
+\begin{frame}[label=linea-tiempo]{De la visión a la herramienta}
+  \centering
+  \begin{tikzpicture}[font=\footnotesize]
+    \draw[very thick, upblue] (0,0) -- (9.8,0);
+    \foreach \x/\y/\a in {
+        0.6/1976/{Crítica\\de Lucas},
+        2.3/1980/{Lucas,\\Blanchard--\\Kahn},
+        4.0/1982/{Kydland--\\Prescott},
+        5.7/1983/{Fair--Taylor},
+        7.4/1994/{Juillard crea\\\textbf{Dynare}},
+        9.1/2025/{30 años}}{
+      \filldraw[upblue] (\x,0) circle (2.4pt);
+      \node[upblue, font=\footnotesize\bfseries] at (\x,0.38) {\y};
+      \node[align=center, text width=1.6cm, font=\scriptsize] at (\x,-0.8) {\a};
+    }
+  \end{tikzpicture}
+  \par\vspace{0.6cm}
+  \raggedright
+  \textbf{Blanchard y Kahn (1980)}: cuándo un modelo lineal tiene solución única y
+  estable. Es lo que Dynare comprueba con \cod{check}.\par
+  \vspace{0.25cm}
+  \textbf{Fair y Taylor (1983)}: el método para modelos no lineales de previsión
+  perfecta.\par
+  \vspace{0.25cm}
+  \textbf{Dynare (1994, CEPREMAP)}: Michel Juillard une todo en un solo programa.
+  \fuente{\parencite{bk1980,ft1983,kp1982,dynare}}
+  \note{Cinco minutos como máximo. En febrero de 2025 el Banque de France celebró los
+  treinta años de Dynare con una conferencia.}
+\end{frame}
+
+% S06
+\begin{frame}[label=que-es-dynare]{¿Qué es Dynare?}
+  \begin{bluebox}{Dynare}
+    Un \textbf{preprocesador} y una biblioteca de rutinas para MATLAB u Octave que
+    resuelve, simula y estima modelos DSGE.
+  \end{bluebox}
+  \vspace{0.2cm}
+  Escribimos el modelo casi como en el papel. Dynare se encarga de:
+  \begin{itemize}
+    \item Estado estacionario y su verificación.
+    \item Linealización con derivadas exactas.
+    \item Condición de Blanchard--Kahn y regla de decisión.
+    \item Funciones de impulso-respuesta y momentos.
+    \item Estimación bayesiana (solo un adelanto al final).
+  \end{itemize}
+  \fuente{\parencite{dynare}}
+  \note{Mencionar alternativas (Python, Julia) y por qué usamos Dynare: sintaxis
+  declarativa, estándar en bancos centrales y licencia de MATLAB en la UP.}
+\end{frame}
+
+% S07
+\begin{frame}[label=objetivos]{Al terminar la sesión}
+  \begin{enumerate}
+    \item Escribirás un \texttt{.mod} completo del modelo RBC.\par\vspace{0.15cm}
+    \item Leerás lo que imprime Dynare: estado estacionario, valores propios y regla de
+      decisión.\par\vspace{0.15cm}
+    \item Explicarás cada impulso-respuesta con una ecuación.\par\vspace{0.15cm}
+    \item Confrontarás el modelo con los datos.
+  \end{enumerate}
+  \vspace{0.4cm}
+  \textbf{Material}\par
+  \vspace{0.1cm}
+  Handout \emph{Un crash course de Dynare}\par
+  Taller \texttt{rbc\_taller.mod}\par
+  PD06, parte G
+  \note{Comprobar que todos tienen MATLAB abierto y la carpeta del taller descargada.
+  Si alguien no tiene Dynare instalado, que trabaje en pareja.}
+\end{frame}
