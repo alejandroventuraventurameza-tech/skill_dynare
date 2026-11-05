@@ -920,6 +920,60 @@ incógnitas es lo primero que Dynare verificará.
 \label{tab:system}
 \end{table}
 
+\noindent La Figura~\ref{fig:tresmercados} lee el mismo sistema por \emph{mercados}: cada
+uno tiene una oferta, una demanda y un precio que las iguala, y cada ecuación del
+Cuadro~\ref{tab:system} es una de esas piezas. Es el mapa que usaremos en la
+\S\ref{sec:irfanalitica} para seguir el choque mercado por mercado.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  ag/.style={draw=darkblue, very thick, rounded corners=4pt, fill=thmblue, align=center,
+    text width=2.5cm, minimum height=6.3cm, font=\scriptsize, inner sep=4pt},
+  mk/.style={draw=upblue, thick, rounded corners=2pt, fill=white, align=center,
+    text width=2.55cm, minimum height=1.25cm, font=\scriptsize, inner sep=3pt},
+  fl/.style={-{Stealth[length=2mm]}, thick, darkblue},
+  lab/.style={font=\scriptsize, align=center, text width=3.05cm, inner sep=1.5pt},
+]
+\node[ag] (H) at (0,0) {\textbf{\small HOGAR}\\[6pt]
+  $\max\ \E_0\sum_t\beta^t\big[\ln c_t$\\$+\theta\ln(1-h_t)\big]$\\[4pt]
+  s.a.\ $c_t+i_t=w_th_t+r_tk_t$\\[4pt]
+  $k_{t+1}=(1-\delta)k_t+i_t$\\[8pt]
+  \textit{posee los factores}};
+\node[ag] (F) at (12.2,0) {\textbf{\small FIRMA}\\[6pt]
+  $\max\ \ y_t-w_th_t$\\$-\,r_tk_t$\\[4pt]
+  $y_t=a_tk_t^{1-\alpha}h_t^{\alpha}$\\[8pt]
+  \textit{alquila los factores}};
+\node[mk] (L) at (6.1,2.25) {\textbf{Trabajo}\\ cantidad $h_t$, precio $w_t$};
+\node[mk] (K) at (6.1,0)    {\textbf{Capital}\\ cantidad $k_t$, precio $r_t$};
+\node[mk] (B) at (6.1,-2.25) {\textbf{Bienes}\\ cantidad $y_t$, precio $1$};
+% ofertas y demandas
+\draw[fl] (H.east|-L) -- node[lab, above]{\textbf{oferta}}
+  node[lab, below]{$\theta\frac{c_t}{1-h_t}=w_t$} (L.west);
+\draw[fl] (F.west|-L) -- node[lab, above]{\textbf{demanda}}
+  node[lab, below]{$w_t=\alpha\frac{y_t}{h_t}$} (L.east);
+\draw[fl] (H.east|-K) -- node[lab, above]{\textbf{oferta}: $k_t$, elegido}
+  node[lab, below]{en $t-1$ con la Euler} (K.west);
+\draw[fl] (F.west|-K) -- node[lab, above]{\textbf{demanda}}
+  node[lab, below]{$r_t=(1-\alpha)\frac{y_t}{k_t}$} (K.east);
+\draw[fl] (H.east|-B) -- node[lab, above]{\textbf{demanda}}
+  node[lab, below]{$c_t+i_t$} (B.west);
+\draw[fl] (F.west|-B) -- node[lab, above]{\textbf{oferta}}
+  node[lab, below]{$y_t$} (B.east);
+\node[font=\scriptsize, text=errframe, below=1pt of B] {vaciado: $y_t=c_t+i_t$};
+% el choque
+\node[font=\scriptsize, align=center, text=errframe] (S) at (12.2,4.05)
+  {\textbf{choque}: $\ln a_t=\phi\ln a_{t-1}+\varepsilon_t$};
+\draw[-{Stealth[length=2mm]}, thick, errframe] (S.south) -- (F.north);
+\end{tikzpicture}
+\caption{Los tres mercados del modelo. El hogar ofrece trabajo y capital y demanda
+bienes; la firma hace lo contrario. Las ocho ecuaciones del Cuadro~\ref{tab:system}
+están todas en el mapa: dos ofertas y dos demandas de factores, la producción, el
+vaciado de bienes, la ley de movimiento y el choque, que entra por la firma
+(inspirada en Galindo, Montecinos y Ortiz, Fig.~3.1).}
+\label{fig:tresmercados}
+\end{figure}
+
 \section{Estado estacionario}
 \label{sec:ss}
 
@@ -1215,6 +1269,53 @@ $\eta_{\cdot a}$ (ante $\hat{a}_t$) & $1$ & $1$ & $1$ & $1$ & $1$ & $1$ \\
 \label{tab:policy}
 \end{table}
 
+\noindent La Figura~\ref{fig:policyplot} dibuja dos de estas funciones. Son rectas
+porque la solución es de primer orden: cada variable es una combinación lineal de los
+estados. La pendiente es la elasticidad ante el capital, $\eta_{\cdot k}$, y un choque
+de productividad desplaza la recta en paralelo, en $\eta_{\cdot a}\hat{a}_t$.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  ax/.style={-{Stealth[length=1.8mm]}, thick},
+  base/.style={very thick, darkblue},
+  chq/.style={very thick, errframe, densely dashed},
+  tk/.style={font=\scriptsize},
+]
+% ---------- consumo ----------
+\begin{scope}[xscale=2.4, yscale=1.7]
+  \draw[gray!25] (-1,-1) grid[xstep=0.5, ystep=0.5] (1,1.5);
+  \draw[ax] (-1.1,0) -- (1.15,0) node[right, font=\small]{$\hat{k}_t$};
+  \draw[ax] (0,-1.1) -- (0,1.65) node[above, font=\small]{$\hat{c}_t$};
+  \foreach \x in {-1,-0.5,0.5,1} \node[tk, below] at (\x,0) {$\x$};
+  \foreach \y in {-1,-0.5,0.5,1,1.5} \node[tk, left] at (0,\y) {$\y$};
+  \draw[base] (-1,-0.333) -- (1,0.333) node[right, font=\scriptsize, align=left]{$\hat{a}_t=0$};
+  \draw[chq]  (-1,0.387) -- (1,1.053) node[right, font=\scriptsize, align=left]{$\hat{a}_t=\sigma_\varepsilon$};
+  \draw[{Stealth[length=1.5mm]}-{Stealth[length=1.5mm]}, errframe] (-0.75,-0.25) -- (-0.75,0.47)
+    node[midway, left, font=\scriptsize]{$\sigma_\varepsilon$};
+  \node[font=\small\bfseries] at (0,2.25) {Consumo: $\hat{c}_t=(1-\alpha)\hat{k}_t+\hat{a}_t$};
+\end{scope}
+% ---------- tasa de alquiler ----------
+\begin{scope}[shift={(7.6,0)}, xscale=2.4, yscale=1.7]
+  \draw[gray!25] (-1,-1) grid[xstep=0.5, ystep=0.5] (1,1.5);
+  \draw[ax] (-1.1,0) -- (1.15,0) node[right, font=\small]{$\hat{k}_t$};
+  \draw[ax] (0,-1.1) -- (0,1.65) node[above, font=\small]{$\hat{r}_t$};
+  \foreach \x in {-1,-0.5,0.5,1} \node[tk, below] at (\x,0) {$\x$};
+  \foreach \y in {-1,-0.5,0.5,1,1.5} \node[tk, left] at (0,\y) {$\y$};
+  \draw[base] (-1,0.667) -- (1,-0.667) node[right, font=\scriptsize]{$\hat{a}_t=0$};
+  \draw[chq]  (-1,1.387) node[above right, font=\scriptsize]{$\hat{a}_t=\sigma_\varepsilon$} -- (1,0.053);
+  \node[font=\small\bfseries] at (0,2.25) {Alquiler: $\hat{r}_t=-\alpha\hat{k}_t+\hat{a}_t$};
+\end{scope}
+\end{tikzpicture}
+\caption{Funciones de política del consumo y de la tasa de alquiler con $\delta=1$
+(Cuadro~\ref{tab:policy}), en \% de desviación del estado estacionario. Más capital
+eleva el consumo (pendiente $1-\alpha=0.333$) y reduce el retorno por rendimientos
+decrecientes (pendiente $-\alpha=-0.667$); un choque de una desviación estándar,
+$\sigma_\varepsilon=0.72\%$, desplaza ambas rectas hacia arriba (inspirada en Galindo,
+Montecinos y Ortiz, Fig.~3.3).}
+\label{fig:policyplot}
+\end{figure}
+
 \subsection{Por qué $\delta=1$ es especial}
 
 Mostremos \emph{en ecuaciones} que, con $\delta<1$, el supuesto $\hat{h}_t=0$ es
@@ -1499,51 +1600,108 @@ dos efectos opuestos sobre el consumo. El \textbf{efecto sustitución} (vía la 
 incentiva \emph{posponer} consumo ---menos hoy, más mañana, porque ahorrar rinde más.
 El \textbf{efecto ingreso} (vía la restricción presupuestaria) empuja en sentido
 contrario: un retorno más alto enriquece al hogar, que querría consumir \emph{más} hoy.
-Con utilidad logarítmica la elasticidad de sustitución intertemporal es uno, y ambos
-efectos se \emph{cancelan exactamente}. Lo único que mueve el consumo es la Euler
-\eqref{eq:ll_euler} evaluada en $t=0$, $\E_0\hat{c}_1-\hat{c}_0=\beta r_{ss}\,\E_0\hat{r}_1$:
-con $\hat{c}_0=0$ y $\beta r_{ss}=1$,
-\[
-\hat{c}_1=\hat{r}_1=\hat{y}_1.
-\]
+Con utilidad logarítmica la elasticidad de sustitución intertemporal es uno y, con
+$\delta=1$, ambos efectos se \emph{cancelan exactamente}: el hogar consume siempre la
+misma fracción de su ingreso, $\hat{c}_t=\hat{y}_t$.
 
-\emph{El mercado de trabajo cierra con $\hat{h}_1=0$.} Igualando la oferta
-\eqref{eq:ll_ls} y la demanda \eqref{eq:ll_ld} de trabajo,
-$\hat{c}_1+\tfrac{h_{ss}}{1-h_{ss}}\hat{h}_1=\hat{y}_1-\hat{h}_1$; sustituyendo
-$\hat{c}_1=\hat{y}_1$, el producto se cancela y queda
+Conviene precisar de dónde sale esa regla, porque no sale de la Euler de $t=0$: el
+choque no estaba previsto, así que $\E_0\hat{r}_1=0$ y esa ecuación solo dice
+$\E_0\hat{c}_1=0$. Sale de verificarla. Si $\hat{c}_t=\hat{y}_t$, el vaciado de bienes
+\eqref{eq:ll_clear} da $\hat{\imath}_t=\hat{y}_t$ y, con $\delta=1$,
+$\hat{k}_{t+1}=\hat{\imath}_t=\hat{y}_t$; como además $\beta r_{ss}=1$ y
+$\hat{r}_{t+1}=\hat{y}_{t+1}-\hat{k}_{t+1}$,
 \[
-\Big(\tfrac{h_{ss}}{1-h_{ss}}+1\Big)\hat{h}_1=\frac{\hat{h}_1}{1-h_{ss}}=0
-\quad\Longrightarrow\quad \boxed{\ \hat{h}_1=0\ }.
+\E_t\hat{c}_{t+1}-\beta r_{ss}\,\E_t\hat{r}_{t+1}
+=\E_t\hat{y}_{t+1}-\big(\E_t\hat{y}_{t+1}-\hat{k}_{t+1}\big)
+=\hat{y}_t=\hat{c}_t ,
 \]
-Las horas no reaccionan: la demanda de trabajo se expande, pero la oferta se contrae
-justo lo necesario (el efecto riqueza sobre el ocio), y el nuevo salario de equilibrio
-$\hat{w}_1$ sube sin que las horas cambien (Figura~\ref{fig:labormkt}). Es el mismo
-resultado de la \S\ref{sec:policy}, ahora leído como equilibrio período a período.
+de modo que la regla cumple la Euler en cada período, \emph{cualquiera} que sea la
+trayectoria de las horas. Que sea la única solución acotada es lo que probamos en la
+\S\ref{sec:policy}. En el impacto, entonces, $\hat{c}_1=\hat{y}_1=\hat{r}_1$.
+
+\emph{Los dos mercados de factores.} Con eso podemos leer el equilibrio de $t=1$ en
+los mercados de la Figura~\ref{fig:tresmercados}, ahora en desviaciones y en unidades
+de $\sigma_\varepsilon$ (Figura~\ref{fig:mercados1}). En el \textbf{mercado de capital}
+la oferta es vertical: el capital de $t=1$ se decidió en $t=0$, $\hat{k}_1=0$. La
+demanda, $\hat{r}_t=\hat{y}_t-\hat{k}_t=\hat{a}_t-\alpha\hat{k}_t$ (con $\hat{h}_t=0$, que
+confirmamos enseguida en el mercado de trabajo),
+sube en $\hat{a}_1=\sigma_\varepsilon$; como la oferta no puede moverse, todo el ajuste
+es de precio: $\hat{r}_1=\sigma_\varepsilon$ (de $A$ a $B$). En el \textbf{mercado de
+trabajo}, la demanda \eqref{eq:ll_ld} con $\hat{y}_1=\sigma_\varepsilon+\alpha\hat{h}_1$
+es
+\[
+\hat{w}_1=\sigma_\varepsilon-(1-\alpha)\,\hat{h}_1 ,
+\]
+que sube en $\sigma_\varepsilon$: la firma paga más por cada hora porque cada hora
+produce más. La oferta \eqref{eq:ll_ls}, dado el consumo,
+\[
+\hat{w}_1=\hat{c}_1+\tfrac{h_{ss}}{1-h_{ss}}\,\hat{h}_1 ,
+\]
+sube en $\hat{c}_1$: un hogar más rico pide más salario por cada hora de ocio que cede
+(el efecto riqueza). Igualando ambas con $\hat{c}_1=\hat{y}_1=\sigma_\varepsilon+\alpha\hat{h}_1$,
+\[
+\sigma_\varepsilon-(1-\alpha)\hat{h}_1=\sigma_\varepsilon+\alpha\hat{h}_1+\tfrac{h_{ss}}{1-h_{ss}}\hat{h}_1
+\;\Rightarrow\;
+\tfrac{1}{1-h_{ss}}\,\hat{h}_1=0
+\;\Rightarrow\; \boxed{\hat{h}_1=0},
+\]
+y entonces $\hat{c}_1=\sigma_\varepsilon$: en el equilibrio las dos curvas subieron
+\emph{exactamente lo mismo}, $\sigma_\varepsilon$, y se cortan en la misma cantidad de
+horas, con el salario en $\hat{w}_1=\sigma_\varepsilon$. Es el mismo resultado de la
+\S\ref{sec:policy}, ahora leído como equilibrio de mercado.
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[>={Stealth[length=2mm]}, scale=0.92]
-\draw[->,thick] (0,0) -- (7.6,0) node[right]{horas $h$};
-\draw[->,thick] (0,0) -- (0,6.6) node[above]{salario $w$};
-\draw[thick, darkblue] (0.8,0.24) -- (6.0,4.4) node[right]{$S$};
-\draw[thick, darkblue] (0.8,4.56) -- (6.0,0.4) node[right]{$D$};
-\draw[thick, tipframe, densely dashed] (1.3,2.04) -- (6.0,5.8) node[right]{$S'$};
-\draw[thick, errframe, densely dashed] (1.3,5.56) -- (6.3,1.56) node[right]{$D'$};
-\coordinate (A) at (3.5,2.4);
-\coordinate (B) at (3.5,3.8);
-\fill[darkblue] (A) circle (2.2pt) node[below left=0pt]{$A$};
-\fill[errframe] (B) circle (2.2pt) node[above left=0pt]{$B$};
-\draw[dotted] (3.5,0) node[below]{$h_{ss}$} -- (B);
-\draw[dotted] (A) -- (0,2.4) node[left]{$w_{ss}$};
-\draw[dotted] (B) -- (0,3.8) node[left]{$w_1$};
-\draw[->, errframe, thick] (5.0,2.2) -- (5.55,2.75);
-\draw[->, tipframe, thick] (1.75,2.7) -- (1.4,3.25);
+\begin{tikzpicture}[
+  ax/.style={-{Stealth[length=1.8mm]}, thick},
+  c0/.style={thick, darkblue!45},
+  c1/.style={very thick, darkblue},
+  sp/.style={very thick, tipframe},
+  sp0/.style={thick, tipframe!45},
+  pt/.style={circle, fill, inner sep=1.6pt},
+  tk/.style={font=\scriptsize},
+  sh/.style={-{Stealth[length=1.6mm]}, errframe, thick},
+]
+% ===== capital, t = 1 =====
+\begin{scope}[xscale=2.3, yscale=1.9]
+  \draw[ax] (-0.7,0) -- (1.6,0) node[right, font=\small]{$\hat{k}$};
+  \draw[ax] (0,-0.6) -- (0,1.7) node[above, font=\small]{$\hat{r}$};
+  \node[tk, below left] at (0,0) {$0$};
+  \draw[sp] (0,-0.55) -- (0,1.5) node[above right, tipframe, font=\scriptsize]{$S_0=S_1$};
+  \draw[c0] (-0.6,0.4) -- (0.8,-0.533) node[right, font=\scriptsize]{$D_0$};
+  \draw[c1] (-0.6,1.4) node[left, font=\scriptsize]{$D_1$} -- (1.5,0);
+  \draw[sh] (0.45,-0.27) -- (0.45,0.66);
+  \node[pt, darkblue!60] at (0,0) {}; \node[tk, above right] at (0,0) {$A$};
+  \node[pt, errframe] at (0,1) {};    \node[tk, right] at (0.03,1.04) {$B$};
+  \draw[dotted] (0,1) -- (-0.65,1) node[left, tk]{$1$};
+  \node[font=\small\bfseries] at (0.45,2.0) {Mercado de capital};
+\end{scope}
+% ===== trabajo, t = 1 =====
+\begin{scope}[shift={(7.4,0)}, xscale=2.3, yscale=1.9]
+  \draw[ax] (-1.2,0) -- (1.3,0) node[right, font=\small]{$\hat{h}$};
+  \draw[ax] (0,-0.6) -- (0,1.7) node[above, font=\small]{$\hat{w}$};
+  \draw[c0]  (-1.1,0.367) -- (1.1,-0.367) node[right, font=\scriptsize]{$D_0$};
+  \draw[sp0] (-1.1,-0.275) -- (1.1,0.275) node[right, font=\scriptsize]{$S_0$};
+  \draw[c1]  (-1.1,1.367) -- (1.1,0.633) node[right, font=\scriptsize]{$D_1$};
+  \draw[sp]  (-1.1,0.725) -- (1.1,1.275) node[right, font=\scriptsize]{$S_1$};
+  \draw[sh] (-0.75,0.25) -- (-0.75,1.2);
+  \draw[sh] (0.75,0.2) -- (0.75,1.12);
+  \node[pt, darkblue!60] at (0,0) {}; \node[tk, below right] at (0,0) {$A$};
+  \node[pt, errframe] at (0,1) {};    \node[tk, above right] at (0,1) {$B$};
+  \draw[dotted] (0,1) -- (-1.15,1) node[left, tk]{$1$};
+  \node[font=\small\bfseries] at (0,2.0) {Mercado de trabajo};
+\end{scope}
 \end{tikzpicture}
-\caption{El mercado de trabajo en $t=1$. La mayor productividad desplaza la demanda
-hacia afuera ($D\!\to\!D'$); el efecto riqueza contrae la oferta ($S\!\to\!S'$). Con
-utilidad logarítmica los dos desplazamientos se compensan: el equilibrio pasa de $A$ a
-$B$ ---el salario sube de $w_{ss}$ a $w_1$, pero las horas siguen en $h_{ss}$.}
-\label{fig:labormkt}
+\caption{El equilibrio de los factores en $t=1$, con $\delta=1$, en \% de desviación y
+en unidades de $\sigma_\varepsilon$ (por eso el choque vale $1$). \emph{Capital}: la
+oferta está fija ($\hat{k}_1=0$) y la demanda sube en $\hat{a}_1$; el retorno absorbe
+todo el ajuste. \emph{Trabajo}: la demanda sube en $\hat{a}_1$ y la oferta, por el
+efecto riqueza, en $\hat{c}_1$ (se dibuja para el consumo de equilibrio); como ambas
+suben $1$, las horas no cambian y el salario
+sube $1$. Las pendientes son las del modelo: $-\alpha$ y $-(1-\alpha)$ para las
+demandas, $h_{ss}/(1-h_{ss})=0.25$ para la oferta de trabajo (inspirada en Galindo,
+Montecinos y Ortiz, Figs.~3.5--3.8).}
+\label{fig:mercados1}
 \end{figure}
 
 \emph{Resumen de $t=1$.} Con $\hat{h}_1=0$ todas las variables ``reales'' se mueven
@@ -1555,15 +1713,96 @@ y del vaciado de bienes \eqref{eq:ll_clear} con $\hat{c}_1=\hat{y}_1$ se sigue
 $\hat{\imath}_1=\hat{y}_1=\sigma_\varepsilon$: la inversión absorbe el impulso, de modo
 que el capital de mañana sube, $\hat{k}_2=\hat{\imath}_1=\sigma_\varepsilon$.
 
-\paragraph{$t=2$ en adelante.} Ahora conviven dos fuerzas: la productividad, ya más
-débil ($\hat{a}_2=\phi\sigma_\varepsilon$), y el capital acumulado
-($\hat{k}_2=\sigma_\varepsilon>0$). El producto responde a ambas; el mismo argumento del
-mercado de trabajo mantiene $\hat{h}_t=0$ en cada período (de ahí que en el caso
-$\delta=1$ las horas sean \emph{planas}), y la economía regresa al estado estacionario a
-medida que $\hat{a}_t$ y $\hat{k}_t$ decaen según el AR(2) de la \S\ref{sec:timeseries}.
-Esta es, exactamente, la forma de las IRF que Dynare dibujará en el
-Capítulo~\ref{ch:codigo}; haber derivado a mano la de $t=1$ nos deja anticipar cada
-trazo y detectar al instante si la máquina se aparta de la teoría.
+\paragraph{$t=2$: dos fuerzas.} Ahora conviven la productividad, ya más débil,
+$\hat{a}_2=\phi\hat{a}_1+\varepsilon_2=\phi\sigma_\varepsilon$, y el capital acumulado,
+$\hat{k}_2=\sigma_\varepsilon$. El producto responde a ambas:
+\[
+\hat{y}_2=\hat{a}_2+(1-\alpha)\hat{k}_2+\alpha\hat{h}_2
+=(\phi+1-\alpha)\,\sigma_\varepsilon+\alpha\hat{h}_2
+=1.312\,\sigma_\varepsilon+\alpha\hat{h}_2 .
+\]
+El coeficiente $1.312>1$ dice que el producto de $t=2$ supera al de $t=1$ aunque la
+productividad ya haya empezado a caer: el capital nuevo más que compensa la
+pérdida. En los mercados de factores (Figura~\ref{fig:mercados2}):
+\begin{itemize}[nosep,leftmargin=1.4em]
+\item \textbf{Capital.} La oferta se desplaza a la derecha, a $\hat{k}_2=\sigma_\varepsilon$,
+  y la demanda queda algo por debajo de la de $t=1$, porque $\hat{a}_2<\hat{a}_1$. El
+  nuevo equilibrio $C$ tiene más capital y un retorno menor,
+  \[
+  \hat{r}_2=\hat{a}_2-\alpha\hat{k}_2=(\phi-\alpha)\,\sigma_\varepsilon=0.312\,\sigma_\varepsilon ,
+  \]
+  aún positivo: el incentivo a ahorrar persiste, pero se debilita.
+\item \textbf{Trabajo.} La demanda sube a $\hat{w}=\hat{y}_2-\hat{h}=1.312\,\sigma_\varepsilon
+  -(1-\alpha)\hat{h}$ y la oferta, otra vez, en $\hat{c}_2=\hat{y}_2$. Suben lo mismo, de
+  modo que $\hat{h}_2=0$ y $\hat{w}_2=1.312\,\sigma_\varepsilon$.
+\end{itemize}
+Así, $\hat{y}_2=\hat{c}_2=\hat{\imath}_2=\hat{w}_2=\hat{k}_3=1.312\,\sigma_\varepsilon$:
+con $\sigma_\varepsilon=0.72\%$, un $0.94\%$, que es el segundo punto de las IRF de la
+Figura~\ref{fig:hours}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  ax/.style={-{Stealth[length=1.8mm]}, thick},
+  c0/.style={thick, darkblue!45},
+  c1/.style={thick, darkblue!45, densely dashed},
+  c2/.style={very thick, darkblue},
+  sp/.style={very thick, tipframe},
+  sp0/.style={thick, tipframe!45},
+  sp1/.style={thick, tipframe!45, densely dashed},
+  pt/.style={circle, fill, inner sep=1.6pt},
+  tk/.style={font=\scriptsize},
+  sh/.style={-{Stealth[length=1.6mm]}, errframe, thick},
+]
+% ===== capital, t = 2 =====
+\begin{scope}[xscale=2.3, yscale=1.9]
+  \draw[ax] (-0.7,0) -- (1.6,0) node[right, font=\small]{$\hat{k}$};
+  \draw[ax] (0,-0.6) -- (0,1.7) node[above, font=\small]{$\hat{r}$};
+  \node[tk, below left] at (0,0) {$0$};
+  \draw[sp0] (0,-0.55) -- (0,1.5); \node[tipframe!60, font=\scriptsize] at (0.12,1.42) {$S_1$};
+  \draw[sp]  (1,-0.55) -- (1,1.5) node[above, tipframe, font=\scriptsize]{$S_2$};
+  \draw[c1] (-0.6,1.4) -- (1.5,0);
+  \node[tk, darkblue!60] at (-0.45,1.52) {$D_1$};
+  \draw[c2] (-0.6,1.379) -- (1.45,0.012); \node[font=\scriptsize, darkblue] at (1.38,0.2) {$D_2$};
+  \draw[sh] (0.08,-0.15) -- (0.9,-0.15);
+  \node[pt, darkblue!60] at (0,1) {}; \node[tk, left] at (0,1.06) {$B$};
+  \node[pt, errframe] at (1,0.312) {}; \node[tk, right] at (1.02,0.36) {$C$};
+  \draw[dotted] (1,0.312) -- (0,0.312) node[left, tk]{$0.312$};
+  \node[tk, below] at (1,-0.55) {$1$};
+  \node[font=\small\bfseries] at (0.45,2.0) {Mercado de capital};
+\end{scope}
+% ===== trabajo, t = 2 =====
+\begin{scope}[shift={(7.4,0)}, xscale=2.3, yscale=1.9]
+  \draw[ax] (-1.2,0) -- (1.3,0) node[right, font=\small]{$\hat{h}$};
+  \draw[ax] (0,-0.6) -- (0,1.75) node[above, font=\small]{$\hat{w}$};
+  \draw[c1]  (-1.1,1.367) -- (1.1,0.633) node[right, font=\scriptsize]{$D_1$};
+  \draw[sp1] (-1.1,0.725) -- (1.1,1.275) node[right, font=\scriptsize]{$S_1$};
+  \draw[c2]  (-1.1,1.679) -- (1.1,0.945) node[right, font=\scriptsize]{$D_2$};
+  \draw[sp]  (-1.1,1.037) -- (1.1,1.587) node[right, font=\scriptsize]{$S_2$};
+  \node[pt, darkblue!60] at (0,1) {};    \node[tk, below right] at (0,1) {$B$};
+  \node[pt, errframe] at (0,1.312) {};   \node[tk, above right] at (0,1.312) {$C$};
+  \draw[dotted] (0,1) -- (-1.15,1) node[left, tk]{$1$};
+  \draw[dotted] (0,1.312) -- (-1.15,1.312) node[left, tk]{$1.312$};
+  \node[font=\small\bfseries] at (0,2.05) {Mercado de trabajo};
+\end{scope}
+\end{tikzpicture}
+\caption{El equilibrio de los factores en $t=2$, en las mismas unidades de la
+Figura~\ref{fig:mercados1} (curvas de $t=1$ en trazo discontinuo). \emph{Capital}: la
+inversión de $t=1$ desplaza la oferta a $\hat{k}_2=1$ y la demanda baja levemente,
+porque $\hat{a}_2=\phi<1$; el retorno cae a $\phi-\alpha=0.312$. \emph{Trabajo}: demanda
+y oferta vuelven a subir lo mismo, ahora $1.312$; las horas siguen en su estado
+estacionario (inspirada en Galindo, Montecinos y Ortiz, Figs.~3.9--3.11).}
+\label{fig:mercados2}
+\end{figure}
+
+\paragraph{$t\ge3$.} El mismo razonamiento se repite cada período: el mercado de
+trabajo cierra con $\hat{h}_t=0$, el capital hereda la inversión del período anterior
+y el producto obedece $\hat{y}_t=\hat{a}_t+(1-\alpha)\hat{y}_{t-1}$, el AR(2) de la
+\S\ref{sec:timeseries}, con raíces $\phi$ y $1-\alpha$. La economía regresa al estado
+estacionario a medida que $\hat{a}_t$ y $\hat{k}_t$ decaen. Esta es, exactamente, la
+forma de las IRF que Dynare dibujará en el Capítulo~\ref{ch:codigo}; haber derivado a
+mano las de $t=1$ y $t=2$ nos deja anticipar cada trazo y detectar al instante si la
+máquina se aparta de la teoría.
 
 Con el modelo completamente especificado \emph{y resuelto analíticamente}
 ---ecuaciones, estado estacionario, log-linealización, funciones de política,
