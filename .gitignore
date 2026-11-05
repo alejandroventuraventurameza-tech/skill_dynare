@@ -60,3 +60,7 @@ crash_course/*.pdf
 
 # Material complementario del libro de GMO (codigos y datos con derechos): NO publicar
 crash_course/gmo_material/
+
+# Solucion del taller: se comparte fuera del repo publico
+crash_course/taller/rbc_taller_solucion.mod
+crash_course/taller/SOLUCIONARIO.md
