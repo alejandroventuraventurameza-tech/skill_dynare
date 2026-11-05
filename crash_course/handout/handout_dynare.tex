@@ -2428,6 +2428,237 @@ valores propios que la regla de decisión lleva en su diagonal
   el \emph{primer punto} de cada IRF.
 \end{enumerate}
 
+\section{Dónde guarda Dynare los resultados}
+\label{sec:estructuras}
+
+Todo lo que Dynare imprime en la ventana de comandos queda también guardado en la
+memoria de MATLAB, y es de ahí ---no de la pantalla--- de donde se leen los resultados
+para graficarlos, compararlos o reutilizarlos. Tras correr \lstinline@dynare rbc_analytical@,
+el \emph{Workspace} luce como en la Figura~\ref{fig:workspace}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.62\textwidth]{assets/capturas/01_workspace.png}
+\caption{El \emph{Workspace} de MATLAB tras \lstinline@dynare rbc_analytical@
+(Dynare~7.1). Las tres estructuras \code{M\_}, \code{oo\_} y \code{options\_} guardan el
+modelo, sus resultados y las opciones de cálculo.}
+\label{fig:workspace}
+\end{figure}
+
+\noindent Tres grupos de objetos conviven ahí:
+\begin{itemize}[nosep,leftmargin=1.4em]
+\item \textbf{Las tres estructuras de Dynare}, que son las que importan
+  (Cuadro~\ref{tab:estructuras}).
+\item \textbf{Los parámetros como variables sueltas} (\code{alpha}, \code{beta},
+  \code{c\_ss}, \ldots). Dynare los copia al \emph{Workspace} por comodidad, pero la
+  fuente autorizada es \lstinline@M_.params@: cambiar \code{alpha} a mano en la ventana
+  de comandos \emph{no} cambia el modelo.
+\item \textbf{Auxiliares} que casi nunca se usan: estructuras de estimación, aquí
+  vacías (\code{bayestopt\_}, \code{dataset\_}, \code{estim\_params\_}); la lista
+  \code{var\_list\_} de variables pedidas a \lstinline@stoch_simul@; y \code{ans}, que
+  aquí guarda los ocho residuos que dejó \code{resid}, del orden de $10^{-16}$.
+\end{itemize}
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lp{4.3cm}p{6.3cm}}
+\toprule
+\textbf{Estructura} & \textbf{Qué guarda} & \textbf{Campos que usaremos}\\
+\midrule
+\code{M\_}       & El \emph{modelo}: lo que declaraste (95 campos).
+                 & \code{endo\_names}, \code{exo\_names}, \code{param\_names},
+                   \code{params}, \code{endo\_nbr}, \code{Sigma\_e}\\
+\code{oo\_}      & Los \emph{resultados} (\emph{output}; 20 campos).
+                 & \code{steady\_state}, \code{dr}, \code{irfs}, \code{mean},
+                   \code{var}, \code{autocorr}\\
+\code{options\_} & Las \emph{opciones} de cálculo.
+                 & \code{order}, \code{irf}, \code{hp\_filter}\\
+\bottomrule
+\end{tabular}
+\caption{Las tres estructuras que crea Dynare. El sufijo \code{\_} evita que choquen
+con nombres del usuario.}
+\label{tab:estructuras}
+\end{table}
+
+\subsection{\texttt{M\_}: el modelo que declaraste}
+
+\code{M\_} es la versión que Dynare guarda del \code{.mod}: nombres, dimensiones y
+valores de los parámetros (Figura~\ref{fig:Moo}a). Los nombres se guardan en
+el \emph{orden de declaración}: \mbox{\lstinline@M_.endo_names@} es la celda
+$\{\code{y},\code{c},\code{i},\code{k},\code{h},\code{r},\code{w},\code{a}\}$, en el
+mismo orden del bloque \code{var}; \lstinline@M_.param_names@ y \lstinline@M_.params@
+tienen 13 entradas, los siete parámetros estructurales más los seis valores de estado
+estacionario que declaramos como parámetros. Para leer un parámetro por su nombre:
+
+\begin{lstlisting}[numbers=none]
+beta_modelo = M_.params(strcmp(M_.param_names, 'beta'));   % 0.984
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.66\textwidth]{assets/capturas/02_M.png}\\[3pt]
+{\small (a) \code{M\_}: los primeros de sus 95 campos.}\\[8pt]
+\includegraphics[width=0.66\textwidth]{assets/capturas/03_oo.png}\\[3pt]
+{\small (b) \code{oo\_}: sus 20 campos.}
+\caption{Las estructuras \code{M\_} y \code{oo\_} en el editor de variables de MATLAB. Se abren con doble clic
+sobre su nombre en el \emph{Workspace}.}
+\label{fig:Moo}
+\end{figure}
+
+\subsection{\texttt{oo\_}: los resultados}
+
+\code{oo\_} guarda todo lo que calculan \code{steady} y \lstinline@stoch_simul@
+(Figura~\ref{fig:Moo}b). Sus campos responden a la salida que leímos en la
+\S\ref{sec:salida}:
+\begin{itemize}[nosep,leftmargin=1.4em]
+\item \lstinline@oo_.steady_state@ ($8\times1$): el estado estacionario del
+  Cuadro~\ref{tab:ssout}, en orden de declaración.
+\item Los momentos teóricos de la \S\ref{sec:momentos}: \lstinline@oo_.mean@,
+  \lstinline@oo_.var@ ($8\times8$) y \lstinline@oo_.autocorr@, con una matriz por
+  rezago (cinco en total).
+\item \lstinline@oo_.irfs@: una serie de $1\times40$ por cada par variable--choque,
+  con nombre \code{variable\_choque}: \code{y\_eps}, \code{c\_eps}, \ldots\
+  (Figura~\ref{fig:oodr}b). Están en \emph{niveles}, como desviación del estado
+  estacionario: el primer valor de \lstinline@oo_.irfs.c_eps@ es $0.0019$, que dividido entre
+  $c_{ss}=0.4528$ es un alza del consumo de $0.42\%$ en el impacto.
+\item \lstinline@oo_.dr@: la \emph{regla de decisión} (\emph{decision rule}), la
+  solución misma. Merece su propia subsección.
+\end{itemize}
+
+\begin{errorbox}[la IRF que no está]
+Dynare solo guarda en \lstinline@oo_.irfs@ las respuestas que no son prácticamente
+nulas. Con $\delta=1$ no existe \lstinline@oo_.irfs.h_eps@: pedirla da el error
+\texttt{Reference to non-existent field}. Antes de leer una IRF, pregunta si está:
+\lstinline@isfield(oo_.irfs, 'h_eps')@; si no está, la respuesta es cero.
+\end{errorbox}
+
+\subsection{\texttt{oo\_.dr}: la regla de decisión y el orden DR}
+\label{sec:ordendr}
+
+A primer orden, la solución que Dynare guarda en \lstinline@oo_.dr@ es la regla de
+decisión del Cuadro~\ref{tab:polout}, escrita como
+\begin{equation}
+x_t-x_{ss}=\mathtt{ghx}\,\big(s_{t-1}-s_{ss}\big)+\mathtt{ghu}\,u_t,
+\label{eq:ghxghu}
+\end{equation}
+donde $x_t$ apila las ocho variables endógenas, $s_{t-1}=(k_{t-1},a_{t-1})'$ son los
+estados y $u_t=eps_t$ es el choque. \code{ghx} ($8\times2$) y \code{ghu} ($8\times1$)
+son las derivadas de la función de política respecto a los estados y al choque
+(Figura~\ref{fig:oodr}a); \lstinline@oo_.dr.ys@ es el estado estacionario.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.66\textwidth]{assets/capturas/04_oo_dr.png}\\[3pt]
+{\small (a) \code{oo\_.dr}: la regla de decisión.}\\[8pt]
+\includegraphics[width=0.66\textwidth]{assets/capturas/05_oo_irfs_recorte.png}\\[3pt]
+{\small (b) \code{oo\_.irfs}: una IRF por variable (se omiten los campos intermedios).}
+\caption{Dentro de \code{oo\_}, desplegando sus campos con la flecha
+\textcolor{darkblue}{$\blacktriangleright$}.}
+\label{fig:oodr}
+\end{figure}
+
+\noindent Hay una trampa, y es la causa del error más frecuente al trabajar con
+\lstinline@oo_.dr@ (Galindo, Montecinos y Ortiz, 2024, \S2.4.8, nota~[3]): las filas
+de \code{ghx} y \code{ghu} \emph{no} están en el orden en que declaramos las variables.
+
+\begin{definition}[Orden de declaración y orden DR]
+El \emph{orden de declaración} es el del bloque \code{var}; lo siguen
+\mbox{\lstinline@M_.endo_names@}, \mbox{\lstinline@oo_.steady_state@},
+\mbox{\lstinline@oo_.dr.ys@} y \mbox{\lstinline@oo_.irfs@}. El \emph{orden DR} (\emph{decision rule}) es el que Dynare usa
+internamente para resolver: primero las variables \emph{estáticas}, luego las
+\emph{predeterminadas} y al final las \emph{forward-looking}. Lo siguen las filas de
+\code{ghx} y \code{ghu}. Dos vectores traducen un orden al otro:
+\begin{itemize}[nosep,leftmargin=1.4em]
+\item \lstinline@oo_.dr.order_var@: la fila $p$ del orden DR contiene la variable
+  declarada número \lstinline@order_var(p)@;
+\item \lstinline@oo_.dr.inv_order_var@: la variable declarada número $j$ ocupa la fila
+  \lstinline@inv_order_var(j)@ del orden DR.
+\end{itemize}
+\end{definition}
+
+\noindent En nuestro modelo, \lstinline@order_var = [1 3 5 7 4 8 2 6]@, de modo que las
+filas de \code{ghx} corresponden a $(y,i,h,w,\,k,a,\,c,r)$: las cuatro estáticas, los dos
+estados y los dos \emph{jumpers}, exactamente la clasificación del
+Cuadro~\ref{tab:modsum}. Y \lstinline@oo_.dr.state_var = [4 8]@ dice que las columnas de
+\code{ghx} son los estados $k$ y $a$ (variables declaradas número 4 y 8). El
+Cuadro~\ref{tab:ghx} muestra el resultado.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{ccc|rr|r}
+\toprule
+\textbf{Fila DR} $p$ & \lstinline@order_var(p)@ & \textbf{Variable}
+  & \textbf{\code{ghx}: $k(-1)$} & \textbf{\code{ghx}: $a(-1)$} & \textbf{\code{ghu}}\\
+\midrule
+1 & 1 & $y$ & $0.0134$  & $0.8205$ & $0.0060$\\
+2 & 3 & $i$ & $-0.0390$ & $0.5621$ & $0.0041$\\
+3 & 5 & $h$ & $-0.0147$ & $0.1401$ & $0.0010$\\
+4 & 7 & $w$ & $0.1840$  & $1.4108$ & $0.0104$\\
+\midrule
+5 & 4 & $k$ & $\mathbf{0.9360}$ & $0.5621$ & $0.0041$\\
+6 & 8 & $a$ & $0$       & $\mathbf{0.9790}$ & $0.0072$\\
+\midrule
+7 & 2 & $c$ & $0.0524$  & $0.2584$ & $0.0019$\\
+8 & 6 & $r$ & $-0.0080$ & $0.0597$ & $0.0004$\\
+\bottomrule
+\end{tabular}
+\caption{\code{oo\_.dr.ghx} y \code{oo\_.dr.ghu} tal como los imprime MATLAB, con sus
+filas identificadas: estáticas, estados y \emph{jumpers}. Son las mismas cifras del
+Cuadro~\ref{tab:polout}, reordenadas.}
+\label{tab:ghx}
+\end{table}
+
+\begin{errorbox}[leer \code{ghx} en el orden de declaración]
+El consumo es la segunda variable declarada, pero \lstinline@oo_.dr.ghx(2,:)@ es la
+fila de la \emph{inversión}, $[-0.0390,\ 0.5621]$. La fila del consumo es
+\lstinline@oo_.dr.ghx(oo_.dr.inv_order_var(2),:)@, es decir, la fila 7:
+$[0.0524,\ 0.2584]$. Confundirlas no produce ningún mensaje de error, solo números
+equivocados.
+\end{errorbox}
+
+\paragraph{Reconstruir la IRF a mano.} Con \eqref{eq:ghxghu} se obtiene cualquier IRF
+sin pedírsela a Dynare. Partiendo del estado estacionario, un choque de una desviación
+estándar en $t=1$ da $x_1-x_{ss}=\mathtt{ghu}$ y, como después no hay más choques,
+$x_t-x_{ss}=\mathtt{ghx}\,(s_{t-1}-s_{ss})$ para $t\ge2$: solo los estados llevan la
+historia. Por ejemplo, para el consumo en $t=2$,
+\[
+c_2-c_{ss}=0.0524\times\underbrace{0.0041}_{k_1-k_{ss}}
++0.2584\times\underbrace{0.0072}_{a_1-a_{ss}}=0.0021,
+\]
+que es \lstinline@oo_.irfs.c_eps(2)@. El script \code{reconstruir\_irf.m} hace la
+cuenta para todas las variables y horizontes:
+
+\begin{lstlisting}[numbers=none,basicstyle=\ttfamily\footnotesize]
+dr  = oo_.dr;
+iv  = dr.inv_order_var;              % declaracion -> fila DR
+est = iv(dr.state_var);              % filas DR de los estados (k, a)
+x   = zeros(M_.endo_nbr, options_.irf);
+x(:,1) = dr.ghu*sqrt(M_.Sigma_e(1,1));   % impacto
+for t = 2:options_.irf
+    x(:,t) = dr.ghx*x(est,t-1);      % solo los estados propagan
+end
+c_mia = x(iv(2),:);                  % consumo = variable declarada 2
+max(abs(c_mia - oo_.irfs.c_eps))     % 2.8e-17
+\end{lstlisting}
+
+\noindent Las dos últimas líneas usan \lstinline@inv_order_var@ para volver al orden
+de declaración. Es, salvo por el orden de las operaciones, el mismo cálculo que hace
+Dynare: en las ocho variables y los 40 trimestres, la mayor diferencia con
+\lstinline@oo_.irfs@ es de $4.4\times10^{-16}$ (en el capital), la precisión de
+máquina. El script imprime además la prueba del recuadro anterior: la fila 2 de
+\code{ghx} es la de $i$, no la de $c$.
+
+\begin{remark}
+\lstinline@oo_.dr@ guarda también lo que \code{check} imprime: \code{eigval}, los
+valores propios ($0.936$, $0.979$, $1.086$ y el infinito), y \code{sdim}~$=2$, el
+número de raíces estables, igual al número de estados. Su campo \code{Gy}, en tanto,
+reproduce las filas de $k$ y $a$ de \code{ghx},
+$\left[\begin{smallmatrix}0.936&0.562\\0&0.979\end{smallmatrix}\right]$: es la matriz
+de transición de los estados, la $G$ de la Proposición~\ref{prop:cuatroformas}. Es
+triangular porque el capital no afecta a la PTF, así que sus valores propios se leen
+en la diagonal.
+\end{remark}
+
 \section{Las funciones de impulso-respuesta}
 \label{sec:irf}
 
@@ -2471,10 +2702,11 @@ propagando este impulso a través de las funciones de política.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{assets/irf_base.pdf}
-\caption{IRFs a un choque de productividad de una desviación estándar
-($\delta=0.025$), en desviaciones del estado estacionario. Reproducen las que
-genera Dynare con \lstinline@stoch_simul@.}
+\includegraphics[width=\textwidth]{assets/irf_matlab_base.pdf}
+\caption{IRF a un choque de productividad de una desviación estándar
+($\delta=0.025$), en porcentaje de desviación respecto al estado estacionario.
+Son las IRF que calcula Dynare (\lstinline@oo_.irfs@), graficadas con
+\code{graficar\_irfs.m} (\S\ref{sec:irfgraf}).}
 \label{fig:irf}
 \end{figure}
 
@@ -2533,6 +2765,50 @@ hace pico hacia $t\approx25$; y las \emph{horas}, tras subir en el impacto, cruz
 a terreno negativo cuando el capital ya es alto, el retorno ha caído y domina el
 efecto riqueza. En el límite todas regresan a su estado estacionario, porque las
 dos raíces son menores que uno.
+
+\subsection{De \texttt{oo\_.irfs} a una figura}
+\label{sec:irfgraf}
+
+Al terminar, \lstinline@stoch_simul@ dibuja las IRF por su cuenta
+(Figura~\ref{fig:irfdefault}). Sirven para comprobar que el modelo corrió, pero no para
+un documento: cada panel lleva el nombre interno de la variable, sin unidades; las
+IRF están en \emph{niveles}, de modo que un $0.04$ en el capital y un $10\times10^{-4}$
+en las horas no son comparables; y cada eje tiene su propio factor de escala
+($\times10^{-3}$, $\times10^{-4}$), que el lector debe descifrar panel por panel.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{assets/capturas/irf_dynare_default.png}
+\caption{\emph{Antes}: las IRF tal como las dibuja Dynare (caso base). Compárese con
+la Figura~\ref{fig:irf}, \emph{después}.}
+\label{fig:irfdefault}
+\end{figure}
+
+\noindent La Figura~\ref{fig:irf} se obtiene de los mismos números, que el script
+\code{graficar\_irfs.m}, incluido con el handout, lee de \lstinline@oo_.irfs@. La idea
+es de Galindo, Montecinos y Ortiz (2024), que hacen lo mismo en su
+\code{irfs\_nolineal\_log.m}. Se corre justo después de Dynare:
+\begin{lstlisting}[numbers=none]
+>> dynare rbc_analytical
+>> graficar_irfs            % exporta assets/irf_matlab_base.pdf
+\end{lstlisting}
+Cada decisión del script corrige uno de los defectos anteriores:
+\begin{enumerate}[label=(\roman*),nosep,leftmargin=2.2em]
+\item \textbf{Una unidad común.} Grafica $100\times$\lstinline@oo_.irfs.x_eps@$/x_{ss}$,
+  con $x_{ss}$ tomado de \lstinline@oo_.steady_state@: porcentaje de desviación
+  respecto al estado estacionario, la unidad de las variables con gorro del
+  Capítulo~\ref{ch:modelo} (\S\ref{sec:cuatroformas}).
+\item \textbf{Títulos que se leen.} Cada panel nombra la variable y su símbolo
+  (\emph{Consumo, $c_t$}), y los paneles siguen un orden económico: el choque, el
+  producto y sus usos, los factores y sus precios.
+\item \textbf{Ejes honestos.} Todo eje incluye el cero ---el estado estacionario---,
+  para que una respuesta pequeña no parezca enorme; la línea punteada del cero solo
+  aparece cuando la IRF la cruza. Una IRF ausente de \lstinline@oo_.irfs@ se dibuja
+  como nula.
+\item \textbf{Tamaño final.} La figura se crea con el ancho de texto del handout
+  ($15.5$~cm) y se exporta en vectorial, de modo que entra sin reescalar y sus letras
+  se imprimen al tamaño en que se diseñaron.
+\end{enumerate}
 
 \section{Cuatro maneras de escribir el mismo modelo}
 \label{sec:cuatroformas}
@@ -3124,14 +3400,17 @@ base, el lado izquierdo vale $0.008$ y el derecho $0.040$---: la cancelación es
 imperfecta, domina levemente el efecto sustitución, y las \textbf{horas responden}.
 Ese es, exactamente, el mecanismo que permite al RBC generar fluctuaciones de
 empleo; sin él no habría ciclo en el mercado laboral. La Figura~\ref{fig:hours}
-contrasta ambos casos: la pizarra \eqref{eq:mu}--\eqref{eq:hzero} y la máquina
-dicen lo mismo.
+muestra el caso $\delta=1$; compárala con la Figura~\ref{fig:irf}: la pizarra
+\eqref{eq:mu}--\eqref{eq:hzero} y la máquina dicen lo mismo.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.78\textwidth]{assets/irf_hours.pdf}
-\caption{Respuesta de las horas: con $\delta<1$ reaccionan; con $\delta=1$ son
-nulas, confirmando el resultado analítico de la \S\ref{sec:policy}.}
+\includegraphics[width=\textwidth]{assets/irf_matlab_delta1.pdf}
+\caption{IRF con depreciación total ($\delta=1$), con \code{graficar\_irfs.m}. Las
+horas no se mueven ---Dynare ni siquiera guarda su IRF en \lstinline@oo_.irfs@---,
+como predice la \S\ref{sec:policy}. Producto, consumo, inversión, capital y salario
+responden exactamente igual en porcentaje: con $\delta=1$ todos son iguales a
+$\hat{y}_t$, un AR(2) con raíces $\phi$ y $1-\alpha$.}
 \label{fig:hours}
 \end{figure}
 
